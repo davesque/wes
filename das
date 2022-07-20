@@ -147,6 +147,10 @@ if __name__ == "__main__":
     if len(sys.argv) == 1:
         prog.parse(sys.stdin)
     else:
+        if sys.argv[1] == "-h":
+            sys.stderr.write(f"usage: {sys.argv[0]} <filename> | {sys.argv[0]} < <filename>\n")
+            sys.exit(1)
+
         with open(sys.argv[1], 'r') as f:
             prog.parse(f)
 

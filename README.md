@@ -17,9 +17,24 @@ and compile a code file from the repo root dir:
 git clone https://github.com/davesque/das.git
 cd das
 
-./das < my_prog.asm
-# or
-./das my_prog.asm
+# pipe a file into das
+./das < examples/count.asm
+0000: 0001 1010
+0001: 1110 0000
+0010: 0010 1011
+0011: 0111 0101
+0100: 0110 0001
+0101: 1110 0000
+0110: 0011 1011
+0111: 1000 1001
+1000: 0110 0101
+1001: 1111 0000
+1010: 0010 1010
+1011: 0000 0001
+
+# or, specify a file path as an arg
+./das examples/count.asm
+# ...
 ```
 
 ## Features (or lack thereof?)
