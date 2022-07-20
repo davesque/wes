@@ -33,7 +33,7 @@ def run(f: TextIO, out: TextIO) -> None:
         sys.exit(1)
 
 
-if __name__ == "__main__":
+def main():
     if len(sys.argv) == 1:
         run(sys.stdin, sys.stdout)
     else:
@@ -43,3 +43,7 @@ if __name__ == "__main__":
 
         with open(sys.argv[1], 'r') as f:
             run(f, sys.stdout)
+
+
+if __name__ == "__main__":
+    main()
