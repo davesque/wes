@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from typing import Dict, List, TextIO
-from io import StringIO
 
 import sys
 import re
@@ -96,7 +95,7 @@ class Program:
         if label in self.labels:
             raise ValueError(f"Label '{label}' defined more than once")
 
-    def parse(self, f):
+    def parse(self, f: TextIO) -> None:
         lines = f.readlines()
 
         # strip out comments, empty lines, and bracketing whitespace
