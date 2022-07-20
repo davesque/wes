@@ -14,11 +14,11 @@ probably run this thing.  Quickest way to install is just to clone this repo
 and compile a code file from the repo root dir:
 
 ```bash
-git clone https://github.com/davesque/das.git
-cd das
+$ git clone https://github.com/davesque/das.git
+$ cd das
 
 # pipe a file into das
-./das < examples/count.asm
+$ ./das < examples/count.asm
 0000: 0001 1010
 0001: 1110 0000
 0010: 0010 1011
@@ -33,7 +33,7 @@ cd das
 1011: 0000 0001
 
 # or, specify a file path as an arg
-./das examples/count.asm
+$ ./das examples/count.asm
 # ...
 ```
 
