@@ -126,12 +126,41 @@ init: 0b00101010
 incr: 0b00000001
 ```
 
-The labels in the version above don't end up doing much.  They're just there
-for comparison.  So there's really no difference between values and code as far
-as the compiler is concerned.  That means the onus is on you to make sure you
-don't define any data values before your code.  Otherwise, the computer might
-try and interpret them as instructions.  In our example count program, there's
-a reason that the "variables" are declared at the end.
+This version of the count program will compile just fine and output identical
+program code as the nicer version further up.  The section and data labels in
+this case don't actually do anything.  They're just there to make it obvious
+how the generated code lines up.
+
+This example should make it clear that the operation mnemonics such as "jmp"
+and "add" are really just syntactic sugar for specific bytes that are output at
+each position by the compiler.  If you already know what those bytes should be,
+you're free to list them out explicitly like we've done here.
+
+So there's really no difference between values and code as far as the compiler
+is concerned.  That means the onus is on you to make sure you don't define any
+data values before your code.  Otherwise, the computer might try and interpret
+them as instructions.  In our example count program, there's a reason that the
+"variables" are declared at the end.
+
+Here's another version of the count program just for kicks that foregoes using
+labels:
+
+```asm
+lda 10
+out
+add 11
+jc 5
+jmp 1
+out
+sub 11
+jz 9
+jmp 5
+hlt
+42
+1
+```
+
+This version of the program again compiles to the same output code.
 
 ## Examples and contribution
 
