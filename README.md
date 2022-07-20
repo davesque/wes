@@ -2,16 +2,17 @@
 
 This is a bare bones assembler that can be used to generate program code for
 Ben Eater's 8-bit computer project (see here: https://eater.net/8bit).  The
-name "das" stand for David's Assembler. However, if you're frustrated with its
-lack of features, you can call it Dumb Assembler too, but that'll cost you some
-karma.
+name "das" stands for David's Assembler.  If you're frustrated with the lack of
+features, you can call it Dumb Assembler, but that'll cost you some karma.
 
 ## Installation and Usage
 
 It's written in python 3 and has no package dependencies.  The only real
 version requirement comes from the fact that I use the walrus operator (yeah, I
-know I know).  From that, you need at least python python 3.8.  To get started,
-clone the repo, make a virtualenv, and install the package locally:
+know I know).  From that, you need at least python 3.8.
+
+To get started, clone the repo, make a virtualenv, and install the package
+locally:
 ```bash
 git clone https://github.com/davesque/das.git
 
@@ -162,6 +163,11 @@ hlt
 ```
 
 This version of the program again compiles to the same output code.
+
+## Disclaimer
+
+You might ask, "Why do this?  Isn't this a bit overkill?"  My answers are "For
+fun!" and "Yes!", respectively.  And respectfully!  Thanks for asking!
 
 ## Examples and contribution
 
