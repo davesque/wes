@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from typing import Iterator, List, Optional, Union
 
-from .exceptions import DasSyntaxError, EndOfTokens
+from .exceptions import EndOfTokens, RenderedError
 from .lexer import Lexer, Token
 from .utils import str_to_int
 
@@ -196,7 +196,7 @@ class Parser:
         elif VAL_RE.match(name_or_val.text):
             return Val(str_to_int(name_or_val.text), name_or_val)
         else:
-            raise DasSyntaxError(f"{repr(name_or_val.text)} is not a valid mnemonic or integer", name_or_val)
+            raise RenderedError(f"{repr(name_or_val.text)} is not a valid mnemonic or integer", name_or_val)
 
     def parse_unary(self) -> Optional[Op]:
         try:
@@ -207,20 +207,20 @@ class Parser:
         self.move(3)
 
         if not NAME_RE.match(name.text):
-            raise DasSyntaxError(f"{repr(name.text)} is not a valid name", name)
+            raise RenderedError(f"{repr(name.text)} is not a valid name", name)
         if not newline.is_newline:
-            raise DasSyntaxError("expected end of line", newline)
+            raise RenderedError("expected end of line", newline)
 
         if VAL_RE.match(name_or_val.text):
             arg = str_to_int(name_or_val.text)
         elif NAME_RE.match(name_or_val.text):
             arg = name_or_val.text
         else:
-            raise DasSyntaxError(f"{repr(name_or_val.text)} is not a valid label or integer", name_or_val)
+            raise RenderedError(f"{repr(name_or_val.text)} is not a valid label or integer", name_or_val)
 
         return Op(name.text, arg, [name, name_or_val])
 
     def parse_eof(self) -> None:
         tok = self.get()
         if not tok.is_eof:
-            raise DasSyntaxError("expected end of file", tok)
+            raise RenderedError("expected end of file", tok)

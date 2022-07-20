@@ -9,7 +9,7 @@ class EndOfTokens(ParseError):
     pass
 
 
-class DasSyntaxError(ParseError):
+class RenderedError(ParseError):
     def __init__(self, msg: str, tok: Token):
         self.msg = msg
         self.tok = tok
