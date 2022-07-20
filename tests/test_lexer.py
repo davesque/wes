@@ -1,6 +1,6 @@
 from io import StringIO
 
-from das.lexer import tokenize, Token, Lexer
+from das.lexer import Lexer, Token, tokenize
 
 
 def test_tokenize() -> None:
@@ -50,7 +50,6 @@ def test_lexer_simple() -> None:
         Token('\n', 44, 45, '42  # test comment\n', 26, 4, 18),
         Token('', 45, 45, '', 45, 5, 0)
     ]
-
 
 
 def test_lexer_complex() -> None:
