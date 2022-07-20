@@ -39,25 +39,29 @@ def tokenize(buf: str) -> Iterator[str]:
 
 
 class Token:
-    __slots__ = ("text", "start", "end", "line_start", "line_num", "col")
+    __slots__ = ("text", "start", "end", "line", "line_start", "line_num", "col")
 
     text: str
 
     start: int
     end: int
 
+    line: str
     line_start: int
     line_num: int
+
     col: int
 
-    def __init__(self, text: str, start: int, end: int, line_start: int, line_num: int, col: int):
+    def __init__(self, text: str, start: int, end: int, line: str, line_start: int, line_num: int, col: int):
         self.text = text
 
         self.start = start
         self.end = end
 
+        self.line = line
         self.line_start = line_start
         self.line_num = line_num
+
         self.col = col
 
     def __repr__(self) -> str:
@@ -121,6 +125,7 @@ class Lexer:
                         "",
                         self.pos,
                         self.pos,
+                        "",
                         self.pos,
                         self.line_num + 1,
                         0,
@@ -149,6 +154,7 @@ class Lexer:
                     part,
                     self.pos + col,
                     self.pos + col + len(part),
+                    line,
                     self.pos,
                     self.line_num,
                     col,
@@ -161,6 +167,7 @@ class Lexer:
                 "\n",
                 self.pos + len(line) - 1,
                 self.pos + len(line),
+                line,
                 self.pos,
                 self.line_num,
                 len(line) - 1,
