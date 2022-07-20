@@ -29,7 +29,7 @@ class File(Node):
         for stmt in stmts:
             self.toks.extend(stmt.toks)
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # pragma: no cover
         return f"File({repr(self.stmts)})"
 
     def __eq__(self, other) -> bool:
@@ -49,7 +49,7 @@ class Label(Stmt):
         self.name = name
         self.toks = toks
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # pragma: no cover
         return f"Label({repr(self.name)})"
 
     def __eq__(self, other) -> bool:
@@ -67,7 +67,7 @@ class Op(Stmt):
         self.arg = arg
         self.toks = toks
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # pragma: no cover
         return f"Op({repr(self.mnemonic)}, {repr(self.arg)})"
 
     def __eq__(self, other) -> bool:
@@ -85,7 +85,7 @@ class Val(Stmt):
         self.val = val
         self.toks = [tok]
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # pragma: no cover
         return f"Val({self.val})"
 
     def __eq__(self, other) -> bool:
@@ -148,7 +148,7 @@ class Parser:
         if label := self.parse_label():
             try:
                 tok = self.peek(1)[0]
-            except EndOfTokens:
+            except EndOfTokens:  # pragma: no cover
                 return label
 
             # consume a newline if one exists
@@ -196,14 +196,16 @@ class Parser:
 
     def parse_unary(self) -> Optional[Op]:
         try:
-            name, name_or_val, newline = self.peek(3)
+            mnemonic, name_or_val, newline = self.peek(3)
         except EndOfTokens:
             return None
 
         self.move(3)
 
-        if not NAME_RE.match(name.text):
-            raise RenderedError(f"{repr(name.text)} is not a valid name", name)
+        if not NAME_RE.match(mnemonic.text):
+            raise RenderedError(
+                f"{repr(mnemonic.text)} is not a valid mnemonic", mnemonic
+            )
         if not newline.is_newline:
             raise RenderedError("expected end of line", newline)
 
@@ -216,9 +218,9 @@ class Parser:
                 f"{repr(name_or_val.text)} is not a valid label or integer", name_or_val
             )
 
-        return Op(name.text, arg, [name, name_or_val])
+        return Op(mnemonic.text, arg, [mnemonic, name_or_val])
 
     def parse_eof(self) -> None:
         tok = self.get()
-        if not tok.is_eof:
+        if not tok.is_eof:  # pragma: no cover
             raise RenderedError("expected end of file", tok)

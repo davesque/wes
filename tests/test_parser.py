@@ -1,5 +1,8 @@
 from io import StringIO
 
+import pytest
+
+from das.exceptions import RenderedError
 from das.lexer import Lexer
 from das.parser import File, Label, Op, Parser, Val
 
@@ -101,3 +104,51 @@ b: 1
             Val(1, None),  # type: ignore
         ]
     )
+
+
+def test_parse_unary_with_val() -> None:
+    lexer = Lexer(StringIO("lda 1"))
+    parser = Parser(lexer)
+
+    file = parser.parse_file()
+    assert file == File([Op("lda", 1, [])])
+
+
+def test_parse_nullary_or_val_invalid() -> None:
+    lexer = Lexer(StringIO("!!!"))
+    parser = Parser(lexer)
+
+    with pytest.raises(RenderedError) as excinfo:
+        parser.parse_file()
+
+    assert "is not a valid mnemonic or integer" in excinfo.value.msg
+
+
+def test_parse_unary_invalid_mnemonic() -> None:
+    lexer = Lexer(StringIO("!!! blah"))
+    parser = Parser(lexer)
+
+    with pytest.raises(RenderedError) as excinfo:
+        parser.parse_file()
+
+    assert "is not a valid mnemonic" in excinfo.value.msg
+
+
+def test_parse_unary_expected_end_of_line() -> None:
+    lexer = Lexer(StringIO("foo bar baz"))
+    parser = Parser(lexer)
+
+    with pytest.raises(RenderedError) as excinfo:
+        parser.parse_file()
+
+    assert "expected end of line" in excinfo.value.msg
+
+
+def test_parse_unary_invalid_op_arg() -> None:
+    lexer = Lexer(StringIO("blah !!!"))
+    parser = Parser(lexer)
+
+    with pytest.raises(RenderedError) as excinfo:
+        parser.parse_file()
+
+    assert "is not a valid label or integer" in excinfo.value.msg
