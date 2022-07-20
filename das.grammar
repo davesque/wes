@@ -1,0 +1,22 @@
+NAME: [a-zA-Z_][a-zA-Z0-9_]*
+BIN_DIGIT: [01]
+OCT_DIGIT: [0-7]
+DEC_DIGIT: [0-9]
+HEX_DIGIT: [a-fA-F0-9]
+
+file: stmt* EOF
+
+stmt: (label | labeled)
+
+label: NAME ':' NEWLINE
+labeled: [NAME ':'] (op | val) NEWLINE
+
+op: NAME [arg]
+arg: NAME | val
+
+val: bin | oct | hex | dec
+
+bin: '0b' BIN_DIGIT+
+oct: '0o' OCT_DIGIT+
+hex: '0x' HEX_DIGIT+
+dec: DEC_DIGIT+
