@@ -5,7 +5,7 @@ loop:
   out
   add b
   sta a
-  
+
   lda b
   out
   add a
