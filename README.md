@@ -1,12 +1,12 @@
-# dac
+# das
 
 This is a bare bones assembly compiler written as a quick hack to generate
 instruction code for Ben Eater's 8-bit computer project (see here:
-https://eater.net/8bit).  The name "dac" stand for David's Assembly Compiler.
-However, if you're frustrated with its lack of features, you can call it Dumb
-Assembly Compiler too, but that'll cost you some karma.
+https://eater.net/8bit).  The name "das" stand for David's Assembler. However,
+if you're frustrated with its lack of features, you can call it Dumb Assembler
+too, but that'll cost you some karma.
 
-## Installation
+## Installation and Usage
 
 It's written in python 3 and has no package dependencies.  It also doesn't
 really have any serious version dependencies.  Your system python 3 will
@@ -14,12 +14,12 @@ probably run this thing.  Quickest way to install is just to clone this repo
 and compile a code file from the repo root dir:
 
 ```bash
-git clone https://github.com/davesque/dac.git
-cd dac
+git clone https://github.com/davesque/das.git
+cd das
 
-./dac < my_prog.asm
+./das < my_prog.asm
 # or
-./dac my_prog.asm
+./das my_prog.asm
 ```
 
 ## Features (or lack thereof?)
