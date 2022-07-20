@@ -11,14 +11,18 @@ LABEL_RE = re.compile(r"^([a-zA-Z0-9_]+)\s*:$")
 LABELED_RE = re.compile(r"^([a-zA-Z0-9_]+)\s*:\s*(.+)$")
 
 
-def str_to_int(s: str) -> int:
-    for base in (2, 8, 10, 16):
-        try:
-            return int(s, base=base)
-        except ValueError:
-            pass
+BASES = {
+    "0b": 2,
+    "0o": 8,
+    "0x": 16,
+}
 
-    raise ValueError(f"string '{s}' not recognizable as integer literal")
+
+def str_to_int(s: str) -> int:
+    prefix = s[:2]
+    base = BASES.get(prefix, 10)
+
+    return int(s, base=base)
 
 
 class Program:
