@@ -61,13 +61,21 @@ class Token:
         self.col = col
 
     def __repr__(self) -> str:
-        if self.text == "\n":
+        if self.is_newline:
             text_repr = "NEWLINE"
-        elif self.text == "":
+        elif self.is_eof:
             text_repr = "EOF"
         else:
             text_repr = repr(self.text)
         return f'{text_repr} [{self.start}:{self.end}] (line {self.line_num}, col {self.col})'
+
+    @property
+    def is_newline(self) -> bool:
+        return self.text == "\n"
+
+    @property
+    def is_eof(self) -> bool:
+        return self.text == ""
 
 
 class Eof(Exception):
