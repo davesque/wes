@@ -1,8 +1,10 @@
-# dac (David's Assembly Compiler)
+# dac
 
 This is a bare bones assembly compiler written as a quick hack to generate
 instruction code for Ben Eater's 8-bit computer project (see here:
-https://eater.net/8bit).
+https://eater.net/8bit).  The name, "dac", stand for David's Assembly Compiler.
+However, if you're frustrated with its lack of features, you can call it Dumb
+Assembly Compiler too, but that'll cost you some karma.
 
 ## Installation
 
