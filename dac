@@ -149,7 +149,6 @@ if __name__ == "__main__":
         prog.parse(sys.stdin)
     else:
         with open(sys.argv[1], 'r') as f:
-            buf = StringIO(f.read())
-        prog.parse(buf)
+            prog.parse(f)
 
     prog.write(sys.stdout)
