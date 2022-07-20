@@ -33,7 +33,8 @@ compiler doesn't like if it throws an error.
 
 ### Section and data labels
 
-One neat thing is that you can label code sections and also data values:
+One neat thing that you can do (which is pretty standard in assembly dialects)
+is label code sections and also data values:
 
 ```asm
 # Counts from 42 to 256 (zero really in 8 bits), then down from 255 to 1
