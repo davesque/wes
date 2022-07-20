@@ -92,13 +92,13 @@ In fact, we could have defined the whole program like this:
 count_up:
   0b00101011     # add incr
   0b11100000     # out
-  0b01110000     # jc count_down
+  0b01110101     # jc count_down
   0b01100001     # jmp count_up
 
 count_down:
   0b00111011     # sub incr
   0b11100000     # out
-  0b10001011     # jz end
+  0b10001001     # jz end
   0b01100101     # jmp count_down
 
 end:
