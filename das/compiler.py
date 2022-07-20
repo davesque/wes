@@ -29,11 +29,13 @@ class Compiler:
         loc = 0
         for stmt in self.file.stmts:
             if loc > 15:
-                raise RenderedError(f"statement makes program too large", stmt.toks[0])
+                raise RenderedError("statement makes program too large", stmt.toks[0])
 
             if isinstance(stmt, Label):
                 if stmt.name in self.labels:
-                    raise RenderedError(f"redefinition of label '{stmt.name}'", stmt.toks[0])
+                    raise RenderedError(
+                        f"redefinition of label '{stmt.name}'", stmt.toks[0]
+                    )
 
                 self.labels[stmt.name] = loc
             else:
@@ -45,20 +47,30 @@ class Compiler:
                 code, arity = self.OPS[stmt.mnemonic]
 
                 if arity == 1 and stmt.arg is None:
-                    raise RenderedError(f"operation '{stmt.mnemonic}' requires an argument", stmt.toks[0])
+                    raise RenderedError(
+                        f"operation '{stmt.mnemonic}' requires an argument",
+                        stmt.toks[0],
+                    )
 
                 if arity == 0 and stmt.arg is not None:
-                    raise RenderedError(f"operation '{stmt.mnemonic}' does not take an argument", stmt.toks[0])
+                    raise RenderedError(
+                        f"operation '{stmt.mnemonic}' does not take an argument",
+                        stmt.toks[0],
+                    )
 
                 if isinstance(stmt.arg, str):
                     if stmt.arg not in self.labels:
-                        raise RenderedError(f"unrecognized label '{stmt.arg}'", stmt.toks[1])
+                        raise RenderedError(
+                            f"unrecognized label '{stmt.arg}'", stmt.toks[1]
+                        )
 
                     loc = self.labels[stmt.arg]
                     yield (code << 4) + loc
                 elif isinstance(stmt.arg, int):
                     if stmt.arg > 15:
-                        raise RenderedError(f"arg '{stmt.arg}' is too large", stmt.toks[1])
+                        raise RenderedError(
+                            f"arg '{stmt.arg}' is too large", stmt.toks[1]
+                        )
 
                     yield (code << 4) + stmt.arg
                 elif stmt.arg is None:
@@ -68,6 +80,8 @@ class Compiler:
 
             elif isinstance(stmt, Val):
                 if stmt.val > 255:
-                    raise RenderedError(f"value '{stmt.toks[0].text}' is too large", stmt.toks[0])
+                    raise RenderedError(
+                        f"value '{stmt.toks[0].text}' is too large", stmt.toks[0]
+                    )
 
                 yield stmt.val
