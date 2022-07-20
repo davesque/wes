@@ -73,7 +73,7 @@ class Token:
 
         self.col = col
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # pragma: no cover
         return (
             "Token("
             f"{repr(self.text)}, "
