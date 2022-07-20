@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from typing import Iterator, List, Optional, Union
 
+from .exceptions import DasSyntaxError, EndOfTokens
 from .lexer import Lexer, Token
 from .utils import str_to_int
 
@@ -14,9 +15,6 @@ class Node:
     __slots__ = ("toks",)
 
     toks: List[Token]
-
-    def __init__(self, toks: List[Token]):
-        self.toks = toks
 
 
 class File(Node):
@@ -80,22 +78,16 @@ class Val(Stmt):
         return f"Val({self.val})"
 
 
-class ParseError(Exception):
-    pass
-
-
 class Parser:
     __slots__ = ("lex", "tokens", "buf")
 
     lex: Lexer
     tokens: Iterator[Token]
-
     buf: List[Token]
 
     def __init__(self, lex: Lexer):
         self.lex = lex
         self.tokens = iter(lex)
-
         self.buf = []
 
     def put(self, tok: Token) -> None:
@@ -108,14 +100,14 @@ class Parser:
             try:
                 return next(self.tokens)
             except StopIteration:
-                raise ParseError("unexpected eof")
+                raise EndOfTokens("end of tokens")
 
     def peek(self, n: int = 1) -> List[Token]:
         toks = []
         for _ in range(n):
             try:
                 toks.append(self.get())
-            except ParseError:
+            except EndOfTokens:
                 for tok in reversed(toks):
                     self.put(tok)
                 raise
@@ -129,7 +121,7 @@ class Parser:
         for _ in range(n):
             self.get()
 
-    def parse(self) -> File:
+    def parse_file(self) -> File:
         stmts = []
         while stmt := self.parse_stmt():
             stmts.append(stmt)
@@ -142,7 +134,7 @@ class Parser:
         if label := self.parse_label():
             try:
                 tok = self.peek(1)[0]
-            except ParseError:
+            except EndOfTokens:
                 return label
 
             # consume a newline if one exists
@@ -150,16 +142,15 @@ class Parser:
                 self.move(1)
 
             return label
-
-        if nullary_or_val := self.parse_nullary_or_val():
+        elif nullary_or_val := self.parse_nullary_or_val():
             return nullary_or_val
-
-        return self.parse_unary()
+        else:
+            return self.parse_unary()
 
     def parse_label(self) -> Optional[Label]:
         try:
             name, colon = self.peek(2)
-        except ParseError:
+        except EndOfTokens:
             return None
 
         if colon.text != ":":
@@ -171,7 +162,7 @@ class Parser:
     def parse_nullary_or_val(self) -> Union[Op, Val, None]:
         try:
             name_or_val, newline = self.peek(2)
-        except ParseError:
+        except EndOfTokens:
             return None
 
         if not newline.is_newline:
@@ -184,31 +175,31 @@ class Parser:
         elif VAL_RE.match(name_or_val.text):
             return Val(str_to_int(name_or_val.text), name_or_val)
         else:
-            raise ParseError(f"string {repr(name_or_val.text)} not parseable as name or integer")
+            raise DasSyntaxError(f"string {repr(name_or_val.text)} not parseable as name or integer")
 
     def parse_unary(self) -> Optional[Op]:
         try:
             name, name_or_val, newline = self.peek(3)
-        except ParseError:
+        except EndOfTokens:
             return None
 
         self.move(3)
 
         if not NAME_RE.match(name.text):
-            raise ParseError(f"string {repr(name.text)} not parseable as name")
+            raise DasSyntaxError(f"string {repr(name.text)} not parseable as name")
         if not newline.is_newline:
-            raise ParseError("expected newline")
+            raise DasSyntaxError("expected newline")
 
         if VAL_RE.match(name_or_val.text):
             arg = str_to_int(name_or_val.text)
         elif NAME_RE.match(name_or_val.text):
             arg = name_or_val.text
         else:
-            raise ParseError(f"string {repr(name_or_val.text)} not parseable as name or integer")
+            raise DasSyntaxError(f"string {repr(name_or_val.text)} not parseable as name or integer")
 
         return Op(name.text, arg, [name, name_or_val])
 
     def parse_eof(self) -> None:
         tok = self.get()
         if not tok.is_eof:
-            raise ParseError("expected eof token")
+            raise DasSyntaxError("expected end of file")
