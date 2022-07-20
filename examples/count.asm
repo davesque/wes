@@ -1,17 +1,17 @@
-# Counts from 42 to 256 (zero really in 8 bits), then down from 255 to 0
+# Counts from 42 to 256 (zero really in 8 bits), then down from 255 to 1
 # before halting
 
 lda init
 
 count_up:
-  add incr
   out
+  add incr
   jc count_down  # jump to "count_down" if we overflowed
   jmp count_up
 
 count_down:
-  sub incr
   out
+  sub incr
   jz end         # jump to "end" if we hit zero
   jmp count_down
 

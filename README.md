@@ -34,20 +34,20 @@ compiler doesn't like if it throws an error.
 One neat thing is that you can label code sections and also data values:
 
 ```asm
-# Counts from 42 to 256 (zero really in 8 bits), then down from 255 to 0
+# Counts from 42 to 256 (zero really in 8 bits), then down from 255 to 1
 # before halting
 
 lda init
 
 count_up:
-  add incr
   out
+  add incr
   jc count_down  # jump to "count_down" if we overflowed
   jmp count_up
 
 count_down:
-  sub incr
   out
+  sub incr
   jz end         # jump to "end" if we hit zero
   jmp count_down
 
@@ -90,22 +90,22 @@ In fact, we could have defined the whole program like this:
 0b00011010       # lda init
 
 count_up:
-  0b00101011     # add incr
   0b11100000     # out
+  0b00101011     # add incr
   0b01110101     # jc count_down
   0b01100001     # jmp count_up
 
 count_down:
-  0b00111011     # sub incr
   0b11100000     # out
+  0b00111011     # sub incr
   0b10001001     # jz end
   0b01100101     # jmp count_down
 
 end:
   0b11110000
 
-init: 42
-incr: 1
+init: 0b00101010
+incr: 0b00000001
 ```
 
 The labels in the version above don't end up doing much.  They're just there
