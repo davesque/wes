@@ -138,9 +138,9 @@ you're free to list them out explicitly like we've done here.
 
 So there's really no difference between values and code as far as the compiler
 is concerned.  That means the onus is on you to make sure you don't define any
-data values before your code.  Otherwise, the computer might try and interpret
-them as instructions.  In our example count program, there's a reason that the
-"variables" are declared at the end.
+you want to interpret as data before your code.  Otherwise, the computer might
+try and interpret them as instructions.  In our example count program, there's
+a reason that the "variables" are declared at the end.
 
 Here's another version of the count program just for kicks that foregoes using
 labels:
