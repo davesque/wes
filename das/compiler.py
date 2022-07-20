@@ -54,7 +54,7 @@ class Compiler:
 
                 if arity == 0 and stmt.arg is not None:
                     raise RenderedError(
-                        f"operation '{stmt.mnemonic}' does not take an argument",
+                        f"operation '{stmt.mnemonic}' takes no argument",
                         stmt.toks[0],
                     )
 
@@ -75,7 +75,7 @@ class Compiler:
                     yield (code << 4) + stmt.arg
                 elif stmt.arg is None:
                     yield code << 4
-                else:
+                else:  # pragma: no cover
                     raise Exception("invariant")
 
             elif isinstance(stmt, Val):
