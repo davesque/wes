@@ -6,7 +6,8 @@ from das.parser import Parser
 
 
 def test_compile_count() -> None:
-    buf = StringIO("""
+    buf = StringIO(
+        """
 # Counts from 42 to 256 (zero really in 8 bits), then down from 255 to 1
 # before halting
 
@@ -28,7 +29,8 @@ end: hlt
 
 init: 42
 incr: 1
-""")
+"""
+    )
     lexer = Lexer(buf)
     parser = Parser(lexer)
     file = parser.parse_file()
@@ -38,7 +40,8 @@ incr: 1
 
 
 def test_compile_fib() -> None:
-    buf = StringIO("""
+    buf = StringIO(
+        """
 # Counts up in fibonacci numbers forever (with a lot of overflow)
 
 loop:
@@ -56,7 +59,8 @@ loop:
 
 a: 1
 b: 1
-""")
+"""
+    )
     lexer = Lexer(buf)
     parser = Parser(lexer)
     file = parser.parse_file()

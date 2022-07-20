@@ -52,7 +52,16 @@ class Token:
 
     col: int
 
-    def __init__(self, text: str, start: int, end: int, line: str, line_start: int, line_num: int, col: int):
+    def __init__(
+        self,
+        text: str,
+        start: int,
+        end: int,
+        line: str,
+        line_start: int,
+        line_num: int,
+        col: int,
+    ):
         self.text = text
 
         self.start = start
@@ -87,13 +96,13 @@ class Token:
 
     def __eq__(self, other) -> bool:
         return type(self) is type(other) and (
-            self.text == other.text and
-            self.start == other.start and
-            self.end == other.end and
-            self.line == other.line and
-            self.line_start == other.line_start and
-            self.line_num == other.line_num and
-            self.col == other.col
+            self.text == other.text
+            and self.start == other.start
+            and self.end == other.end
+            and self.line == other.line
+            and self.line_start == other.line_start
+            and self.line_num == other.line_num
+            and self.col == other.col
         )
 
 
@@ -102,11 +111,10 @@ class Eof(Exception):
 
 
 class Lexer:
-    __slots__ = ("buf", "line_num", "col", "pos")
+    __slots__ = ("buf", "line_num", "pos")
 
     buf: TextIO
     line_num: int
-    col: int
     pos: int
 
     def __init__(self, buf: TextIO):
@@ -118,7 +126,7 @@ class Lexer:
     def get_line(self) -> str:
         line = self.buf.readline()
         if len(line) == 0:
-            raise Eof('eof')
+            raise Eof("eof")
 
         # we add this here to make some of the tokenization logic for semantic
         # newlines more simple

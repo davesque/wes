@@ -38,10 +38,10 @@ def main():
         run(sys.stdin, sys.stdout)
     else:
         if sys.argv[1] == "-h":
-            sys.stderr.write(f"usage: das <filename> | das < <filename>\n")
+            sys.stderr.write("usage: das <filename> | das < <filename>\n")
             sys.exit(1)
 
-        with open(sys.argv[1], 'r') as f:
+        with open(sys.argv[1], "r") as f:
             run(f, sys.stdout)
 
 

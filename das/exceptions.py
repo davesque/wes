@@ -21,6 +21,7 @@ class RenderedError(ParseError):
 
         marker_str = " " * col + "^" * (end - start)
 
+        # fmt:off
         return f"""
 at line {self.tok.line_num}, col {self.tok.col}:
 {self.tok.line.rstrip()}
@@ -28,3 +29,4 @@ at line {self.tok.line_num}, col {self.tok.col}:
 
 {self.msg}
 """[1:-1]
+        # fmt: on

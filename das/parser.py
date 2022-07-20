@@ -14,7 +14,7 @@ VAL_RE = re.compile(r"^(0b[01]+|0o[0-7]+|[0-9]+|0x[a-fA-F0-9]+)$")
 class Node:
     __slots__ = ("toks",)
 
-    toks: List[Token]
+    toks: List[Token]  # type: ignore
 
 
 class File(Node):
@@ -33,9 +33,7 @@ class File(Node):
         return f"File({repr(self.stmts)})"
 
     def __eq__(self, other) -> bool:
-        return type(self) is type(other) and (
-            self.stmts == other.stmts
-        )
+        return type(self) is type(other) and (self.stmts == other.stmts)
 
 
 class Stmt(Node):
@@ -55,9 +53,7 @@ class Label(Stmt):
         return f"Label({repr(self.name)})"
 
     def __eq__(self, other) -> bool:
-        return type(self) is type(other) and (
-            self.name == other.name
-        )
+        return type(self) is type(other) and (self.name == other.name)
 
 
 class Op(Stmt):
@@ -76,8 +72,7 @@ class Op(Stmt):
 
     def __eq__(self, other) -> bool:
         return type(self) is type(other) and (
-            self.mnemonic == other.mnemonic and
-            self.arg == other.arg
+            self.mnemonic == other.mnemonic and self.arg == other.arg
         )
 
 
@@ -94,9 +89,7 @@ class Val(Stmt):
         return f"Val({self.val})"
 
     def __eq__(self, other) -> bool:
-        return type(self) is type(other) and (
-            self.val == other.val
-        )
+        return type(self) is type(other) and (self.val == other.val)
 
 
 class Parser:
@@ -196,7 +189,10 @@ class Parser:
         elif VAL_RE.match(name_or_val.text):
             return Val(str_to_int(name_or_val.text), name_or_val)
         else:
-            raise RenderedError(f"{repr(name_or_val.text)} is not a valid mnemonic or integer", name_or_val)
+            raise RenderedError(
+                f"{repr(name_or_val.text)} is not a valid mnemonic or integer",
+                name_or_val,
+            )
 
     def parse_unary(self) -> Optional[Op]:
         try:
@@ -216,7 +212,9 @@ class Parser:
         elif NAME_RE.match(name_or_val.text):
             arg = name_or_val.text
         else:
-            raise RenderedError(f"{repr(name_or_val.text)} is not a valid label or integer", name_or_val)
+            raise RenderedError(
+                f"{repr(name_or_val.text)} is not a valid label or integer", name_or_val
+            )
 
         return Op(name.text, arg, [name, name_or_val])
 
