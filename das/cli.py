@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 
+import sys
 from typing import TextIO
 
-import sys
-
+from .compiler import Compiler
 from .exceptions import RenderedError
 from .lexer import Lexer
 from .parser import Parser
-from .compiler import Compiler
 
 
 def run(f: TextIO, out: TextIO) -> None:

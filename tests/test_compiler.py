@@ -1,8 +1,8 @@
 from io import StringIO
 
+from das.compiler import Compiler
 from das.lexer import Lexer
 from das.parser import Parser
-from das.compiler import Compiler
 
 
 def test_compile_count() -> None:

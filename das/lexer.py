@@ -1,4 +1,4 @@
-from typing import TextIO, Iterator
+from typing import Iterator, TextIO
 
 
 def _char_type(c: str) -> int:

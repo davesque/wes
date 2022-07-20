@@ -1,7 +1,7 @@
 from io import StringIO
 
 from das.lexer import Lexer
-from das.parser import Parser, File, Label, Op, Val
+from das.parser import File, Label, Op, Parser, Val
 
 
 def test_parse_count() -> None:
