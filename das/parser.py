@@ -32,6 +32,11 @@ class File(Node):
     def __repr__(self) -> str:
         return f"File({repr(self.stmts)})"
 
+    def __eq__(self, other) -> bool:
+        return type(self) is type(other) and (
+            self.stmts == other.stmts
+        )
+
 
 class Stmt(Node):
     __slots__ = tuple()
@@ -49,6 +54,11 @@ class Label(Stmt):
     def __repr__(self) -> str:
         return f"Label({repr(self.name)})"
 
+    def __eq__(self, other) -> bool:
+        return type(self) is type(other) and (
+            self.name == other.name
+        )
+
 
 class Op(Stmt):
     __slots__ = ("mnemonic", "arg")
@@ -64,6 +74,12 @@ class Op(Stmt):
     def __repr__(self) -> str:
         return f"Op({repr(self.mnemonic)}, {repr(self.arg)})"
 
+    def __eq__(self, other) -> bool:
+        return type(self) is type(other) and (
+            self.mnemonic == other.mnemonic and
+            self.arg == other.arg
+        )
+
 
 class Val(Stmt):
     __slots__ = ("val",)
@@ -76,6 +92,11 @@ class Val(Stmt):
 
     def __repr__(self) -> str:
         return f"Val({self.val})"
+
+    def __eq__(self, other) -> bool:
+        return type(self) is type(other) and (
+            self.val == other.val
+        )
 
 
 class Parser:
