@@ -2,6 +2,11 @@ from typing import TextIO, Iterator
 
 
 def _char_type(c: str) -> int:
+    """
+    Helper function for the low-level tokenizer.  All that matters is that this
+    function outputs values that are considered different by the equality
+    operator for different character types.
+    """
     if c.isspace():
         return 0
     elif c == ":":
@@ -12,7 +17,7 @@ def _char_type(c: str) -> int:
 
 def tokenize(buf: str) -> Iterator[str]:
     """
-    Split a string into alternating regions of whitespace and non-whitespace.
+    Split a string into regions of differing character types.
     """
     if len(buf) == 0:
         return
