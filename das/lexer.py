@@ -41,12 +41,11 @@ def tokenize(s: str, *, split_f: Callable[[str], Any] = _char_type) -> Iterator[
 
 
 class Token:
-    __slots__ = ("text", "start", "end", "line", "line_start", "line_num", "col")
+    __slots__ = ("text", "start", "line", "line_start", "line_num", "col")
 
     text: str
 
     start: int
-    end: int
 
     line: str
     line_start: int
@@ -58,7 +57,6 @@ class Token:
         self,
         text: str,
         start: int,
-        end: int,
         line: str,
         line_start: int,
         line_num: int,
@@ -67,7 +65,6 @@ class Token:
         self.text = text
 
         self.start = start
-        self.end = end
 
         self.line = line
         self.line_start = line_start
@@ -80,7 +77,6 @@ class Token:
             "Token("
             f"{repr(self.text)}, "
             f"{self.start}, "
-            f"{self.end}, "
             f"{repr(self.line)}, "
             f"{self.line_start}, "
             f"{self.line_num}, "
@@ -100,7 +96,6 @@ class Token:
         return type(self) is type(other) and (
             self.text == other.text
             and self.start == other.start
-            and self.end == other.end
             and self.line == other.line
             and self.line_start == other.line_start
             and self.line_num == other.line_num
@@ -149,7 +144,6 @@ class Lexer:
                     yield Token(
                         "",
                         self.pos,
-                        self.pos,
                         "",
                         self.pos,
                         self.line_num + 1,
@@ -178,7 +172,6 @@ class Lexer:
                 yield Token(
                     part,
                     self.pos + col,
-                    self.pos + col + len(part),
                     line,
                     self.pos,
                     self.line_num,
@@ -191,7 +184,6 @@ class Lexer:
             yield Token(
                 "\n",
                 self.pos + len(line) - 1,
-                self.pos + len(line),
                 line,
                 self.pos,
                 self.line_num,

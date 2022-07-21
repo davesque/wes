@@ -15,11 +15,7 @@ class RenderedError(ParseError):
         self.tok = tok
 
     def render(self) -> str:
-        start = self.tok.start
-        end = self.tok.end
-        col = self.tok.col
-
-        marker_str = " " * col + "^" * (end - start)
+        marker_str = " " * self.tok.col + "^" * len(self.tok.text)
 
         # fmt:off
         return f"""
