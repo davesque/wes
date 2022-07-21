@@ -17,27 +17,27 @@ def _char_type(c: str) -> int:
         return 2
 
 
-def tokenize(buf: str, *, split_f: Callable[[str], Any] = _char_type) -> Iterator[str]:
+def tokenize(s: str, *, split_f: Callable[[str], Any] = _char_type) -> Iterator[str]:
     """
     Split a string into regions of differing character types.
     """
-    if len(buf) == 0:
+    if len(s) == 0:
         return
 
     last_pos = 0
-    last_type = split_f(buf[0])
+    last_type = split_f(s[0])
     i = 0
 
-    while i < len(buf):
-        curr_type = split_f(buf[i])
+    while i < len(s):
+        curr_type = split_f(s[i])
         if curr_type != last_type:
-            yield buf[last_pos:i]
+            yield s[last_pos:i]
             last_pos = i
 
         last_type = curr_type
         i += 1
 
-    yield buf[last_pos:]
+    yield s[last_pos:]
 
 
 class Token:
