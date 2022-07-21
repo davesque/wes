@@ -1,4 +1,5 @@
 import sys
+from io import StringIO
 from typing import TextIO
 
 from .compiler import Compiler
@@ -19,18 +20,22 @@ def run(in_buf: TextIO, out_buf: TextIO) -> None:
 
 
 def main():  # pragma: no cover
-    try:
-        if len(sys.argv) == 1:
-            run(sys.stdin, sys.stdout)
-        else:
-            if sys.argv[1] == "-h":
-                sys.stderr.write("usage: das <filename> | das < <filename>\n")
-                sys.exit(1)
+    if len(sys.argv) == 1:
+        file_txt = sys.stdin.read()
+        in_buf = StringIO(file_txt)
+    else:
+        if sys.argv[1] == "-h":
+            sys.stderr.write("usage: das <filename> | das < <filename>\n")
+            sys.exit(1)
 
-            with open(sys.argv[1], "r") as f:
-                run(f, sys.stdout)
+        with open(sys.argv[1], "r") as f:
+            file_txt = f.read()
+        in_buf = StringIO(file_txt)
+
+    try:
+        run(in_buf, sys.stdout)
     except RenderedError as e:
-        print(e.render(), file=sys.stderr)
+        print(e.render(file_txt), file=sys.stderr)
         sys.exit(1)
 
 

@@ -41,11 +41,10 @@ def tokenize(s: str, *, split_f: Callable[[str], Any] = _char_type) -> Iterator[
 
 
 class Token:
-    __slots__ = ("text", "line", "line_start", "line_num", "col")
+    __slots__ = ("text", "line_start", "line_num", "col")
 
     text: str
 
-    line: str
     line_start: int
     line_num: int
 
@@ -54,14 +53,12 @@ class Token:
     def __init__(
         self,
         text: str,
-        line: str,
         line_start: int,
         line_num: int,
         col: int,
     ):
         self.text = text
 
-        self.line = line
         self.line_start = line_start
         self.line_num = line_num
 
@@ -71,7 +68,6 @@ class Token:
         return (
             "Token("
             f"{repr(self.text)}, "
-            f"{repr(self.line)}, "
             f"{self.line_start}, "
             f"{self.line_num}, "
             f"{self.col}"
@@ -89,7 +85,6 @@ class Token:
     def __eq__(self, other) -> bool:
         return type(self) is type(other) and (
             self.text == other.text
-            and self.line == other.line
             and self.line_start == other.line_start
             and self.line_num == other.line_num
             and self.col == other.col
@@ -104,6 +99,7 @@ class Lexer:
     __slots__ = ("buf", "line_num", "pos")
 
     buf: TextIO
+
     line_num: int
     pos: int
 
@@ -118,12 +114,13 @@ class Lexer:
         if len(line) == 0:
             raise Eof("eof")
 
+        self.line_num += 1
+
         # we add this here to make some of the tokenization logic for semantic
         # newlines more simple
         if not line.endswith("\n"):
             line += "\n"
 
-        self.line_num += 1
         return line
 
     def __iter__(self) -> Iterator[Token]:
@@ -135,7 +132,6 @@ class Lexer:
                 except Eof:
                     # eof token
                     yield Token(
-                        "",
                         "",
                         self.pos,
                         self.line_num + 1,
@@ -163,7 +159,6 @@ class Lexer:
 
                 yield Token(
                     part,
-                    line,
                     self.pos,
                     self.line_num,
                     col,
@@ -174,7 +169,6 @@ class Lexer:
             # semantic newline token
             yield Token(
                 "\n",
-                line,
                 self.pos,
                 self.line_num,
                 len(line) - 1,
