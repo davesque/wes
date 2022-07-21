@@ -1,4 +1,4 @@
-from .lexer import Token
+from .lexer import Eof, Newline, Text, Token
 
 
 class ParseError(Exception):
@@ -24,7 +24,14 @@ class RenderedError(ParseError):
 
     def render(self, file_txt: str) -> str:
         line = self._get_line(file_txt, self.tok.line_start)
-        marker_str = " " * self.tok.col + "^" * len(self.tok.text)
+
+        if isinstance(self.tok, Text):
+            marker = "^" * len(self.tok.text)
+        elif isinstance(self.tok, (Newline, Eof)):
+            marker = "^"
+        else:  # pragma: no cover
+            raise Exception("invariant")
+        marker_str = " " * self.tok.col + marker
 
         # fmt:off
         return f"""

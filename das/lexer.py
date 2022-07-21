@@ -41,13 +41,34 @@ def tokenize(s: str, *, split_f: Callable[[str], Any] = _char_type) -> Iterator[
 
 
 class Token:
-    __slots__ = ("text", "line_start", "line_num", "col")
-
-    text: str
+    __slots__ = ("line_start", "line_num", "col")
 
     line_start: int
     line_num: int
     col: int
+
+    def __init__(
+        self,
+        line_start: int,
+        line_num: int,
+        col: int,
+    ):
+        self.line_start = line_start
+        self.line_num = line_num
+        self.col = col
+
+    def __eq__(self, other: Any) -> bool:
+        return type(self) is type(other) and (
+            self.line_start == other.line_start
+            and self.line_num == other.line_num
+            and self.col == other.col
+        )
+
+
+class Text(Token):
+    __slots__ = ("text",)
+
+    text: str
 
     def __init__(
         self,
@@ -64,7 +85,7 @@ class Token:
 
     def __repr__(self) -> str:  # pragma: no cover
         return (
-            "Token("
+            "Text("
             f"{repr(self.text)}, "
             f"{self.line_start}, "
             f"{self.line_num}, "
@@ -72,15 +93,7 @@ class Token:
             ")"
         )
 
-    @property
-    def is_newline(self) -> bool:
-        return self.text == "\n"
-
-    @property
-    def is_eof(self) -> bool:
-        return self.text == ""
-
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Any) -> bool:
         return type(self) is type(other) and (
             self.text == other.text
             and self.line_start == other.line_start
@@ -89,7 +102,17 @@ class Token:
         )
 
 
-class Eof(Exception):
+class Newline(Token):
+    def __repr__(self) -> str:  # pragma: no cover
+        return f"Newline({self.line_start}, {self.line_num}, {self.col})"
+
+
+class Eof(Token):
+    def __repr__(self) -> str:  # pragma: no cover
+        return f"Eof({self.line_start}, {self.line_num}, {self.col})"
+
+
+class BufferEof(Exception):
     pass
 
 
@@ -109,10 +132,11 @@ class Lexer:
 
     def get_line(self) -> str:
         line = self.buf.readline()
-        if len(line) == 0:
-            raise Eof("eof")
-
         self.line_num += 1
+
+        if len(line) == 0:
+            raise BufferEof("eof")
+
         return line
 
     def __iter__(self) -> Iterator[Token]:
@@ -121,9 +145,9 @@ class Lexer:
             while True:
                 try:
                     line = self.get_line()
-                except Eof:
+                except BufferEof:
                     # eof token
-                    yield Token("", self.pos, self.line_num + 1, 0)
+                    yield Eof(self.pos, self.line_num, 0)
                     return
 
                 stripped = line.strip()
@@ -144,14 +168,15 @@ class Lexer:
                     # line.
                     break
 
-                yield Token(part, self.pos, self.line_num, col)
+                yield Text(part, self.pos, self.line_num, col)
 
                 col += len(part)
 
             # semantic newline token
-            if line[-1] == "\n":
-                yield Token("\n", self.pos, self.line_num, len(line) - 1)
-            else:
-                yield Token("\n", self.pos, self.line_num, len(line))
+            yield Newline(
+                self.pos,
+                self.line_num,
+                len(line) - 1 if line[-1] == "\n" else len(line),
+            )
 
             self.pos += len(line)

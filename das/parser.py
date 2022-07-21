@@ -4,7 +4,7 @@ import re
 from typing import Iterator, List, Optional, Union
 
 from .exceptions import EndOfTokens, RenderedError
-from .lexer import Lexer, Token
+from .lexer import Eof, Lexer, Newline, Text, Token
 from .utils import str_to_int
 
 NAME_RE = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
@@ -14,7 +14,7 @@ VAL_RE = re.compile(r"^(0b[01]+|0o[0-7]+|[0-9]+|0x[a-fA-F0-9]+)$")
 class Node:
     __slots__ = ("toks",)
 
-    toks: List[Token]  # type: ignore
+    toks: List[Text]  # type: ignore
 
 
 class File(Node):
@@ -45,7 +45,7 @@ class Label(Stmt):
 
     name: str
 
-    def __init__(self, name: str, toks: List[Token]):
+    def __init__(self, name: str, toks: List[Text]):
         self.name = name
         self.toks = toks
 
@@ -62,7 +62,7 @@ class Op(Stmt):
     mnemonic: str
     arg: Union[str, int, None]
 
-    def __init__(self, mnemonic: str, arg: Union[str, int, None], toks: List[Token]):
+    def __init__(self, mnemonic: str, arg: Union[str, int, None], toks: List[Text]):
         self.mnemonic = mnemonic
         self.arg = arg
         self.toks = toks
@@ -81,7 +81,7 @@ class Val(Stmt):
 
     val: int
 
-    def __init__(self, val: int, tok: Token):
+    def __init__(self, val: int, tok: Text):
         self.val = val
         self.toks = [tok]
 
@@ -90,6 +90,12 @@ class Val(Stmt):
 
     def __eq__(self, other) -> bool:
         return type(self) is type(other) and (self.val == other.val)
+
+
+def _require_text(tok: Token, msg: str) -> Text:
+    if not isinstance(tok, Text):  # pragma: no cover
+        raise RenderedError(msg, tok)
+    return tok
 
 
 class Parser:
@@ -152,7 +158,7 @@ class Parser:
                 return label
 
             # consume a newline if one exists
-            if tok.is_newline:
+            if isinstance(tok, Newline):
                 self.move(1)
 
             return label
@@ -167,10 +173,13 @@ class Parser:
         except EndOfTokens:
             return None
 
-        if colon.text != ":":
+        if not isinstance(colon, Text) or colon.text != ":":
             return None
 
         self.move(2)
+
+        name = _require_text(name, "expected a valid name")
+
         return Label(name.text, [name, colon])
 
     def parse_nullary_or_val(self) -> Union[Op, Val, None]:
@@ -179,10 +188,12 @@ class Parser:
         except EndOfTokens:
             return None
 
-        if not newline.is_newline:
+        if not isinstance(newline, Newline):
             return None
 
         self.move(2)
+
+        name_or_val = _require_text(name_or_val, "expected a valid name or value")
 
         if NAME_RE.match(name_or_val.text):
             return Op(name_or_val.text, None, [name_or_val])
@@ -202,11 +213,14 @@ class Parser:
 
         self.move(3)
 
+        mnemonic = _require_text(mnemonic, "expected a valid name")
+        name_or_val = _require_text(name_or_val, "expected a valid name or value")
+
         if not NAME_RE.match(mnemonic.text):
             raise RenderedError(
                 f"{repr(mnemonic.text)} is not a valid mnemonic", mnemonic
             )
-        if not newline.is_newline:
+        if not isinstance(newline, Newline):
             raise RenderedError("expected end of line", newline)
 
         if VAL_RE.match(name_or_val.text):
@@ -222,5 +236,5 @@ class Parser:
 
     def parse_eof(self) -> None:
         tok = self.get()
-        if not tok.is_eof:  # pragma: no cover
+        if not isinstance(tok, Eof):  # pragma: no cover
             raise RenderedError("expected end of file", tok)
