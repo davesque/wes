@@ -113,12 +113,6 @@ class Lexer:
             raise Eof("eof")
 
         self.line_num += 1
-
-        # we add this here to make some of the tokenization logic for semantic
-        # newlines more simple
-        if not line.endswith("\n"):
-            line += "\n"
-
         return line
 
     def __iter__(self) -> Iterator[Token]:
@@ -155,6 +149,9 @@ class Lexer:
                 col += len(part)
 
             # semantic newline token
-            yield Token("\n", self.pos, self.line_num, len(line) - 1)
+            if line[-1] == "\n":
+                yield Token("\n", self.pos, self.line_num, len(line) - 1)
+            else:
+                yield Token("\n", self.pos, self.line_num, len(line))
 
             self.pos += len(line)
