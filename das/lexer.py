@@ -47,7 +47,6 @@ class Token:
 
     line_start: int
     line_num: int
-
     col: int
 
     def __init__(
@@ -61,7 +60,6 @@ class Token:
 
         self.line_start = line_start
         self.line_num = line_num
-
         self.col = col
 
     def __repr__(self) -> str:  # pragma: no cover
@@ -131,12 +129,7 @@ class Lexer:
                     line = self.get_line()
                 except Eof:
                     # eof token
-                    yield Token(
-                        "",
-                        self.pos,
-                        self.line_num + 1,
-                        0,
-                    )
+                    yield Token("", self.pos, self.line_num + 1, 0)
                     return
 
                 stripped = line.strip()
@@ -157,21 +150,11 @@ class Lexer:
                     # line.
                     break
 
-                yield Token(
-                    part,
-                    self.pos,
-                    self.line_num,
-                    col,
-                )
+                yield Token(part, self.pos, self.line_num, col)
 
                 col += len(part)
 
             # semantic newline token
-            yield Token(
-                "\n",
-                self.pos,
-                self.line_num,
-                len(line) - 1,
-            )
+            yield Token("\n", self.pos, self.line_num, len(line) - 1)
 
             self.pos += len(line)
