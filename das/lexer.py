@@ -41,11 +41,9 @@ def tokenize(s: str, *, split_f: Callable[[str], Any] = _char_type) -> Iterator[
 
 
 class Token:
-    __slots__ = ("text", "start", "line", "line_start", "line_num", "col")
+    __slots__ = ("text", "line", "line_start", "line_num", "col")
 
     text: str
-
-    start: int
 
     line: str
     line_start: int
@@ -56,15 +54,12 @@ class Token:
     def __init__(
         self,
         text: str,
-        start: int,
         line: str,
         line_start: int,
         line_num: int,
         col: int,
     ):
         self.text = text
-
-        self.start = start
 
         self.line = line
         self.line_start = line_start
@@ -76,7 +71,6 @@ class Token:
         return (
             "Token("
             f"{repr(self.text)}, "
-            f"{self.start}, "
             f"{repr(self.line)}, "
             f"{self.line_start}, "
             f"{self.line_num}, "
@@ -95,7 +89,6 @@ class Token:
     def __eq__(self, other) -> bool:
         return type(self) is type(other) and (
             self.text == other.text
-            and self.start == other.start
             and self.line == other.line
             and self.line_start == other.line_start
             and self.line_num == other.line_num
@@ -143,7 +136,6 @@ class Lexer:
                     # eof token
                     yield Token(
                         "",
-                        self.pos,
                         "",
                         self.pos,
                         self.line_num + 1,
@@ -171,7 +163,6 @@ class Lexer:
 
                 yield Token(
                     part,
-                    self.pos + col,
                     line,
                     self.pos,
                     self.line_num,
@@ -183,7 +174,6 @@ class Lexer:
             # semantic newline token
             yield Token(
                 "\n",
-                self.pos + len(line) - 1,
                 line,
                 self.pos,
                 self.line_num,
