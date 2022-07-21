@@ -1,4 +1,4 @@
-from typing import Iterator, TextIO
+from typing import Any, Callable, Iterator, TextIO
 
 COMMENT_CHR = ";"
 
@@ -17,7 +17,7 @@ def _char_type(c: str) -> int:
         return 2
 
 
-def tokenize(buf: str) -> Iterator[str]:
+def tokenize(buf: str, *, split_f: Callable[[str], Any] = _char_type) -> Iterator[str]:
     """
     Split a string into regions of differing character types.
     """
@@ -25,11 +25,11 @@ def tokenize(buf: str) -> Iterator[str]:
         return
 
     last_pos = 0
-    last_type = _char_type(buf[0])
+    last_type = split_f(buf[0])
     i = 0
 
     while i < len(buf):
-        curr_type = _char_type(buf[i])
+        curr_type = split_f(buf[i])
         if curr_type != last_type:
             yield buf[last_pos:i]
             last_pos = i
