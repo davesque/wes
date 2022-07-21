@@ -50,21 +50,21 @@ das examples/count.asm
 The best way to highlight the features is probably just to take a look at an
 example program:
 ```asm
-# Counts from 42 to 256 (zero really in 8 bits), then down from 255 to 1
-# before halting
+; Counts from 42 to 256 (zero really in 8 bits), then down from 255 to 1
+; before halting
 
 lda init
 
 count_up:
   out
   add incr
-  jc count_down  # jump to "count_down" if we overflowed
+  jc count_down  ; jump to "count_down" if we overflowed
   jmp count_up
 
 count_down:
   out
   sub incr
-  jz end         # jump to "end" if we hit zero
+  jz end         ; jump to "end" if we hit zero
   jmp count_down
 
 end: hlt
@@ -76,7 +76,7 @@ incr: 1
 For those of you who've followed Ben's 8-bit computer build tutorial, the above
 program might look sort of familiar.  The general idea is that any line is
 either an operation or a literal value.  Also, any line (blank or otherwise)
-can be labeled.  Comments are also supported and begin with the "#" character.
+can be labeled.  Comments are also supported and begin with the ";" character.
 Let's go into more detail below.
 
 ### Section and data labels
@@ -100,27 +100,27 @@ literal value of 42 (in binary) is output by the compiler.
 The compiler actually supports 4 different number formats.  We could have
 defined the "init" value in all of the following ways:
 ```asm
-init: 0b101010  # binary
-init: 0o52      # octal
-init: 42        # decimal
-init: 0x2a      # hexadecimal
+init: 0b101010  ; binary
+init: 0o52      ; octal
+init: 42        ; decimal
+init: 0x2a      ; hexadecimal
 ```
 
 In fact, we could have defined the whole program like this:
 ```asm
-0b00011010       # lda init
+0b00011010       ; lda init
 
 count_up:
-  0b11100000     # out
-  0b00101011     # add incr
-  0b01110101     # jc count_down
-  0b01100001     # jmp count_up
+  0b11100000     ; out
+  0b00101011     ; add incr
+  0b01110101     ; jc count_down
+  0b01100001     ; jmp count_up
 
 count_down:
-  0b11100000     # out
-  0b00111011     # sub incr
-  0b10001001     # jz end
-  0b01100101     # jmp count_down
+  0b11100000     ; out
+  0b00111011     ; sub incr
+  0b10001001     ; jz end
+  0b01100101     ; jmp count_down
 
 end:
   0b11110000

@@ -1,4 +1,4 @@
-# Counts up in fibonacci numbers forever (with a lot of overflow)
+; Counts up in fibonacci numbers forever (with a lot of overflow)
 
 loop:
   lda a

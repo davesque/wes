@@ -1,5 +1,7 @@
 from typing import Iterator, TextIO
 
+COMMENT_CHR = ";"
+
 
 def _char_type(c: str) -> int:
     """
@@ -156,7 +158,7 @@ class Lexer:
                     return
 
                 stripped = line.strip()
-                is_empty_line = len(stripped) == 0 or stripped.startswith("#")
+                is_empty_line = len(stripped) == 0 or stripped.startswith(COMMENT_CHR)
 
                 if not is_empty_line:
                     break
@@ -168,7 +170,7 @@ class Lexer:
                 if part.isspace():
                     col += len(part)
                     continue
-                elif part.startswith("#"):
+                elif part.startswith(COMMENT_CHR):
                     # We've hit a comment.  No more tokens coming from this
                     # line.
                     break

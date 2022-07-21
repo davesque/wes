@@ -39,17 +39,17 @@ def test_token_is_eof() -> None:
 def test_lexer_simple() -> None:
     buf = StringIO(
         """
-# test comment
+; test comment
     lda 1
-42  # test comment
+42  ; test comment
 """
     )
     assert list(Lexer(buf)) == [
         Token("lda", 20, 23, "    lda 1\n", 16, 3, 4),
         Token("1", 24, 25, "    lda 1\n", 16, 3, 8),
         Token("\n", 25, 26, "    lda 1\n", 16, 3, 9),
-        Token("42", 26, 28, "42  # test comment\n", 26, 4, 0),
-        Token("\n", 44, 45, "42  # test comment\n", 26, 4, 18),
+        Token("42", 26, 28, "42  ; test comment\n", 26, 4, 0),
+        Token("\n", 44, 45, "42  ; test comment\n", 26, 4, 18),
         Token("", 45, 45, "", 45, 5, 0),
     ]
 
@@ -57,21 +57,21 @@ def test_lexer_simple() -> None:
 def test_lexer_complex() -> None:
     buf = StringIO(
         """
-# Counts from 42 to 256 (zero really in 8 bits), then down from 255 to 1
-# before halting
+; Counts from 42 to 256 (zero really in 8 bits), then down from 255 to 1
+; before halting
 
 lda init
 
 count_up:
   out
   add incr
-  jc count_down  # jump to "count_down" if we overflowed
+  jc count_down  ; jump to "count_down" if we overflowed
   jmp count_up
 
 count_down:
   out
   sub incr
-  jz end         # jump to "end" if we hit zero
+  jz end         ; jump to "end" if we hit zero
   jmp count_down
 
 end: hlt
@@ -96,7 +96,7 @@ incr: 1
             "jc",
             131,
             133,
-            '  jc count_down  # jump to "count_down" if we overflowed\n',
+            '  jc count_down  ; jump to "count_down" if we overflowed\n',
             129,
             10,
             2,
@@ -105,7 +105,7 @@ incr: 1
             "count_down",
             134,
             144,
-            '  jc count_down  # jump to "count_down" if we overflowed\n',
+            '  jc count_down  ; jump to "count_down" if we overflowed\n',
             129,
             10,
             5,
@@ -114,7 +114,7 @@ incr: 1
             "\n",
             185,
             186,
-            '  jc count_down  # jump to "count_down" if we overflowed\n',
+            '  jc count_down  ; jump to "count_down" if we overflowed\n',
             129,
             10,
             56,
@@ -134,7 +134,7 @@ incr: 1
             "jz",
             233,
             235,
-            '  jz end         # jump to "end" if we hit zero\n',
+            '  jz end         ; jump to "end" if we hit zero\n',
             231,
             16,
             2,
@@ -143,7 +143,7 @@ incr: 1
             "end",
             236,
             239,
-            '  jz end         # jump to "end" if we hit zero\n',
+            '  jz end         ; jump to "end" if we hit zero\n',
             231,
             16,
             5,
@@ -152,7 +152,7 @@ incr: 1
             "\n",
             278,
             279,
-            '  jz end         # jump to "end" if we hit zero\n',
+            '  jz end         ; jump to "end" if we hit zero\n',
             231,
             16,
             47,
