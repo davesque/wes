@@ -19,6 +19,8 @@ class RenderedError(ParseError):
         line_end = file_txt.find("\n", line_start)
         if line_end == -1:
             line_end = len(file_txt)
+        else:
+            line_end += 1
 
         return file_txt[line_start:line_end]
 
@@ -32,6 +34,12 @@ class RenderedError(ParseError):
         else:  # pragma: no cover
             raise Exception("invariant")
         marker_str = " " * self.tok.col + marker
+
+        if line.endswith("\n") and isinstance(self.tok, Eof):
+            line = line.strip() + r"\n"
+            marker_str = " " + marker_str
+        else:
+            line = line.strip()
 
         # fmt:off
         return f"""

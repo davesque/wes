@@ -132,22 +132,32 @@ class Lexer:
 
     def get_line(self) -> str:
         line = self.buf.readline()
-        self.line_num += 1
-
         if len(line) == 0:
             raise BufferEof("eof")
 
+        self.line_num += 1
         return line
 
     def __iter__(self) -> Iterator[Token]:
+        line = None
+
         while True:
             # skip over empty lines and comment lines
             while True:
                 try:
                     line = self.get_line()
                 except BufferEof:
-                    # eof token
-                    yield Eof(self.pos, self.line_num, 0)
+                    if line is None:
+                        line = ""
+
+                    yield Eof(
+                        self.pos - len(line),
+                        self.line_num,
+                        # `line` here is the previous line since the expression
+                        # to the right of the assignment operator raised an
+                        # exception
+                        len(line),
+                    )
                     return
 
                 stripped = line.strip()

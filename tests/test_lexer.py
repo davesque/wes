@@ -20,6 +20,14 @@ def test_tokenize() -> None:
     ]
 
 
+def test_lexer_empty() -> None:
+    buf = StringIO("")
+    assert list(Lexer(buf)) == [Eof(0, 0, 0)]
+
+    buf = StringIO("\n")
+    assert list(Lexer(buf)) == [Eof(0, 1, 1)]
+
+
 def test_lexer_simple() -> None:
     buf = StringIO(
         """
@@ -34,7 +42,7 @@ def test_lexer_simple() -> None:
         Newline(16, 3, 9),
         Text("42", 26, 4, 0),
         Newline(26, 4, 18),
-        Eof(45, 5, 0),
+        Eof(26, 4, 19),
     ]
 
 
@@ -108,5 +116,5 @@ incr: 1
         Text(":", 316, 22, 4),
         Text("1", 316, 22, 6),
         Newline(316, 22, 7),
-        Eof(324, 23, 0),
+        Eof(316, 22, 8),
     ]
