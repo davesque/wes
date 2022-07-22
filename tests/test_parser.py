@@ -146,3 +146,23 @@ def test_parser_from_buf() -> None:
     parser = Parser.from_buf(buf)
 
     assert parser.parse_file() == File([Op("foo", None, [])])
+
+
+@pytest.mark.parametrize(
+    "int_repr,int_val",
+    (
+        ("1_000_000_000", 1_000_000_000),
+        ("0b1000_0000", 0b1000_0000),
+        ("0o52_52", 0o52_52),
+        ("0x52_52", 0x52_52),
+    )
+)
+def test_parse_underscore_digit_grouping(int_repr: str, int_val: int) -> None:
+    parser = Parser.from_str(int_repr)
+    file = parser.parse_file()
+
+    assert file == File(
+        [
+            Val(int_val, None),  # type: ignore
+        ]
+    )
