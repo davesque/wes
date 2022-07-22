@@ -25,8 +25,6 @@ class Compiler:
         self.file = file
         self.labels = {}
 
-        self.find_labels()
-
     @classmethod
     def from_str(cls, text: str) -> Compiler:
         parser = Parser.from_str(text)
@@ -58,6 +56,8 @@ class Compiler:
                 loc += 1
 
     def __iter__(self) -> Iterator[int]:
+        self.find_labels()
+
         for stmt in self.file.stmts:
             if isinstance(stmt, Op):
                 code, arity = self.OPS[stmt.mnemonic]

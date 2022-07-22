@@ -113,7 +113,7 @@ too_big
     file = parser.parse_file()
 
     with pytest.raises(RenderedError) as excinfo:
-        Compiler(file)
+        list(Compiler(file))
 
     assert "statement makes program too large" in excinfo.value.msg
 
@@ -130,7 +130,7 @@ foo: 1
     file = parser.parse_file()
 
     with pytest.raises(RenderedError) as excinfo:
-        Compiler(file)
+        list(Compiler(file))
 
     assert "redefinition of label" in excinfo.value.msg
 
