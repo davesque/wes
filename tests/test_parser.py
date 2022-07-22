@@ -1,3 +1,5 @@
+from io import StringIO
+
 import pytest
 
 from das.exceptions import RenderedError
@@ -137,3 +139,10 @@ def test_parse_unary_invalid_op_arg() -> None:
         parser.parse_file()
 
     assert "is not a valid label or integer" in excinfo.value.msg
+
+
+def test_parser_from_buf() -> None:
+    buf = StringIO("foo")
+    parser = Parser.from_buf(buf)
+
+    assert parser.parse_file() == File([Op("foo", None, [])])

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import Iterator, List, Optional, Union
+from typing import Iterator, List, Optional, TextIO, Union
 
 from .exceptions import EndOfTokens, RenderedError
 from .lexer import Eof, Lexer, Newline, Text, Token
@@ -113,6 +113,10 @@ class Parser:
     @classmethod
     def from_str(cls, text: str) -> Parser:
         return cls(Lexer.from_str(text))
+
+    @classmethod
+    def from_buf(cls, buf: TextIO) -> Parser:
+        return cls(Lexer(buf))
 
     def put(self, tok: Token) -> None:
         self.buf.append(tok)
