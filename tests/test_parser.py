@@ -1,14 +1,11 @@
-from io import StringIO
-
 import pytest
 
 from das.exceptions import RenderedError
-from das.lexer import Lexer
 from das.parser import File, Label, Op, Parser, Val
 
 
 def test_parse_count() -> None:
-    buf = StringIO(
+    parser = Parser.from_str(
         """
 ; Counts from 42 to 256 (zero really in 8 bits), then down from 255 to 1
 ; before halting
@@ -33,9 +30,6 @@ init: 42
 incr: 1
 """
     )
-    lexer = Lexer(buf)
-    parser = Parser(lexer)
-
     file = parser.parse_file()
     assert file == File(
         [
@@ -61,7 +55,7 @@ incr: 1
 
 
 def test_parse_fib() -> None:
-    buf = StringIO(
+    parser = Parser.from_str(
         """
 ; Counts up in fibonacci numbers forever (with a lot of overflow)
 
@@ -82,9 +76,6 @@ a: 1
 b: 1
 """
     )
-    lexer = Lexer(buf)
-    parser = Parser(lexer)
-
     file = parser.parse_file()
     assert file == File(
         [
@@ -107,16 +98,13 @@ b: 1
 
 
 def test_parse_unary_with_val() -> None:
-    lexer = Lexer(StringIO("lda 1"))
-    parser = Parser(lexer)
-
+    parser = Parser.from_str("lda 1")
     file = parser.parse_file()
     assert file == File([Op("lda", 1, [])])
 
 
 def test_parse_nullary_or_val_invalid() -> None:
-    lexer = Lexer(StringIO("!!!"))
-    parser = Parser(lexer)
+    parser = Parser.from_str("!!!")
 
     with pytest.raises(RenderedError) as excinfo:
         parser.parse_file()
@@ -125,8 +113,7 @@ def test_parse_nullary_or_val_invalid() -> None:
 
 
 def test_parse_unary_invalid_mnemonic() -> None:
-    lexer = Lexer(StringIO("!!! blah"))
-    parser = Parser(lexer)
+    parser = Parser.from_str("!!! blah")
 
     with pytest.raises(RenderedError) as excinfo:
         parser.parse_file()
@@ -135,8 +122,7 @@ def test_parse_unary_invalid_mnemonic() -> None:
 
 
 def test_parse_unary_expected_end_of_line() -> None:
-    lexer = Lexer(StringIO("foo bar baz"))
-    parser = Parser(lexer)
+    parser = Parser.from_str("foo bar baz")
 
     with pytest.raises(RenderedError) as excinfo:
         parser.parse_file()
@@ -145,8 +131,7 @@ def test_parse_unary_expected_end_of_line() -> None:
 
 
 def test_parse_unary_invalid_op_arg() -> None:
-    lexer = Lexer(StringIO("blah !!!"))
-    parser = Parser(lexer)
+    parser = Parser.from_str("blah !!!")
 
     with pytest.raises(RenderedError) as excinfo:
         parser.parse_file()

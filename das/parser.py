@@ -110,6 +110,10 @@ class Parser:
         self.tokens = iter(lexer)
         self.buf = []
 
+    @classmethod
+    def from_str(cls, text: str) -> Parser:
+        return cls(Lexer.from_str(text))
+
     def put(self, tok: Token) -> None:
         self.buf.append(tok)
 
