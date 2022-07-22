@@ -213,3 +213,11 @@ def test_compile_big_bare_literal() -> None:
         list(Compiler(file))
 
     assert "is too large" in excinfo.value.msg
+
+
+def test_compiler_from_str() -> None:
+    assert list(Compiler.from_str("255")) == [255]
+
+
+def test_compiler_from_buf() -> None:
+    assert list(Compiler.from_buf(StringIO("255"))) == [255]

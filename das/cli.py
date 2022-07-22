@@ -4,16 +4,10 @@ from typing import TextIO
 
 from .compiler import Compiler
 from .exceptions import RenderedError
-from .lexer import Lexer
-from .parser import Parser
 
 
 def run(in_buf: TextIO, out_buf: TextIO) -> None:
-    lexer = Lexer(in_buf)
-    parser = Parser(lexer)
-
-    file = parser.parse_file()
-    compiler = Compiler(file)
+    compiler = Compiler.from_buf(in_buf)
 
     for i, code in enumerate(compiler):
         print(f"{i:04b}: {code >> 4:04b} {code & 15:04b}", file=out_buf)

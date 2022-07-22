@@ -1,7 +1,9 @@
-from typing import Iterator
+from __future__ import annotations
+
+from typing import Iterator, TextIO
 
 from .exceptions import RenderedError
-from .parser import File, Label, Op, Val
+from .parser import File, Label, Op, Parser, Val
 
 
 class Compiler:
@@ -24,6 +26,16 @@ class Compiler:
         self.labels = {}
 
         self.find_labels()
+
+    @classmethod
+    def from_str(cls, text: str) -> Compiler:
+        parser = Parser.from_str(text)
+        return cls(parser.parse_file())
+
+    @classmethod
+    def from_buf(cls, buf: TextIO) -> Compiler:
+        parser = Parser.from_buf(buf)
+        return cls(parser.parse_file())
 
     def find_labels(self) -> None:
         loc = 0
