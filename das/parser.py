@@ -112,11 +112,13 @@ class Parser:
 
     @classmethod
     def from_str(cls, text: str) -> Parser:
-        return cls(Lexer.from_str(text))
+        lexer = Lexer.from_str(text)
+        return cls(lexer)
 
     @classmethod
     def from_buf(cls, buf: TextIO) -> Parser:
-        return cls(Lexer(buf))
+        lexer = Lexer(buf)
+        return cls(lexer)
 
     def put(self, tok: Token) -> None:
         self.buf.append(tok)

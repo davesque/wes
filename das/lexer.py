@@ -135,7 +135,8 @@ class Lexer:
 
     @classmethod
     def from_str(cls, text: str) -> Lexer:
-        return cls(StringIO(text))
+        buf = StringIO(text)
+        return cls(buf)
 
     def get_line(self) -> str:
         line = self.buf.readline()

@@ -30,12 +30,16 @@ class Compiler:
     @classmethod
     def from_str(cls, text: str) -> Compiler:
         parser = Parser.from_str(text)
-        return cls(parser.parse_file())
+        file = parser.parse_file()
+
+        return cls(file)
 
     @classmethod
     def from_buf(cls, buf: TextIO) -> Compiler:
         parser = Parser.from_buf(buf)
-        return cls(parser.parse_file())
+        file = parser.parse_file()
+
+        return cls(file)
 
     def find_labels(self) -> None:
         loc = 0
