@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from io import StringIO
 from typing import Any, Callable, Iterator, TextIO
 
 COMMENT_CHR = ";"
@@ -129,6 +132,10 @@ class Lexer:
 
         self.line_num = 0
         self.pos = 0
+
+    @classmethod
+    def from_str(cls, text: str) -> Lexer:
+        return cls(StringIO(text))
 
     def get_line(self) -> str:
         line = self.buf.readline()
