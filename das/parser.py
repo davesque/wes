@@ -99,15 +99,15 @@ def _require_text(tok: Token, msg: str) -> Text:
 
 
 class Parser:
-    __slots__ = ("lex", "tokens", "buf")
+    __slots__ = ("lexer", "tokens", "buf")
 
-    lex: Lexer
+    lexer: Lexer
     tokens: Iterator[Token]
     buf: List[Token]
 
-    def __init__(self, lex: Lexer):
-        self.lex = lex
-        self.tokens = iter(lex)
+    def __init__(self, lexer: Lexer):
+        self.lexer = lexer
+        self.tokens = iter(lexer)
         self.buf = []
 
     def put(self, tok: Token) -> None:
