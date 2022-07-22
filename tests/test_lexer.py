@@ -1,5 +1,3 @@
-from io import StringIO
-
 from das.lexer import Eof, Lexer, Newline, Text, tokenize
 
 
@@ -21,22 +19,19 @@ def test_tokenize() -> None:
 
 
 def test_lexer_empty() -> None:
-    buf = StringIO("")
-    assert list(Lexer(buf)) == [Eof(0, 0, 0)]
-
-    buf = StringIO("\n")
-    assert list(Lexer(buf)) == [Eof(0, 1, 1)]
+    assert list(Lexer.from_str("")) == [Eof(0, 0, 0)]
+    assert list(Lexer.from_str("\n")) == [Eof(0, 1, 1)]
 
 
 def test_lexer_simple() -> None:
-    buf = StringIO(
+    lexer = Lexer.from_str(
         """
 ; test comment
     lda 1
 42  ; test comment
 """
     )
-    assert list(Lexer(buf)) == [
+    assert list(lexer) == [
         Text("lda", 16, 3, 4),
         Text("1", 16, 3, 8),
         Newline(16, 3, 9),
@@ -47,7 +42,7 @@ def test_lexer_simple() -> None:
 
 
 def test_lexer_complex() -> None:
-    buf = StringIO(
+    lexer = Lexer.from_str(
         """
 ; Counts from 42 to 256 (zero really in 8 bits), then down from 255 to 1
 ; before halting
@@ -72,7 +67,7 @@ init: 42
 incr: 1
 """
     )
-    assert list(Lexer(buf)) == [
+    assert list(lexer) == [
         Text("lda", 92, 5, 0),
         Text("init", 92, 5, 4),
         Newline(92, 5, 8),
