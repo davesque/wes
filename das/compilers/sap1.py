@@ -43,12 +43,7 @@ class Sap1(Compiler):
                     )
 
                 if isinstance(stmt.arg, str):
-                    if stmt.arg not in self.labels:
-                        raise RenderedError(
-                            f"unrecognized label '{stmt.arg}'", stmt.toks[1]
-                        )
-
-                    loc = self.labels[stmt.arg]
+                    loc = self.resolve_label(stmt.arg, stmt.toks[1])
                     yield (code << 4) + loc
                 elif isinstance(stmt.arg, int):
                     if stmt.arg > self.max_addr:

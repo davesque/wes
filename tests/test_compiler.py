@@ -24,6 +24,25 @@ two: 0x44
     assert compiler.labels["two"] == 2
 
 
+def test_compiler_resolve_label() -> None:
+    compiler = Compiler.from_str(
+        """
+lda meaning_of_life
+forty_two: 0x42
+"""
+    )
+    compiler.find_labels()
+
+    bad_label_tok = compiler.file.stmts[0].toks[1]
+    with pytest.raises(RenderedError) as excinfo:
+        compiler.resolve_label("meaning_of_life", bad_label_tok)
+    assert excinfo.value.msg == "unrecognized label 'meaning_of_life'"
+    assert excinfo.value.toks == [bad_label_tok]
+
+    good_label_tok = compiler.file.stmts[1].toks[1]
+    assert compiler.resolve_label("forty_two", good_label_tok) == 1
+
+
 def test_find_labels_too_large() -> None:
     compiler = Sap1.from_str(
         """

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Dict, TextIO, Type, TypeVar
 
 from .exceptions import RenderedError
+from .lexer import Text
 from .parser import File, Label, Parser
 
 T = TypeVar("T")
@@ -47,3 +48,9 @@ class Compiler:
                 self.labels[stmt.name] = loc
             else:
                 loc += 1
+
+    def resolve_label(self, label: str, label_tok: Text) -> int:
+        try:
+            return self.labels[label]
+        except KeyError:
+            raise RenderedError(f"unrecognized label '{label}'", label_tok)
