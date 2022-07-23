@@ -9,7 +9,7 @@ T = TypeVar("T")
 
 
 class Compiler:
-    max_addr = 2 ** 64 - 1
+    max_addr = 2**64 - 1
 
     file: File
     labels: Dict[str, int]
