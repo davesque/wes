@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import Iterator, List, Optional, TextIO, Union
+from typing import Iterator, List, Optional, TextIO, Tuple, Union
 
 from .exceptions import EndOfTokens, RenderedError
 from .lexer import Eof, Lexer, Newline, Text, Token
@@ -14,20 +14,22 @@ VAL_RE = re.compile(r"^(0b[01_]+|0o[0-7_]+|[0-9_]+|0x[a-fA-F0-9_]+)$")
 class Node:
     __slots__ = ("toks",)
 
-    toks: List[Text]  # type: ignore
+    toks: Tuple[Text, ...]  # type: ignore
 
 
 class File(Node):
     __slots__ = ("stmts",)
 
-    stmts: List[Stmt]
+    stmts: Tuple[Stmt, ...]
 
-    def __init__(self, stmts: List[Stmt]):
+    def __init__(self, stmts: Tuple[Stmt, ...]):
         self.stmts = stmts
 
-        self.toks = []
+        toks = []
         for stmt in stmts:
-            self.toks.extend(stmt.toks)
+            toks.extend(stmt.toks)
+
+        self.toks = tuple(toks)
 
     def __repr__(self) -> str:  # pragma: no cover
         return f"File({repr(self.stmts)})"
@@ -45,7 +47,7 @@ class Label(Stmt):
 
     name: str
 
-    def __init__(self, name: str, toks: List[Text]):
+    def __init__(self, name: str, toks: Tuple[Text, ...]):
         self.name = name
         self.toks = toks
 
@@ -62,7 +64,9 @@ class Op(Stmt):
     mnemonic: str
     arg: Union[str, int, None]
 
-    def __init__(self, mnemonic: str, arg: Union[str, int, None], toks: List[Text]):
+    def __init__(
+        self, mnemonic: str, arg: Union[str, int, None], toks: Tuple[Text, ...]
+    ):
         self.mnemonic = mnemonic
         self.arg = arg
         self.toks = toks
@@ -81,7 +85,7 @@ class Val(Stmt):
 
     val: int
 
-    def __init__(self, val: int, toks: List[Text]):
+    def __init__(self, val: int, toks: Tuple[Text, ...]):
         self.val = val
         self.toks = toks
 
@@ -158,7 +162,7 @@ class Parser:
 
         self.parse_eof()
 
-        return File(stmts)
+        return File(tuple(stmts))
 
     def parse_stmt(self) -> Optional[Stmt]:
         if label := self.parse_label():
@@ -190,7 +194,7 @@ class Parser:
 
         name = _require_text(name, "expected a valid name")
 
-        return Label(name.text, [name, colon])
+        return Label(name.text, (name, colon))
 
     def parse_nullary_or_val(self) -> Union[Op, Val, None]:
         try:
@@ -206,9 +210,9 @@ class Parser:
         name_or_val = _require_text(name_or_val, "expected a valid name or value")
 
         if NAME_RE.match(name_or_val.text):
-            return Op(name_or_val.text, None, [name_or_val])
+            return Op(name_or_val.text, None, (name_or_val,))
         elif VAL_RE.match(name_or_val.text):
-            return Val(str_to_int(name_or_val.text), [name_or_val])
+            return Val(str_to_int(name_or_val.text), (name_or_val,))
         else:
             raise RenderedError(
                 f"{repr(name_or_val.text)} is not a valid mnemonic or integer",
@@ -242,7 +246,7 @@ class Parser:
                 f"{repr(name_or_val.text)} is not a valid label or integer", name_or_val
             )
 
-        return Op(mnemonic.text, arg, [mnemonic, name_or_val])
+        return Op(mnemonic.text, arg, (mnemonic, name_or_val))
 
     def parse_eof(self) -> None:
         tok = self.get()
