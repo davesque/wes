@@ -3,45 +3,7 @@ from typing import Iterator
 from das.compiler import Compiler
 from das.exceptions import RenderedError
 from das.parser import Op, Val
-
-
-class Instruction:
-    mnemonic: str = None  # type: ignore
-
-    __slots__ = ("compiler", "op")
-
-    compiler: Compiler
-    op: Op
-
-    def __init__(self, compiler: Compiler, op: Op):
-        self.compiler = compiler
-        self.op = op
-
-        self.validate()
-
-    def validate(self) -> None:  # pragma: no cover
-        raise NotImplementedError("must define `validate`")
-
-    def __iter__(self) -> Iterator[int]:  # pragma: no cover
-        raise NotImplementedError("must define `__iter__`")
-
-
-class Nullary(Instruction):
-    def validate(self) -> None:
-        if self.op.arg is not None:
-            raise RenderedError(
-                f"'{self.mnemonic}' instruction takes no argument",
-                self.op.toks,
-            )
-
-
-class Unary(Instruction):
-    def validate(self) -> None:
-        if self.op.arg is None:
-            raise RenderedError(
-                f"'{self.mnemonic}' instruction requires an argument",
-                self.op.toks,
-            )
+from das.instruction import Const, Unary
 
 
 class SapUnary(Unary):
@@ -60,13 +22,6 @@ class SapUnary(Unary):
             yield (self.code << 4) + self.op.arg
         else:  # pragma: no cover
             raise Exception("invariant")
-
-
-class Const(Nullary):
-    output: int = None  # type: ignore
-
-    def __iter__(self) -> Iterator[int]:
-        yield self.output
 
 
 class Nop(Const):
