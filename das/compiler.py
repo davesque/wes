@@ -1,16 +1,20 @@
 from __future__ import annotations
 
-from typing import Dict, TextIO, Type, TypeVar
+from typing import Dict, Iterator, TextIO, Type, TypeVar
 
-from .exceptions import RenderedError
-from .lexer import Text
-from .parser import File, Label, Parser
+from das.exceptions import RenderedError
+from das.instruction import Instruction
+from das.lexer import Text
+from das.parser import File, Label, Op, Parser, Val
 
 T = TypeVar("T")
 
 
 class Compiler:
     max_addr = 2**64 - 1
+    max_val = 2**64 - 1
+
+    instructions: Dict[str, Type[Instruction]] = None  # type: ignore
 
     file: File
     labels: Dict[str, int]
@@ -54,3 +58,26 @@ class Compiler:
             return self.labels[label]
         except KeyError:
             raise RenderedError(f"unrecognized label '{label}'", label_tok)
+
+    def __iter__(self) -> Iterator[int]:
+        self.find_labels()
+
+        for stmt in self.file.stmts:
+            if isinstance(stmt, Op):
+                try:
+                    instruction_cls = self.instructions[stmt.mnemonic]
+                except KeyError:
+                    raise RenderedError(
+                        f"unrecognized instruction '{stmt.mnemonic}'", stmt.toks
+                    )
+
+                inst = instruction_cls(self, stmt)
+                yield from inst
+
+            elif isinstance(stmt, Val):
+                if stmt.val > self.max_val:
+                    raise RenderedError(
+                        f"value '{stmt.toks[0].text}' is too large", stmt.toks[0]
+                    )
+
+                yield stmt.val

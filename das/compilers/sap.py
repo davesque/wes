@@ -3,7 +3,6 @@ from typing import Iterator
 from das.compiler import Compiler
 from das.exceptions import RenderedError
 from das.instruction import Const, Unary
-from das.parser import Op, Val
 
 
 class SapUnary(Unary):
@@ -97,26 +96,3 @@ class SapCompiler(Compiler):
         Out.mnemonic: Out,
         Hlt.mnemonic: Hlt,
     }
-
-    def __iter__(self) -> Iterator[int]:
-        self.find_labels()
-
-        for stmt in self.file.stmts:
-            if isinstance(stmt, Op):
-                try:
-                    instruction_cls = self.instructions[stmt.mnemonic]
-                except KeyError:
-                    raise RenderedError(
-                        f"unrecognized instruction '{stmt.mnemonic}'", stmt.toks
-                    )
-
-                inst = instruction_cls(self, stmt)
-                yield from inst
-
-            elif isinstance(stmt, Val):
-                if stmt.val > self.max_val:
-                    raise RenderedError(
-                        f"value '{stmt.toks[0].text}' is too large", stmt.toks[0]
-                    )
-
-                yield stmt.val
