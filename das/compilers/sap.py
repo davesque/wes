@@ -8,7 +8,7 @@ from das.instruction import Const, Unary
 class SapUnary(Unary):
     code: int = None  # type: ignore
 
-    def __iter__(self) -> Iterator[int]:
+    def encode(self) -> Iterator[int]:
         if isinstance(self.op.arg, str):
             arg = self.compiler.resolve_label(self.op.arg, self.op.toks[1])
         elif isinstance(self.op.arg, int):

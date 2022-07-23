@@ -26,8 +26,8 @@ class Instruction:
     def validate(self) -> None:  # pragma: no cover
         raise NotImplementedError("must define `validate`")
 
-    def __iter__(self) -> Iterator[int]:  # pragma: no cover
-        raise NotImplementedError("must define `__iter__`")
+    def encode(self) -> Iterator[int]:  # pragma: no cover
+        raise NotImplementedError("must define `encode`")
 
 
 class Nullary(Instruction):
@@ -51,5 +51,5 @@ class Unary(Instruction):
 class Const(Nullary):
     output: int = None  # type: ignore
 
-    def __iter__(self) -> Iterator[int]:
+    def encode(self) -> Iterator[int]:
         yield self.output

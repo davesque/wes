@@ -72,7 +72,7 @@ class Compiler:
                     )
 
                 inst = instruction_cls(self, stmt)
-                yield from inst
+                yield from inst.encode()
 
             elif isinstance(stmt, Val):
                 if stmt.val > self.max_val:
