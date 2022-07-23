@@ -3,7 +3,7 @@ from io import StringIO
 import pytest
 
 from das.compiler import Compiler
-from das.compilers.sap1 import SapCompiler
+from das.compilers.sap import SapCompiler
 from das.exceptions import RenderedError
 
 

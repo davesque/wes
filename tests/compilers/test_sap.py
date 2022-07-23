@@ -1,6 +1,6 @@
 import pytest
 
-from das.compilers.sap1 import SapCompiler
+from das.compilers.sap import SapCompiler
 from das.exceptions import RenderedError
 
 

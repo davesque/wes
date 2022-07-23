@@ -2,7 +2,7 @@ import sys
 from io import StringIO
 from typing import TextIO
 
-from das.compilers.sap1 import SapCompiler
+from das.compilers.sap import SapCompiler
 from das.exceptions import RenderedError
 
 
