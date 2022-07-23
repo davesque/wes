@@ -10,3 +10,7 @@ def str_to_int(s: str) -> int:
     base = BASES.get(prefix, 10)
 
     return int(s, base=base)
+
+
+def byte_length(i: int) -> int:
+    return max(1, (i.bit_length() + 7) // 8)
