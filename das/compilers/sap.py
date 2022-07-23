@@ -6,6 +6,7 @@ from das.instruction import Const, Unary
 
 
 class SapUnary(Unary):
+    size = 1  # type: ignore
     code: int = None  # type: ignore
 
     def encode(self) -> Iterator[int]:
