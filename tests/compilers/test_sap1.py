@@ -1,11 +1,11 @@
 import pytest
 
-from das.compilers.sap1 import Sap1
+from das.compilers.sap1 import SapCompiler
 from das.exceptions import RenderedError
 
 
 def test_compile_count() -> None:
-    compiler = Sap1.from_str(
+    compiler = SapCompiler.from_str(
         """
 ; Counts from 42 to 256 (zero really in 8 bits), then down from 255 to 1
 ; before halting
@@ -34,7 +34,7 @@ incr: 1
 
 
 def test_compile_fib() -> None:
-    compiler = Sap1.from_str(
+    compiler = SapCompiler.from_str(
         """
 ; Counts up in fibonacci numbers forever (with a lot of overflow)
 
@@ -59,12 +59,12 @@ b: 1
 
 
 def test_compile_op_with_literal() -> None:
-    compiler = Sap1.from_str("lda 1")
+    compiler = SapCompiler.from_str("lda 1")
     assert list(compiler) == [17]
 
 
 def test_compile_bad_unary_op() -> None:
-    compiler = Sap1.from_str("lda")
+    compiler = SapCompiler.from_str("lda")
     with pytest.raises(RenderedError) as excinfo:
         list(compiler)
 
@@ -72,7 +72,7 @@ def test_compile_bad_unary_op() -> None:
 
 
 def test_compile_bad_nullary_op() -> None:
-    compiler = Sap1.from_str("nop 1")
+    compiler = SapCompiler.from_str("nop 1")
     with pytest.raises(RenderedError) as excinfo:
         list(compiler)
 
@@ -80,7 +80,7 @@ def test_compile_bad_nullary_op() -> None:
 
 
 def test_compile_bad_label() -> None:
-    compiler = Sap1.from_str("lda foo")
+    compiler = SapCompiler.from_str("lda foo")
     with pytest.raises(RenderedError) as excinfo:
         list(compiler)
 
@@ -88,7 +88,7 @@ def test_compile_bad_label() -> None:
 
 
 def test_compile_big_op_arg() -> None:
-    compiler = Sap1.from_str("lda 16")
+    compiler = SapCompiler.from_str("lda 16")
     with pytest.raises(RenderedError) as excinfo:
         list(compiler)
 
@@ -96,7 +96,7 @@ def test_compile_big_op_arg() -> None:
 
 
 def test_compile_big_bare_literal() -> None:
-    compiler = Sap1.from_str("256")
+    compiler = SapCompiler.from_str("256")
     with pytest.raises(RenderedError) as excinfo:
         list(compiler)
 
@@ -104,7 +104,7 @@ def test_compile_big_bare_literal() -> None:
 
 
 def test_compile_unrecognized_instruction() -> None:
-    compiler = Sap1.from_str("foo")
+    compiler = SapCompiler.from_str("foo")
     with pytest.raises(RenderedError) as excinfo:
         list(compiler)
 

@@ -3,16 +3,16 @@ from io import StringIO
 import pytest
 
 from das.compiler import Compiler
-from das.compilers.sap1 import Sap1
+from das.compilers.sap1 import SapCompiler
 from das.exceptions import RenderedError
 
 
 def test_compiler_from_str() -> None:
-    assert list(Sap1.from_str("255")) == [255]
+    assert list(SapCompiler.from_str("255")) == [255]
 
 
 def test_compiler_from_buf() -> None:
-    assert list(Sap1.from_buf(StringIO("255"))) == [255]
+    assert list(SapCompiler.from_buf(StringIO("255"))) == [255]
 
 
 def test_compiler_find_labels() -> None:
@@ -33,7 +33,7 @@ two: 0x44
 
 
 def test_find_labels_too_large() -> None:
-    compiler = Sap1.from_str(
+    compiler = SapCompiler.from_str(
         """
 0
 0
