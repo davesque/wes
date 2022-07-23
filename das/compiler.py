@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from typing import Dict, TextIO, TypeVar, Type
+from typing import Dict, TextIO, Type, TypeVar
 
 from .exceptions import RenderedError
 from .parser import File, Label, Parser
-
 
 T = TypeVar("T")
 
