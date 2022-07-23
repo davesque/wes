@@ -2,8 +2,8 @@ from typing import Iterator
 
 from das.compiler import Compiler
 from das.exceptions import RenderedError
-from das.parser import Op, Val
 from das.instruction import Const, Unary
+from das.parser import Op, Val
 
 
 class SapUnary(Unary):

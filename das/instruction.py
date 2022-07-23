@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterator, TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterator
 
 from das.exceptions import RenderedError
 from das.parser import Op
