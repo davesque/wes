@@ -11,32 +11,23 @@ class SapUnary(Unary):
 
     def __iter__(self) -> Iterator[int]:
         if isinstance(self.op.arg, str):
-            loc = self.compiler.resolve_label(self.op.arg, self.op.toks[1])
-            yield (self.code << 4) + loc
+            arg = self.compiler.resolve_label(self.op.arg, self.op.toks[1])
         elif isinstance(self.op.arg, int):
             if self.op.arg > self.compiler.max_addr:
                 raise RenderedError(
-                    f"arg '{self.op.arg}' is too large", self.op.toks[1]
+                    f"arg '{self.op.arg}' is too large",
+                    self.op.toks[1],
                 )
-
-            yield (self.code << 4) + self.op.arg
+            arg = self.op.arg
         else:  # pragma: no cover
             raise Exception("invariant")
+
+        yield (self.code << 4) + arg
 
 
 class Nop(Const):
     mnemonic = "nop"
     output = 0b00000000
-
-
-class Out(Const):
-    mnemonic = "out"
-    output = 0b11100000
-
-
-class Hlt(Const):
-    mnemonic = "hlt"
-    output = 0b11110000
 
 
 class Lda(SapUnary):
@@ -77,6 +68,16 @@ class Jc(SapUnary):
 class Jz(SapUnary):
     mnemonic = "jz"
     code = 0b1000
+
+
+class Out(Const):
+    mnemonic = "out"
+    output = 0b11100000
+
+
+class Hlt(Const):
+    mnemonic = "hlt"
+    output = 0b11110000
 
 
 class Sap1(Compiler):
