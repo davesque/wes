@@ -2,12 +2,12 @@ import sys
 from io import StringIO
 from typing import TextIO
 
-from .compiler import Compiler
-from .exceptions import RenderedError
+from das.compilers.sap1 import Sap1
+from das.exceptions import RenderedError
 
 
 def run(in_buf: TextIO, out_buf: TextIO) -> None:
-    compiler = Compiler.from_buf(in_buf)
+    compiler = Sap1.from_buf(in_buf)
 
     for i, code in enumerate(compiler):
         print(f"{i:04b}: {code >> 4:04b} {code & 15:04b}", file=out_buf)

@@ -2,12 +2,12 @@ from io import StringIO
 
 import pytest
 
-from das.compiler import Compiler
+from das.compilers.sap1 import Sap1
 from das.exceptions import RenderedError
 
 
 def test_compile_count() -> None:
-    compiler = Compiler.from_str(
+    compiler = Sap1.from_str(
         """
 ; Counts from 42 to 256 (zero really in 8 bits), then down from 255 to 1
 ; before halting
@@ -36,7 +36,7 @@ incr: 1
 
 
 def test_compile_fib() -> None:
-    compiler = Compiler.from_str(
+    compiler = Sap1.from_str(
         """
 ; Counts up in fibonacci numbers forever (with a lot of overflow)
 
@@ -61,12 +61,12 @@ b: 1
 
 
 def test_compile_op_with_literal() -> None:
-    compiler = Compiler.from_str("lda 1")
+    compiler = Sap1.from_str("lda 1")
     assert list(compiler) == [17]
 
 
 def test_compile_too_large() -> None:
-    compiler = Compiler.from_str(
+    compiler = Sap1.from_str(
         """
 0
 0
@@ -94,7 +94,7 @@ too_big
 
 
 def test_compile_duplicate_label() -> None:
-    compiler = Compiler.from_str(
+    compiler = Sap1.from_str(
         """
 foo: 1
 foo: 1
@@ -107,7 +107,7 @@ foo: 1
 
 
 def test_compile_bad_unary_op() -> None:
-    compiler = Compiler.from_str("lda")
+    compiler = Sap1.from_str("lda")
     with pytest.raises(RenderedError) as excinfo:
         list(compiler)
 
@@ -115,7 +115,7 @@ def test_compile_bad_unary_op() -> None:
 
 
 def test_compile_bad_nullary_op() -> None:
-    compiler = Compiler.from_str("nop 1")
+    compiler = Sap1.from_str("nop 1")
     with pytest.raises(RenderedError) as excinfo:
         list(compiler)
 
@@ -123,7 +123,7 @@ def test_compile_bad_nullary_op() -> None:
 
 
 def test_compile_bad_label() -> None:
-    compiler = Compiler.from_str("lda foo")
+    compiler = Sap1.from_str("lda foo")
     with pytest.raises(RenderedError) as excinfo:
         list(compiler)
 
@@ -131,7 +131,7 @@ def test_compile_bad_label() -> None:
 
 
 def test_compile_big_op_arg() -> None:
-    compiler = Compiler.from_str("lda 16")
+    compiler = Sap1.from_str("lda 16")
     with pytest.raises(RenderedError) as excinfo:
         list(compiler)
 
@@ -139,7 +139,7 @@ def test_compile_big_op_arg() -> None:
 
 
 def test_compile_big_bare_literal() -> None:
-    compiler = Compiler.from_str("256")
+    compiler = Sap1.from_str("256")
     with pytest.raises(RenderedError) as excinfo:
         list(compiler)
 
@@ -147,8 +147,8 @@ def test_compile_big_bare_literal() -> None:
 
 
 def test_compiler_from_str() -> None:
-    assert list(Compiler.from_str("255")) == [255]
+    assert list(Sap1.from_str("255")) == [255]
 
 
 def test_compiler_from_buf() -> None:
-    assert list(Compiler.from_buf(StringIO("255"))) == [255]
+    assert list(Sap1.from_buf(StringIO("255"))) == [255]
