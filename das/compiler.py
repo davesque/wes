@@ -9,6 +9,8 @@ T = TypeVar("T")
 
 
 class Compiler:
+    max_addr = 2 ** 64 - 1
+
     file: File
     labels: Dict[str, int]
 
@@ -33,7 +35,7 @@ class Compiler:
     def find_labels(self) -> None:
         loc = 0
         for stmt in self.file.stmts:
-            if loc > 15:
+            if loc > self.max_addr:
                 raise RenderedError("statement makes program too large", stmt.toks[0])
 
             if isinstance(stmt, Label):

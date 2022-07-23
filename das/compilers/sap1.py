@@ -6,7 +6,10 @@ from das.parser import Op, Val
 
 
 class Sap1(Compiler):
-    OPS = {
+    max_addr = 15
+    max_val = 255
+
+    ops = {
         "nop": (0b0000, 0),
         "lda": (0b0001, 1),
         "add": (0b0010, 1),
@@ -25,7 +28,7 @@ class Sap1(Compiler):
 
         for stmt in self.file.stmts:
             if isinstance(stmt, Op):
-                code, arity = self.OPS[stmt.mnemonic]
+                code, arity = self.ops[stmt.mnemonic]
 
                 if arity == 1 and stmt.arg is None:
                     raise RenderedError(
@@ -48,7 +51,7 @@ class Sap1(Compiler):
                     loc = self.labels[stmt.arg]
                     yield (code << 4) + loc
                 elif isinstance(stmt.arg, int):
-                    if stmt.arg > 15:
+                    if stmt.arg > self.max_addr:
                         raise RenderedError(
                             f"arg '{stmt.arg}' is too large", stmt.toks[1]
                         )
@@ -60,7 +63,7 @@ class Sap1(Compiler):
                     raise Exception("invariant")
 
             elif isinstance(stmt, Val):
-                if stmt.val > 255:
+                if stmt.val > self.max_val:
                     raise RenderedError(
                         f"value '{stmt.toks[0].text}' is too large", stmt.toks[0]
                     )

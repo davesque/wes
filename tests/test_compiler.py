@@ -25,7 +25,7 @@ two: 0x44
 
 
 def test_find_labels_too_large() -> None:
-    compiler = Compiler.from_str(
+    compiler = Sap1.from_str(
         """
 0
 0
@@ -47,7 +47,7 @@ too_big
 """
     )
     with pytest.raises(RenderedError) as excinfo:
-        compiler.find_labels()
+        list(compiler)
 
     assert "statement makes program too large" in excinfo.value.msg
 
