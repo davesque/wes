@@ -101,3 +101,11 @@ def test_compile_big_bare_literal() -> None:
         list(compiler)
 
     assert "is too large" in excinfo.value.msg
+
+
+def test_compile_unrecognized_instruction() -> None:
+    compiler = Sap1.from_str("foo")
+    with pytest.raises(RenderedError) as excinfo:
+        list(compiler)
+
+    assert "unrecognized instruction" in excinfo.value.msg

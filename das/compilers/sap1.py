@@ -19,10 +19,10 @@ class Instruction:
 
         self.validate()
 
-    def validate(self) -> None:
+    def validate(self) -> None:  # pragma: no cover
         raise NotImplementedError("must define `validate`")
 
-    def __iter__(self) -> Iterator[int]:
+    def __iter__(self) -> Iterator[int]:  # pragma: no cover
         raise NotImplementedError("must define `__iter__`")
 
 
@@ -51,7 +51,6 @@ class SapUnary(Unary):
         if isinstance(self.op.arg, str):
             loc = self.compiler.resolve_label(self.op.arg, self.op.toks[1])
             yield (self.code << 4) + loc
-
         elif isinstance(self.op.arg, int):
             if self.op.arg > self.compiler.max_addr:
                 raise RenderedError(
@@ -59,8 +58,7 @@ class SapUnary(Unary):
                 )
 
             yield (self.code << 4) + self.op.arg
-
-        else:
+        else:  # pragma: no cover
             raise Exception("invariant")
 
 
