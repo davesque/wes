@@ -49,9 +49,9 @@ incr: 1
             Label("end", []),
             Op("hlt", None, []),
             Label("init", []),
-            Val(42, None),  # type: ignore
+            Val(42, []),
             Label("incr", []),
-            Val(1, None),  # type: ignore
+            Val(1, []),
         ]
     )
 
@@ -92,9 +92,9 @@ b: 1
             Op("sta", "b", []),
             Op("jmp", "loop", []),
             Label("a", []),
-            Val(1, None),  # type: ignore
+            Val(1, []),
             Label("b", []),
-            Val(1, None),  # type: ignore
+            Val(1, []),
         ]
     )
 
@@ -155,14 +155,10 @@ def test_parser_from_buf() -> None:
         ("0b1000_0000", 0b1000_0000),
         ("0o52_52", 0o52_52),
         ("0x52_52", 0x52_52),
-    )
+    ),
 )
 def test_parse_underscore_digit_grouping(int_repr: str, int_val: int) -> None:
     parser = Parser.from_str(int_repr)
     file = parser.parse_file()
 
-    assert file == File(
-        [
-            Val(int_val, None),  # type: ignore
-        ]
-    )
+    assert file == File([Val(int_val, [])])

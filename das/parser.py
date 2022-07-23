@@ -81,9 +81,9 @@ class Val(Stmt):
 
     val: int
 
-    def __init__(self, val: int, tok: Text):
+    def __init__(self, val: int, toks: List[Text]):
         self.val = val
-        self.toks = [tok]
+        self.toks = toks
 
     def __repr__(self) -> str:  # pragma: no cover
         return f"Val({self.val})"
@@ -208,7 +208,7 @@ class Parser:
         if NAME_RE.match(name_or_val.text):
             return Op(name_or_val.text, None, [name_or_val])
         elif VAL_RE.match(name_or_val.text):
-            return Val(str_to_int(name_or_val.text), name_or_val)
+            return Val(str_to_int(name_or_val.text), [name_or_val])
         else:
             raise RenderedError(
                 f"{repr(name_or_val.text)} is not a valid mnemonic or integer",
