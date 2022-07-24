@@ -96,9 +96,9 @@ class Val(Stmt):
         return type(self) is type(other) and (self.val == other.val)
 
 
-def _require_text(tok: Token, msg: str) -> Text:
+def _assert_text(tok: Token) -> Text:
     if not isinstance(tok, Text):  # pragma: no cover
-        raise RenderedError(msg, tok)
+        raise Exception("invariant broken")
     return tok
 
 
@@ -192,8 +192,7 @@ class Parser:
 
         self.drop(2)
 
-        name = _require_text(name, "expected a valid name")
-
+        name = _assert_text(name)
         return Label(name.text, (name, colon))
 
     def parse_nullary_or_val(self) -> Union[Op, Val, None]:
@@ -207,8 +206,7 @@ class Parser:
 
         self.drop(2)
 
-        name_or_val = _require_text(name_or_val, "expected a valid name or value")
-
+        name_or_val = _assert_text(name_or_val)
         if NAME_RE.match(name_or_val.text):
             return Op(name_or_val.text, (), (name_or_val,))
         elif VAL_RE.match(name_or_val.text):
@@ -227,8 +225,8 @@ class Parser:
 
         self.drop(3)
 
-        mnemonic = _require_text(mnemonic, "expected a valid name")
-        name_or_val = _require_text(name_or_val, "expected a valid name or value")
+        mnemonic = _assert_text(mnemonic)
+        name_or_val = _assert_text(name_or_val)
 
         if not NAME_RE.match(mnemonic.text):
             raise RenderedError(
