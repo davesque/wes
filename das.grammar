@@ -6,7 +6,10 @@ file: stmt* EOF
 stmt: label | labeled
 
 label: NAME ':' NEWLINE
-labeled: [NAME ':'] (nullary_or_val | unary) NEWLINE
+labeled: [NAME ':'] (nullary_or_val | unary | binary)
 
-nullary_or_val: NAME | VAL
-unary: NAME (NAME | VAL)
+nullary_or_val: (NAME | VAL) NEWLINE
+unary: NAME arg NEWLINE
+binary: NAME arg ',' arg NEWLINE
+
+arg: NAME | VAL
