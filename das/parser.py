@@ -3,9 +3,9 @@ from __future__ import annotations
 import re
 from typing import Callable, Iterator, List, Optional, TextIO, Tuple, TypeVar, Union
 
-from .exceptions import EndOfTokens, ParserError, RenderedError, WrongTokens
-from .lexer import Eof, Lexer, Newline, Text, Token
-from .utils import str_to_int
+from das.exceptions import EndOfTokens, ParserError, RenderedError, WrongTokens
+from das.lexer import Eof, Lexer, Newline, Text, Token
+from das.utils import str_to_int
 
 NAME_RE = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
 VAL_RE = re.compile(r"^(0b[01_]+|0o[0-7_]+|[0-9_]+|0x[a-fA-F0-9_]+)$")

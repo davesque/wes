@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from .lexer import Eof, Newline, Text, Token
+from das.lexer import Eof, Newline, Text, Token
 
 
 class ParserError(Exception):
