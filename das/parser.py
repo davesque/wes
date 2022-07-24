@@ -230,7 +230,7 @@ class Parser:
             try:
                 tok = self.get()
             except EndOfTokens:  # pragma: no cover
-                return label
+                raise Exception("invariant")
             if not isinstance(tok, Newline):
                 self.put(tok)
 
