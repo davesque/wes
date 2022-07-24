@@ -115,7 +115,7 @@ def test_parse_nullary_or_val_invalid() -> None:
     with pytest.raises(RenderedError) as excinfo:
         parser.parse_file()
 
-    assert "is not a valid mnemonic or integer" in excinfo.value.msg
+    assert "is not a valid name or integer" in excinfo.value.msg
 
 
 def test_parse_unary_invalid_mnemonic() -> None:
@@ -124,7 +124,7 @@ def test_parse_unary_invalid_mnemonic() -> None:
     with pytest.raises(RenderedError) as excinfo:
         parser.parse_file()
 
-    assert "is not a valid mnemonic" in excinfo.value.msg
+    assert "is not a valid name" in excinfo.value.msg
 
 
 def test_parse_unary_expected_end_of_line() -> None:
@@ -142,7 +142,7 @@ def test_parse_unary_invalid_op_arg() -> None:
     with pytest.raises(RenderedError) as excinfo:
         parser.parse_file()
 
-    assert "is not a valid label or integer" in excinfo.value.msg
+    assert "is not a valid name or integer" in excinfo.value.msg
 
 
 def test_parser_from_buf() -> None:

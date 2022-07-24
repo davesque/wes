@@ -257,7 +257,7 @@ class Parser:
             return Val(str_to_int(name_or_val.text), (name_or_val,))
         else:
             raise RenderedError(
-                f"{repr(name_or_val.text)} is not a valid mnemonic or integer",
+                f"{repr(name_or_val.text)} is not a valid name or integer",
                 name_or_val,
             )
 
@@ -269,7 +269,7 @@ class Parser:
 
         if not NAME_RE.match(mnemonic.text):
             raise RenderedError(
-                f"{repr(mnemonic.text)} is not a valid mnemonic", mnemonic
+                f"{repr(mnemonic.text)} is not a valid name", mnemonic
             )
 
         if VAL_RE.match(name_or_val.text):
@@ -278,7 +278,7 @@ class Parser:
             arg = name_or_val.text
         else:
             raise RenderedError(
-                f"{repr(name_or_val.text)} is not a valid label or integer", name_or_val
+                f"{repr(name_or_val.text)} is not a valid name or integer", name_or_val
             )
 
         return Op(mnemonic.text, (arg,), (mnemonic, name_or_val))
