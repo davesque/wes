@@ -16,8 +16,10 @@ def _char_type(c: str) -> int:
         return 0
     elif c == ":":
         return 1
-    else:
+    elif c == ",":
         return 2
+    else:
+        return 3
 
 
 def tokenize(s: str, *, split_f: Callable[[str], Any] = _char_type) -> Iterator[str]:
