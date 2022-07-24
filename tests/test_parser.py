@@ -3,11 +3,7 @@ from io import StringIO
 import pytest
 
 from das.exceptions import RenderedError
-from das.lexer import Text
 from das.parser import File, Label, Op, Parser, Val
-
-# dummy token list to appease anal type checker
-dmy = (Text("", 0, 0, 0),)
 
 
 def test_parse_count() -> None:
@@ -39,23 +35,23 @@ incr: 1
     file = parser.parse_file()
     assert file == File(
         (
-            Op("lda", ("init",), dmy),
-            Label("count_up", dmy),
-            Op("out", (), dmy),
-            Op("add", ("incr",), dmy),
-            Op("jc", ("count_down",), dmy),
-            Op("jmp", ("count_up",), dmy),
-            Label("count_down", dmy),
-            Op("out", (), dmy),
-            Op("sub", ("incr",), dmy),
-            Op("jz", ("end",), dmy),
-            Op("jmp", ("count_down",), dmy),
-            Label("end", dmy),
-            Op("hlt", (), dmy),
-            Label("init", dmy),
-            Val(42, dmy),
-            Label("incr", dmy),
-            Val(1, dmy),
+            Op("lda", ("init",), ()),
+            Label("count_up", ()),
+            Op("out", (), ()),
+            Op("add", ("incr",), ()),
+            Op("jc", ("count_down",), ()),
+            Op("jmp", ("count_up",), ()),
+            Label("count_down", ()),
+            Op("out", (), ()),
+            Op("sub", ("incr",), ()),
+            Op("jz", ("end",), ()),
+            Op("jmp", ("count_down",), ()),
+            Label("end", ()),
+            Op("hlt", (), ()),
+            Label("init", ()),
+            Val(42, ()),
+            Label("incr", ()),
+            Val(1, ()),
         )
     )
 
@@ -85,20 +81,20 @@ b: 1
     file = parser.parse_file()
     assert file == File(
         (
-            Label("loop", dmy),
-            Op("lda", ("a",), dmy),
-            Op("out", (), dmy),
-            Op("add", ("b",), dmy),
-            Op("sta", ("a",), dmy),
-            Op("lda", ("b",), dmy),
-            Op("out", (), dmy),
-            Op("add", ("a",), dmy),
-            Op("sta", ("b",), dmy),
-            Op("jmp", ("loop",), dmy),
-            Label("a", dmy),
-            Val(1, dmy),
-            Label("b", dmy),
-            Val(1, dmy),
+            Label("loop", ()),
+            Op("lda", ("a",), ()),
+            Op("out", (), ()),
+            Op("add", ("b",), ()),
+            Op("sta", ("a",), ()),
+            Op("lda", ("b",), ()),
+            Op("out", (), ()),
+            Op("add", ("a",), ()),
+            Op("sta", ("b",), ()),
+            Op("jmp", ("loop",), ()),
+            Label("a", ()),
+            Val(1, ()),
+            Label("b", ()),
+            Val(1, ()),
         )
     )
 
@@ -106,7 +102,7 @@ b: 1
 def test_parse_unary_with_val() -> None:
     parser = Parser.from_str("lda 1")
     file = parser.parse_file()
-    assert file == File((Op("lda", (1,), dmy),))
+    assert file == File((Op("lda", (1,), ()),))
 
 
 def test_parse_nullary_or_val_invalid() -> None:
@@ -175,14 +171,14 @@ def test_parse_binary_expected_mnemonic() -> None:
 def test_parse_binary() -> None:
     parser = Parser.from_str("foo bar, 42")
     file = parser.parse_file()
-    assert file == File((Op("foo", ("bar", 42), dmy),))
+    assert file == File((Op("foo", ("bar", 42), ()),))
 
 
 def test_parser_from_buf() -> None:
     buf = StringIO("foo")
     parser = Parser.from_buf(buf)
 
-    assert parser.parse_file() == File((Op("foo", (), dmy),))
+    assert parser.parse_file() == File((Op("foo", (), ()),))
 
 
 @pytest.mark.parametrize(
@@ -198,4 +194,4 @@ def test_parse_underscore_digit_grouping(int_repr: str, int_val: int) -> None:
     parser = Parser.from_str(int_repr)
     file = parser.parse_file()
 
-    assert file == File((Val(int_val, dmy),))
+    assert file == File((Val(int_val, ()),))

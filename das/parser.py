@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import re
-from typing import Iterator, List, Optional, TextIO, Tuple, Union, TypeVar, Callable
+from typing import Callable, Iterator, List, Optional, TextIO, Tuple, TypeVar, Union
 
-from .exceptions import EndOfTokens, RenderedError, ParserError, WrongToken
+from .exceptions import EndOfTokens, ParserError, RenderedError, WrongToken
 from .lexer import Eof, Lexer, Newline, Text, Token
 from .utils import str_to_int
 
@@ -212,7 +212,7 @@ class Parser:
 
         if not isinstance(tok, Newline):
             if fatal:
-                raise RenderedError(f"expected end of line", tok)
+                raise RenderedError("expected end of line", tok)
             else:
                 raise WrongToken()
 
@@ -275,9 +275,7 @@ class Parser:
         _ = self.expect_newline()
 
         if not NAME_RE.match(mnemonic.text):
-            raise RenderedError(
-                f"{repr(mnemonic.text)} is not a valid name", mnemonic
-            )
+            raise RenderedError(f"{repr(mnemonic.text)} is not a valid name", mnemonic)
 
         arg_ = self.parse_arg(arg)
 
@@ -292,9 +290,7 @@ class Parser:
         _ = self.expect_newline(fatal=True)
 
         if not NAME_RE.match(mnemonic.text):
-            raise RenderedError(
-                f"{repr(mnemonic.text)} is not a valid name", mnemonic
-            )
+            raise RenderedError(f"{repr(mnemonic.text)} is not a valid name", mnemonic)
 
         arg1_ = self.parse_arg(arg1)
         arg2_ = self.parse_arg(arg2)
