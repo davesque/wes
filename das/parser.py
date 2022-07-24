@@ -159,6 +159,9 @@ class Parser:
             try:
                 tok = next(self.tokens)
             except StopIteration:  # pragma: no cover
+                # This shouldn't ever really happen because of the Eof token
+                # type.  If this error is ever emitted, it means the parser API
+                # is not being used correctly.
                 raise ParserError("unexpected end of tokens")
 
         if len(self.marks) > 0:
