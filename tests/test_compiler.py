@@ -51,7 +51,7 @@ def test_find_labels_too_large() -> None:
 0
 0
 0
-too_big
+out
 """
     )
     with pytest.raises(RenderedError) as excinfo:
@@ -74,7 +74,7 @@ foo: 1
 
 
 def test_compiler_resolve_label() -> None:
-    compiler = Compiler.from_str(
+    compiler = SapCompiler.from_str(
         """
 lda meaning_of_life
 forty_two: 0x42

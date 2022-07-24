@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Dict, Iterator, TextIO, Type, TypeVar
 
 from das.exceptions import RenderedError
-from das.instruction import Instruction
+from das.instruction import Instruction, Value
 from das.lexer import Text
 from das.parser import File, Label, Op, Parser, Val
 
@@ -50,8 +50,19 @@ class Compiler:
                     )
 
                 self.labels[stmt.name] = loc
-            else:
-                loc += 1
+            elif isinstance(stmt, Op):
+                try:
+                    instruction_cls = self.instructions[stmt.mnemonic]
+                except KeyError:
+                    raise RenderedError(
+                        f"unrecognized instruction '{stmt.mnemonic}'", stmt.toks
+                    )
+
+                inst = instruction_cls(self, stmt)
+                loc += inst.size
+            elif isinstance(stmt, Val):
+                inst = Value(self, stmt)
+                loc += inst.size
 
     def resolve_label(self, label: str, label_tok: Text) -> int:
         try:
@@ -64,20 +75,11 @@ class Compiler:
 
         for stmt in self.file.stmts:
             if isinstance(stmt, Op):
-                try:
-                    instruction_cls = self.instructions[stmt.mnemonic]
-                except KeyError:
-                    raise RenderedError(
-                        f"unrecognized instruction '{stmt.mnemonic}'", stmt.toks
-                    )
+                instruction_cls = self.instructions[stmt.mnemonic]
 
                 inst = instruction_cls(self, stmt)
                 yield from inst.encode()
 
             elif isinstance(stmt, Val):
-                if stmt.val > self.max_val:
-                    raise RenderedError(
-                        f"value '{stmt.toks[0].text}' is too large", stmt.toks[0]
-                    )
-
-                yield stmt.val
+                inst = Value(self, stmt)
+                yield from inst.encode()
