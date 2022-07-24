@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Dict, Iterator, TextIO, Type, TypeVar, overload
 
 from das.exceptions import RenderedError
-from das.instruction import Instruction, Value
+from das.instruction import Operation, Value
 from das.lexer import Text
 from das.parser import File, Label, Op, Parser, Val
 
@@ -14,7 +14,7 @@ class Compiler:
     max_addr = 2**64 - 1
     max_val = 2**64 - 1
 
-    instructions: Dict[str, Type[Instruction]] = None  # type: ignore
+    instructions: Dict[str, Type[Operation]] = None  # type: ignore
 
     file: File
     labels: Dict[str, int]
@@ -42,7 +42,7 @@ class Compiler:
         ...
 
     @overload
-    def get_instruction(self, stmt: Op) -> Instruction:  # pragma: no cover
+    def get_instruction(self, stmt: Op) -> Operation:  # pragma: no cover
         ...
 
     def get_instruction(self, stmt):

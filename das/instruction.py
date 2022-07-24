@@ -30,7 +30,7 @@ class BaseInstruction:
         raise NotImplementedError("must define `size`")
 
 
-class Instruction(BaseInstruction):
+class Operation(BaseInstruction):
     __slots__ = ("op",)
 
     mnemonic: str = None  # type: ignore
@@ -64,7 +64,7 @@ class Value(BaseInstruction):
         return byte_length(self.val.val)
 
 
-class Nullary(Instruction):
+class Nullary(Operation):
     def validate(self) -> None:
         if self.op.arg is not None:
             raise RenderedError(
@@ -73,7 +73,7 @@ class Nullary(Instruction):
             )
 
 
-class Unary(Instruction):
+class Unary(Operation):
     def validate(self) -> None:
         if self.op.arg is None:
             raise RenderedError(
