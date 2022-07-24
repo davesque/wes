@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 import re
-from typing import Iterator, List, Optional, TextIO, Tuple, Union
+from typing import Iterator, List, Optional, TextIO, Tuple, Union, TypeVar, Callable
 
-from .exceptions import EndOfTokens, RenderedError
+from .exceptions import EndOfTokens, RenderedError, ParserError, WrongToken
 from .lexer import Eof, Lexer, Newline, Text, Token
 from .utils import str_to_int
 
 NAME_RE = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
 VAL_RE = re.compile(r"^(0b[01_]+|0o[0-7_]+|[0-9_]+|0x[a-fA-F0-9_]+)$")
+
+T = TypeVar("T")
 
 
 class Node:
@@ -96,14 +98,27 @@ class Val(Stmt):
         return type(self) is type(other) and (self.val == other.val)
 
 
-def assert_text(tok: Token) -> Text:
-    if not isinstance(tok, Text):  # pragma: no cover
-        raise Exception("invariant broken")
-    return tok
+def marked(
+    old_method: Callable[[Parser], Optional[T]]
+) -> Callable[[Parser], Optional[T]]:
+    def new_method(self) -> Optional[T]:
+        self.mark()
+
+        try:
+            res = old_method(self)
+        except ParserError:
+            res = None
+
+        if res is None:
+            self.reset()
+
+        return res
+
+    return new_method
 
 
 class Parser:
-    __slots__ = ("lexer", "tokens", "buf")
+    __slots__ = ("lexer", "tokens", "buf", "marks")
 
     lexer: Lexer
     tokens: Iterator[Token]
@@ -113,6 +128,7 @@ class Parser:
         self.lexer = lexer
         self.tokens = iter(lexer)
         self.buf = []
+        self.marks = []
 
     @classmethod
     def from_str(cls, text: str) -> Parser:
@@ -124,30 +140,72 @@ class Parser:
         lexer = Lexer(buf)
         return cls(lexer)
 
+    def mark(self) -> None:
+        """
+        Creates a new reset buffer.
+        """
+        self.marks.append([])
+
     def put(self, tok: Token) -> None:
         self.buf.append(tok)
 
     def get(self) -> Token:
         if len(self.buf) > 0:
-            return self.buf.pop()
+            tok = self.buf.pop()
         else:
             try:
-                return next(self.tokens)
+                tok = next(self.tokens)
             except StopIteration:
                 raise EndOfTokens("end of tokens")
 
+        if len(self.marks) > 0:
+            self.marks[-1].append(tok)
+
+        return tok
+
+    def expect_text(self, tok_text: Optional[str] = None, fatal: bool = False) -> Text:
+        tok = self.get()
+
+        if not isinstance(tok, Text):
+            if fatal:
+                raise RenderedError("expected text", tok)
+            else:
+                raise WrongToken("expected text")
+        if tok_text is not None and tok.text != tok_text:
+            if fatal:
+                raise RenderedError(f"expected '{tok_text}'", tok)
+            else:
+                raise WrongToken(f"expected '{tok_text}'")
+
+        return tok
+
+    def expect_newline(self, fatal: bool = False) -> Newline:
+        tok = self.get()
+
+        if not isinstance(tok, Newline):
+            if fatal:
+                raise RenderedError(f"expected end of line", tok)
+            else:
+                raise WrongToken("expected end of line")
+
+        return tok
+
+    def reset(self) -> None:
+        if len(self.marks) == 0:
+            raise ParserError("cannot reset if no marks")
+
+        mark_toks = self.marks.pop()
+        for tok in reversed(mark_toks):
+            self.put(tok)
+
     def peek(self, n: int) -> List[Token]:
         toks = []
-        for _ in range(n):
-            try:
+        try:
+            for _ in range(n):
                 toks.append(self.get())
-            except EndOfTokens:
-                for tok in reversed(toks):
-                    self.put(tok)
-                raise
-
-        for tok in reversed(toks):
-            self.put(tok)
+        finally:
+            for tok in reversed(toks):
+                self.put(tok)
 
         return toks
 
@@ -181,32 +239,18 @@ class Parser:
         else:
             return self.parse_unary()
 
+    @marked
     def parse_label(self) -> Optional[Label]:
-        try:
-            name, colon = self.peek(2)
-        except EndOfTokens:
-            return None
+        name = self.expect_text()
+        colon = self.expect_text(":")
 
-        if not isinstance(colon, Text) or colon.text != ":":
-            return None
-
-        self.drop(2)
-
-        name = assert_text(name)
         return Label(name.text, (name, colon))
 
+    @marked
     def parse_nullary_or_val(self) -> Union[Op, Val, None]:
-        try:
-            name_or_val, newline = self.peek(2)
-        except EndOfTokens:
-            return None
+        name_or_val = self.expect_text()
+        _ = self.expect_newline()
 
-        if not isinstance(newline, Newline):
-            return None
-
-        self.drop(2)
-
-        name_or_val = assert_text(name_or_val)
         if NAME_RE.match(name_or_val.text):
             return Op(name_or_val.text, (), (name_or_val,))
         elif VAL_RE.match(name_or_val.text):
@@ -217,23 +261,16 @@ class Parser:
                 name_or_val,
             )
 
+    @marked
     def parse_unary(self) -> Optional[Op]:
-        try:
-            mnemonic, name_or_val, newline = self.peek(3)
-        except EndOfTokens:
-            return None
-
-        self.drop(3)
-
-        mnemonic = assert_text(mnemonic)
-        name_or_val = assert_text(name_or_val)
+        mnemonic = self.expect_text()
+        name_or_val = self.expect_text()
+        _ = self.expect_newline(fatal=True)
 
         if not NAME_RE.match(mnemonic.text):
             raise RenderedError(
                 f"{repr(mnemonic.text)} is not a valid mnemonic", mnemonic
             )
-        if not isinstance(newline, Newline):
-            raise RenderedError("expected end of line", newline)
 
         if VAL_RE.match(name_or_val.text):
             arg = str_to_int(name_or_val.text)

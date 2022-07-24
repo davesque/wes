@@ -3,15 +3,19 @@ from typing import Tuple, Union
 from .lexer import Eof, Newline, Text, Token
 
 
-class ParseError(Exception):
+class ParserError(Exception):
     pass
 
 
-class EndOfTokens(ParseError):
+class EndOfTokens(ParserError):
     pass
 
 
-class RenderedError(ParseError):
+class WrongToken(ParserError):
+    pass
+
+
+class RenderedError(Exception):
     def __init__(self, msg: str, toks: Union[Token, Tuple[Token, ...]]):
         if isinstance(toks, Token):
             toks = (toks,)
