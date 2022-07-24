@@ -10,7 +10,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from das.compiler import Compiler
 
 
-class BaseInstruction:
+class Instruction:
     __slots__ = ("compiler",)
 
     compiler: Compiler
@@ -30,7 +30,7 @@ class BaseInstruction:
         raise NotImplementedError("must define `size`")
 
 
-class Operation(BaseInstruction):
+class Operation(Instruction):
     __slots__ = ("op",)
 
     mnemonic: str = None  # type: ignore
@@ -41,7 +41,7 @@ class Operation(BaseInstruction):
         super().__init__(compiler)
 
 
-class Value(BaseInstruction):
+class Value(Instruction):
     __slots__ = ("val",)
 
     val: Val
