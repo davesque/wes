@@ -51,7 +51,7 @@ class Compiler:
                 instruction_cls = self.instructions[stmt.mnemonic]
             except KeyError:
                 raise RenderedError(
-                    f"unrecognized instruction '{stmt.mnemonic}'", stmt.toks[0]
+                    f"unrecognized instruction '{stmt.mnemonic}'", (stmt.toks[0],)
                 )
             return instruction_cls(self, stmt)
         elif isinstance(stmt, Val):
@@ -65,7 +65,7 @@ class Compiler:
             if isinstance(stmt, Label):
                 if stmt.name in self.labels:
                     raise RenderedError(
-                        f"redefinition of label '{stmt.name}'", stmt.toks[0]
+                        f"redefinition of label '{stmt.name}'", (stmt.toks[0],)
                     )
 
                 self.labels[stmt.name] = loc
@@ -75,7 +75,7 @@ class Compiler:
 
                 if loc > self.max_addr:
                     raise RenderedError(
-                        "statement makes program too large", stmt.toks[0]
+                        "statement makes program too large", (stmt.toks[0],)
                     )
             else:  # pragma: no cover
                 raise Exception("invariant")
@@ -84,7 +84,7 @@ class Compiler:
         try:
             return self.labels[label]
         except KeyError:
-            raise RenderedError(f"unrecognized label '{label}'", label_tok)
+            raise RenderedError(f"unrecognized label '{label}'", (label_tok,))
 
     def __iter__(self) -> Iterator[int]:
         self.find_labels()

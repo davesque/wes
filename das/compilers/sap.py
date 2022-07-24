@@ -16,7 +16,7 @@ class SapUnary(Unary):
             if self.op.args[0] > self.compiler.max_addr:
                 raise RenderedError(
                     f"arg '{self.op.args[0]}' is too large",
-                    self.op.toks[1],
+                    (self.op.toks[1],),
                 )
             arg = self.op.args[0]
         else:  # pragma: no cover

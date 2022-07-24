@@ -183,12 +183,12 @@ class Parser:
 
         if not isinstance(tok, Text):
             if fatal:
-                raise RenderedError("expected text", tok)
+                raise RenderedError("expected text", (tok,))
             else:
                 raise WrongToken()
         if tok_text is not None and tok.text != tok_text:
             if fatal:
-                raise RenderedError(f"expected '{tok_text}'", tok)
+                raise RenderedError(f"expected '{tok_text}'", (tok,))
             else:
                 raise WrongToken()
 
@@ -199,7 +199,7 @@ class Parser:
 
         if not isinstance(tok, Newline):
             if fatal:
-                raise RenderedError("expected end of line", tok)
+                raise RenderedError("expected end of line", (tok,))
             else:
                 raise WrongToken()
 
@@ -251,7 +251,7 @@ class Parser:
         else:
             raise RenderedError(
                 f"{repr(name_or_val.text)} is not a valid name or integer",
-                name_or_val,
+                (name_or_val,),
             )
 
     @marked
@@ -261,7 +261,9 @@ class Parser:
         _ = self.expect_newline()
 
         if not NAME_RE.match(mnemonic.text):
-            raise RenderedError(f"{repr(mnemonic.text)} is not a valid name", mnemonic)
+            raise RenderedError(
+                f"{repr(mnemonic.text)} is not a valid name", (mnemonic,)
+            )
 
         arg_ = self.parse_arg(arg)
 
@@ -276,7 +278,9 @@ class Parser:
         _ = self.expect_newline(fatal=True)
 
         if not NAME_RE.match(mnemonic.text):
-            raise RenderedError(f"{repr(mnemonic.text)} is not a valid name", mnemonic)
+            raise RenderedError(
+                f"{repr(mnemonic.text)} is not a valid name", (mnemonic,)
+            )
 
         arg1_ = self.parse_arg(arg1)
         arg2_ = self.parse_arg(arg2)
@@ -290,10 +294,11 @@ class Parser:
             return name_or_val.text
         else:
             raise RenderedError(
-                f"{repr(name_or_val.text)} is not a valid name or integer", name_or_val
+                f"{repr(name_or_val.text)} is not a valid name or integer",
+                (name_or_val,),
             )
 
     def parse_eof(self) -> None:
         tok = self.get()
         if not isinstance(tok, Eof):  # pragma: no cover
-            raise RenderedError("expected end of file", tok)
+            raise RenderedError("expected end of file", (tok,))

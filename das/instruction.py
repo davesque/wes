@@ -53,7 +53,7 @@ class Value(Instruction):
     def validate(self) -> None:
         if self.val.val > self.compiler.max_val:
             raise RenderedError(
-                f"value '{self.val.toks[0].text}' is too large", self.val.toks[0]
+                f"value '{self.val.toks[0].text}' is too large", (self.val.toks[0],)
             )
 
     def encode(self) -> Iterator[int]:

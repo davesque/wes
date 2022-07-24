@@ -1,4 +1,4 @@
-from typing import Tuple, Union
+from typing import Tuple
 
 from .lexer import Eof, Newline, Text, Token
 
@@ -12,14 +12,12 @@ class EndOfTokens(ParserError):
 
 
 class WrongToken(ParserError):
+    # def __init__(self, msg: str, toks:
     pass
 
 
 class RenderedError(Exception):
-    def __init__(self, msg: str, toks: Union[Token, Tuple[Token, ...]]):
-        if isinstance(toks, Token):
-            toks = (toks,)
-
+    def __init__(self, msg: str, toks: Tuple[Token, ...]):
         if len(toks) == 0:
             raise ValueError("expected one or more tokens")
 

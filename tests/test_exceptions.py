@@ -7,7 +7,7 @@ from das.lexer import Lexer
 def test_rendered_error_render_text() -> None:
     file_txt = "line one\nthe quick brown fox jumped over the lazy dogs"
     toks = tuple(Lexer.from_str(file_txt))
-    e = RenderedError("problem here", toks[6])
+    e = RenderedError("problem here", (toks[6],))
 
     # fmt: off
     assert e.render(file_txt) == """
@@ -21,7 +21,7 @@ problem here
 
     file_txt = "line one\nthe quick brown fox jumped over the lazy dogs\n"
     toks = tuple(Lexer.from_str(file_txt))
-    e = RenderedError("problem here", toks[6])
+    e = RenderedError("problem here", (toks[6],))
 
     # fmt: off
     assert e.render(file_txt) == """
@@ -37,7 +37,7 @@ problem here
 def test_rendered_error_render_newline() -> None:
     file_txt = "test line"
     toks = tuple(Lexer.from_str(file_txt))
-    e = RenderedError("expected newline", toks[2])
+    e = RenderedError("expected newline", (toks[2],))
 
     # fmt: off
     assert e.render(file_txt) == """
@@ -53,7 +53,7 @@ expected newline
 def test_rendered_error_render_newline_with_nl() -> None:
     file_txt = "test line\n"
     toks = tuple(Lexer.from_str(file_txt))
-    e = RenderedError("expected newline", toks[2])
+    e = RenderedError("expected newline", (toks[2],))
 
     # fmt: off
     assert e.render(file_txt) == """
@@ -69,7 +69,7 @@ expected newline
 def test_rendered_error_render_eof() -> None:
     file_txt = "test line"
     toks = tuple(Lexer.from_str(file_txt))
-    e = RenderedError("expected eof", toks[3])
+    e = RenderedError("expected eof", (toks[3],))
 
     # fmt: off
     assert e.render(file_txt) == """
@@ -85,7 +85,7 @@ expected eof
 def test_rendered_error_render_eof_with_nl() -> None:
     file_txt = "test line\n"
     toks = tuple(Lexer.from_str(file_txt))
-    e = RenderedError("expected eof", toks[3])
+    e = RenderedError("expected eof", (toks[3],))
 
     # fmt: off
     assert e.render(file_txt) == r"""
