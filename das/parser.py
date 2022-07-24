@@ -159,21 +159,6 @@ class Parser:
     def put(self, tok: Token) -> None:
         self.buf.append(tok)
 
-    def peek(self, n: int) -> List[Token]:
-        toks = []
-        try:
-            for _ in range(n):
-                toks.append(self.get())
-        finally:
-            for tok in reversed(toks):
-                self.put(tok)
-
-        return toks
-
-    def drop(self, n: int) -> None:
-        for _ in range(n):
-            self.get()
-
     def mark(self) -> None:
         self.marks.append([])
 
@@ -229,14 +214,13 @@ class Parser:
 
     def parse_stmt(self) -> Optional[Stmt]:
         if label := self.parse_label():
+            # consume a newline if one exists
             try:
-                tok = self.peek(1)[0]
+                tok = self.get()
             except EndOfTokens:  # pragma: no cover
                 return label
-
-            # consume a newline if one exists
-            if isinstance(tok, Newline):
-                self.drop(1)
+            if not isinstance(tok, Newline):
+                self.put(tok)
 
             return label
         elif nullary_or_val := self.parse_nullary_or_val():
