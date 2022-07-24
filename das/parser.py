@@ -13,12 +13,7 @@ from typing import (
     Union,
 )
 
-from das.exceptions import (
-    ParserError,
-    RenderedError,
-    Retry,
-    Stop,
-)
+from das.exceptions import ParserError, RenderedError, Retry, Stop
 from das.lexer import Eof, Lexer, Newline, Text, Token
 from das.utils import str_to_int
 
