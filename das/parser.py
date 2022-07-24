@@ -233,8 +233,10 @@ class Parser:
             return label
         elif nullary_or_val := self.parse_nullary_or_val():
             return nullary_or_val
+        elif unary := self.parse_unary():
+            return unary
         else:
-            return self.parse_unary()
+            return self.parse_binary()
 
     @marked
     def parse_label(self) -> Optional[Label]:
@@ -261,7 +263,24 @@ class Parser:
     @marked
     def parse_unary(self) -> Optional[Op]:
         mnemonic = self.expect_text()
-        name_or_val = self.expect_text()
+        arg = self.expect_text()
+        _ = self.expect_newline()
+
+        if not NAME_RE.match(mnemonic.text):
+            raise RenderedError(
+                f"{repr(mnemonic.text)} is not a valid name", mnemonic
+            )
+
+        arg_ = self.parse_arg(arg)
+
+        return Op(mnemonic.text, (arg_,), (mnemonic, arg))
+
+    @marked
+    def parse_binary(self) -> Optional[Op]:
+        mnemonic = self.expect_text()
+        arg1 = self.expect_text()
+        comma = self.expect_text(",", fatal=True)
+        arg2 = self.expect_text(fatal=True)
         _ = self.expect_newline(fatal=True)
 
         if not NAME_RE.match(mnemonic.text):
@@ -269,16 +288,20 @@ class Parser:
                 f"{repr(mnemonic.text)} is not a valid name", mnemonic
             )
 
+        arg1_ = self.parse_arg(arg1)
+        arg2_ = self.parse_arg(arg2)
+
+        return Op(mnemonic.text, (arg1_, arg2_), (mnemonic, arg1, comma, arg2))
+
+    def parse_arg(self, name_or_val: Text) -> Union[str, int]:
         if VAL_RE.match(name_or_val.text):
-            arg = str_to_int(name_or_val.text)
+            return str_to_int(name_or_val.text)
         elif NAME_RE.match(name_or_val.text):
-            arg = name_or_val.text
+            return name_or_val.text
         else:
             raise RenderedError(
                 f"{repr(name_or_val.text)} is not a valid name or integer", name_or_val
             )
-
-        return Op(mnemonic.text, (arg,), (mnemonic, name_or_val))
 
     def parse_eof(self) -> None:
         tok = self.get()

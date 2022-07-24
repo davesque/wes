@@ -127,15 +127,6 @@ def test_parse_unary_invalid_mnemonic() -> None:
     assert "is not a valid name" in excinfo.value.msg
 
 
-def test_parse_unary_expected_end_of_line() -> None:
-    parser = Parser.from_str("foo bar baz")
-
-    with pytest.raises(RenderedError) as excinfo:
-        parser.parse_file()
-
-    assert "expected end of line" in excinfo.value.msg
-
-
 def test_parse_unary_invalid_op_arg() -> None:
     parser = Parser.from_str("blah !!!")
 
@@ -143,6 +134,15 @@ def test_parse_unary_invalid_op_arg() -> None:
         parser.parse_file()
 
     assert "is not a valid name or integer" in excinfo.value.msg
+
+
+def test_parse_binary_expected_comma() -> None:
+    parser = Parser.from_str("foo bar baz")
+
+    with pytest.raises(RenderedError) as excinfo:
+        parser.parse_file()
+
+    assert "expected ','" in excinfo.value.msg
 
 
 def test_parser_from_buf() -> None:
