@@ -19,8 +19,10 @@ def test_tokenize() -> None:
 
 
 def test_lexer_empty() -> None:
+    # no newlines unless statements are given
     assert list(Lexer.from_str("")) == [Eof(0, 0, 0)]
     assert list(Lexer.from_str("\n")) == [Eof(0, 1, 1)]
+    assert list(Lexer.from_str(" \n \t \n")) == [Eof(2, 2, 4)]
 
 
 def test_lexer_simple() -> None:
