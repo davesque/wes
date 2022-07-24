@@ -197,7 +197,7 @@ class Parser:
         tok = self.get()
 
         if not isinstance(tok, Text):
-            raise error("expected text", (tok,))
+            raise error("unexpected end of line", (tok,))
         if tok_text is not None and tok.text != tok_text:
             raise error(f"expected '{tok_text}'", (tok,))
 

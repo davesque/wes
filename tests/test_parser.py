@@ -147,7 +147,7 @@ def test_parse_binary_expected_text() -> None:
     with pytest.raises(RenderedError) as excinfo:
         parser.parse_file()
 
-    assert "expected text" in excinfo.value.msg
+    assert "unexpected end of line" in excinfo.value.msg
 
 
 def test_parse_binary_expected_newline() -> None:
