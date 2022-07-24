@@ -1,9 +1,26 @@
 from __future__ import annotations
 
 import re
-from typing import Callable, Iterator, List, Optional, TextIO, Tuple, TypeVar, Union
+from typing import (
+    Callable,
+    Iterator,
+    List,
+    Optional,
+    TextIO,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
-from das.exceptions import EndOfTokens, ParserError, RenderedError, WrongTokens
+from das.exceptions import (
+    EndOfTokens,
+    ParserError,
+    RenderedError,
+    Retry,
+    Stop,
+    WrongTokens,
+)
 from das.lexer import Eof, Lexer, Newline, Text, Token
 from das.utils import str_to_int
 
@@ -106,13 +123,13 @@ def marked(
 
         try:
             res = old_method(self)
-        except ParserError:
-            res = None
-
-        if res is None:
+        except Stop as e:
+            raise RenderedError(e.msg, e.toks)
+        except Retry:
             self.reset()
-        else:
-            self.unmark()
+            return None
+
+        self.unmark()
 
         return res
 
@@ -178,30 +195,23 @@ class Parser:
         for tok in reversed(mark_toks):
             self.put(tok)
 
-    def expect_text(self, tok_text: Optional[str] = None, fatal: bool = False) -> Text:
+    def expect_text(
+        self, tok_text: Optional[str] = None, error: Type[Exception] = WrongTokens
+    ) -> Text:
         tok = self.get()
 
         if not isinstance(tok, Text):
-            if fatal:
-                raise RenderedError("expected text", (tok,))
-            else:
-                raise WrongTokens()
+            raise error("expected text", (tok,))
         if tok_text is not None and tok.text != tok_text:
-            if fatal:
-                raise RenderedError(f"expected '{tok_text}'", (tok,))
-            else:
-                raise WrongTokens()
+            raise error(f"expected '{tok_text}'", (tok,))
 
         return tok
 
-    def expect_newline(self, fatal: bool = False) -> Newline:
+    def expect_newline(self, error: Type[Exception] = WrongTokens) -> Newline:
         tok = self.get()
 
         if not isinstance(tok, Newline):
-            if fatal:
-                raise RenderedError("expected end of line", (tok,))
-            else:
-                raise WrongTokens()
+            raise error("expected end of line", (tok,))
 
         return tok
 
@@ -249,7 +259,7 @@ class Parser:
         elif VAL_RE.match(name_or_val.text):
             return Val(str_to_int(name_or_val.text), (name_or_val,))
         else:
-            raise RenderedError(
+            raise Stop(
                 f"{repr(name_or_val.text)} is not a valid name or integer",
                 (name_or_val,),
             )
@@ -261,9 +271,7 @@ class Parser:
         _ = self.expect_newline()
 
         if not NAME_RE.match(mnemonic.text):
-            raise RenderedError(
-                f"{repr(mnemonic.text)} is not a valid name", (mnemonic,)
-            )
+            raise Stop(f"{repr(mnemonic.text)} is not a valid name", (mnemonic,))
 
         arg_ = self.parse_arg(arg)
 
@@ -273,14 +281,12 @@ class Parser:
     def parse_binary(self) -> Optional[Op]:
         mnemonic = self.expect_text()
         arg1 = self.expect_text()
-        comma = self.expect_text(",", fatal=True)
-        arg2 = self.expect_text(fatal=True)
-        _ = self.expect_newline(fatal=True)
+        comma = self.expect_text(",", error=Stop)
+        arg2 = self.expect_text(error=Stop)
+        _ = self.expect_newline(error=Stop)
 
         if not NAME_RE.match(mnemonic.text):
-            raise RenderedError(
-                f"{repr(mnemonic.text)} is not a valid name", (mnemonic,)
-            )
+            raise Stop(f"{repr(mnemonic.text)} is not a valid name", (mnemonic,))
 
         arg1_ = self.parse_arg(arg1)
         arg2_ = self.parse_arg(arg2)
@@ -293,7 +299,7 @@ class Parser:
         elif NAME_RE.match(name_or_val.text):
             return name_or_val.text
         else:
-            raise RenderedError(
+            raise Stop(
                 f"{repr(name_or_val.text)} is not a valid name or integer",
                 (name_or_val,),
             )
@@ -301,4 +307,4 @@ class Parser:
     def parse_eof(self) -> None:
         tok = self.get()
         if not isinstance(tok, Eof):  # pragma: no cover
-            raise RenderedError("expected end of file", (tok,))
+            raise Stop("expected end of file", (tok,))

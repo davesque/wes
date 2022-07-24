@@ -7,12 +7,24 @@ class ParserError(Exception):
     pass
 
 
-class EndOfTokens(ParserError):
+class Retry(ParserError):
     pass
 
 
-class WrongTokens(ParserError):
+class EndOfTokens(Retry):
     pass
+
+
+class WrongTokens(Retry):
+    def __init__(self, msg: str, toks: Tuple[Token, ...]):
+        self.msg = msg
+        self.toks = toks
+
+
+class Stop(ParserError):
+    def __init__(self, msg: str, toks: Tuple[Token, ...]):
+        self.msg = msg
+        self.toks = toks
 
 
 class RenderedError(Exception):
