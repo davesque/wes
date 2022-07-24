@@ -11,8 +11,7 @@ class EndOfTokens(ParserError):
     pass
 
 
-class WrongToken(ParserError):
-    # def __init__(self, msg: str, toks:
+class WrongTokens(ParserError):
     pass
 
 

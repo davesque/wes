@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from typing import Callable, Iterator, List, Optional, TextIO, Tuple, TypeVar, Union
 
-from .exceptions import EndOfTokens, ParserError, RenderedError, WrongToken
+from .exceptions import EndOfTokens, ParserError, RenderedError, WrongTokens
 from .lexer import Eof, Lexer, Newline, Text, Token
 from .utils import str_to_int
 
@@ -185,12 +185,12 @@ class Parser:
             if fatal:
                 raise RenderedError("expected text", (tok,))
             else:
-                raise WrongToken()
+                raise WrongTokens()
         if tok_text is not None and tok.text != tok_text:
             if fatal:
                 raise RenderedError(f"expected '{tok_text}'", (tok,))
             else:
-                raise WrongToken()
+                raise WrongTokens()
 
         return tok
 
@@ -201,7 +201,7 @@ class Parser:
             if fatal:
                 raise RenderedError("expected end of line", (tok,))
             else:
-                raise WrongToken()
+                raise WrongTokens()
 
         return tok
 
