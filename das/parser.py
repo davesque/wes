@@ -136,7 +136,7 @@ class Parser:
             except StopIteration:
                 raise EndOfTokens("end of tokens")
 
-    def peek(self, n: int = 1) -> List[Token]:
+    def peek(self, n: int) -> List[Token]:
         toks = []
         for _ in range(n):
             try:
@@ -151,7 +151,7 @@ class Parser:
 
         return toks
 
-    def move(self, n: int = 1) -> None:
+    def drop(self, n: int) -> None:
         for _ in range(n):
             self.get()
 
@@ -173,7 +173,7 @@ class Parser:
 
             # consume a newline if one exists
             if isinstance(tok, Newline):
-                self.move(1)
+                self.drop(1)
 
             return label
         elif nullary_or_val := self.parse_nullary_or_val():
@@ -190,7 +190,7 @@ class Parser:
         if not isinstance(colon, Text) or colon.text != ":":
             return None
 
-        self.move(2)
+        self.drop(2)
 
         name = _require_text(name, "expected a valid name")
 
@@ -205,7 +205,7 @@ class Parser:
         if not isinstance(newline, Newline):
             return None
 
-        self.move(2)
+        self.drop(2)
 
         name_or_val = _require_text(name_or_val, "expected a valid name or value")
 
@@ -225,7 +225,7 @@ class Parser:
         except EndOfTokens:
             return None
 
-        self.move(3)
+        self.drop(3)
 
         mnemonic = _require_text(mnemonic, "expected a valid name")
         name_or_val = _require_text(name_or_val, "expected a valid name or value")
