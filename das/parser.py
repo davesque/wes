@@ -164,13 +164,15 @@ class Parser:
 
     def unmark(self) -> None:
         if len(self.marks) == 0:  # pragma: no cover
-            raise ParserError("cannot unmark if no marks")
+            raise ParserError("no marks to unmark")
 
-        self.marks.pop()
+        mark_toks = self.marks.pop()
+        if len(self.marks) > 0:
+            self.marks[-1].extend(mark_toks)
 
     def reset(self) -> None:
         if len(self.marks) == 0:  # pragma: no cover
-            raise ParserError("cannot reset if no marks")
+            raise ParserError("no marks to reset")
 
         mark_toks = self.marks.pop()
         for tok in reversed(mark_toks):
