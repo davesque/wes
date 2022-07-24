@@ -51,7 +51,7 @@ class Compiler:
                 instruction_cls = self.instructions[stmt.mnemonic]
             except KeyError:
                 raise RenderedError(
-                    f"unrecognized instruction '{stmt.mnemonic}'", stmt.toks
+                    f"unrecognized instruction '{stmt.mnemonic}'", stmt.toks[0]
                 )
             return instruction_cls(self, stmt)
         elif isinstance(stmt, Val):
