@@ -111,6 +111,8 @@ def marked(
 
         if res is None:
             self.reset()
+        else:
+            self.unmark()
 
         return res
 
@@ -140,19 +142,13 @@ class Parser:
         lexer = Lexer(buf)
         return cls(lexer)
 
-    def mark(self) -> None:
-        self.marks.append([])
-
-    def put(self, tok: Token) -> None:
-        self.buf.append(tok)
-
     def get(self) -> Token:
         if len(self.buf) > 0:
             tok = self.buf.pop()
         else:
             try:
                 tok = next(self.tokens)
-            except StopIteration:
+            except StopIteration:  # pragma: no cover
                 raise EndOfTokens()
 
         if len(self.marks) > 0:
@@ -160,13 +156,8 @@ class Parser:
 
         return tok
 
-    def reset(self) -> None:
-        if len(self.marks) == 0:
-            raise ParserError("cannot reset if no marks")
-
-        mark_toks = self.marks.pop()
-        for tok in reversed(mark_toks):
-            self.put(tok)
+    def put(self, tok: Token) -> None:
+        self.buf.append(tok)
 
     def peek(self, n: int) -> List[Token]:
         toks = []
@@ -182,6 +173,23 @@ class Parser:
     def drop(self, n: int) -> None:
         for _ in range(n):
             self.get()
+
+    def mark(self) -> None:
+        self.marks.append([])
+
+    def unmark(self) -> None:
+        if len(self.marks) == 0:  # pragma: no cover
+            raise ParserError("cannot unmark if no marks")
+
+        self.marks.pop()
+
+    def reset(self) -> None:
+        if len(self.marks) == 0:  # pragma: no cover
+            raise ParserError("cannot reset if no marks")
+
+        mark_toks = self.marks.pop()
+        for tok in reversed(mark_toks):
+            self.put(tok)
 
     def expect_text(self, tok_text: Optional[str] = None, fatal: bool = False) -> Text:
         tok = self.get()

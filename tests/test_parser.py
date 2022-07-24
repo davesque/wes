@@ -145,6 +145,41 @@ def test_parse_binary_expected_comma() -> None:
     assert "expected ','" in excinfo.value.msg
 
 
+def test_parse_binary_expected_text() -> None:
+    parser = Parser.from_str("foo bar,")
+
+    with pytest.raises(RenderedError) as excinfo:
+        parser.parse_file()
+
+    assert "expected text" in excinfo.value.msg
+
+
+def test_parse_binary_expected_newline() -> None:
+    parser = Parser.from_str("foo bar, baz bing")
+
+    with pytest.raises(RenderedError) as excinfo:
+        parser.parse_file()
+
+    assert "expected end of line" in excinfo.value.msg
+
+
+def test_parse_binary_expected_mnemonic() -> None:
+    parser = Parser.from_str("!!! bar, baz")
+
+    with pytest.raises(RenderedError) as excinfo:
+        parser.parse_file()
+
+    assert "is not a valid name" in excinfo.value.msg
+
+
+def test_parse_binary() -> None:
+    parser = Parser.from_str("foo bar, 42")
+    file = parser.parse_file()
+    assert file == File((
+        Op('foo', ('bar', 42), dmy),
+    ))
+
+
 def test_parser_from_buf() -> None:
     buf = StringIO("foo")
     parser = Parser.from_buf(buf)
