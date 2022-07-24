@@ -195,7 +195,7 @@ class Parser:
         for tok in reversed(mark_toks):
             self.put(tok)
 
-    def expect_text(
+    def expect(
         self, tok_text: Optional[str] = None, error: Type[Exception] = WrongTokens
     ) -> Text:
         tok = self.get()
@@ -244,14 +244,14 @@ class Parser:
 
     @marked
     def parse_label(self) -> Optional[Label]:
-        name = self.expect_text()
-        colon = self.expect_text(":")
+        name = self.expect()
+        colon = self.expect(":")
 
         return Label(name.text, (name, colon))
 
     @marked
     def parse_nullary_or_val(self) -> Union[Op, Val, None]:
-        name_or_val = self.expect_text()
+        name_or_val = self.expect()
         _ = self.expect_newline()
 
         if NAME_RE.match(name_or_val.text):
@@ -266,8 +266,8 @@ class Parser:
 
     @marked
     def parse_unary(self) -> Optional[Op]:
-        mnemonic = self.expect_text()
-        arg = self.expect_text()
+        mnemonic = self.expect()
+        arg = self.expect()
         _ = self.expect_newline()
 
         if not NAME_RE.match(mnemonic.text):
@@ -279,10 +279,10 @@ class Parser:
 
     @marked
     def parse_binary(self) -> Optional[Op]:
-        mnemonic = self.expect_text()
-        arg1 = self.expect_text()
-        comma = self.expect_text(",", error=Stop)
-        arg2 = self.expect_text(error=Stop)
+        mnemonic = self.expect()
+        arg1 = self.expect()
+        comma = self.expect(",", error=Stop)
+        arg2 = self.expect(error=Stop)
         _ = self.expect_newline(error=Stop)
 
         if not NAME_RE.match(mnemonic.text):
