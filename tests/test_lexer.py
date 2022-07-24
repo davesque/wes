@@ -113,3 +113,25 @@ incr: 1
         Newline(316, 22, 7),
         Eof(316, 22, 8),
     ]
+
+
+def test_lexer_comma() -> None:
+    lexer = Lexer.from_str(
+        """
+lda a,1
+lda a , 1
+"""
+    )
+    assert list(lexer) == [
+        Text("lda", 1, 2, 0),
+        Text("a", 1, 2, 4),
+        Text(",", 1, 2, 5),
+        Text("1", 1, 2, 6),
+        Newline(1, 2, 7),
+        Text("lda", 9, 3, 0),
+        Text("a", 9, 3, 4),
+        Text(",", 9, 3, 6),
+        Text("1", 9, 3, 8),
+        Newline(9, 3, 9),
+        Eof(9, 3, 10),
+    ]
