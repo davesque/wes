@@ -3,10 +3,11 @@ VAL: (0b[01_]+|0o[0-7_]+|[0-9_]+|0x[a-fA-F0-9_]+)
 
 file: stmt* EOF
 
-stmt: label | labeled
+stmt: label | op_or_val
 
-label: NAME ':' NEWLINE
-labeled: [NAME ':'] (nullary_or_val | unary | binary)
+label: NAME ':' [NEWLINE]
+
+op_or_val: (nullary_or_val | unary | binary)
 
 nullary_or_val: (NAME | VAL) NEWLINE
 unary: NAME arg NEWLINE
