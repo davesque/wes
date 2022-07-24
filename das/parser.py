@@ -141,9 +141,6 @@ class Parser:
         return cls(lexer)
 
     def mark(self) -> None:
-        """
-        Creates a new reset buffer.
-        """
         self.marks.append([])
 
     def put(self, tok: Token) -> None:
