@@ -8,14 +8,6 @@ class ParserError(Exception):
 
 
 class Retry(ParserError):
-    pass
-
-
-class EndOfTokens(Retry):
-    pass
-
-
-class WrongTokens(Retry):
     def __init__(self, msg: str, toks: Tuple[Token, ...]):
         self.msg = msg
         self.toks = toks

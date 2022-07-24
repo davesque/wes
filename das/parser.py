@@ -14,12 +14,10 @@ from typing import (
 )
 
 from das.exceptions import (
-    EndOfTokens,
     ParserError,
     RenderedError,
     Retry,
     Stop,
-    WrongTokens,
 )
 from das.lexer import Eof, Lexer, Newline, Text, Token
 from das.utils import str_to_int
@@ -166,7 +164,7 @@ class Parser:
             try:
                 tok = next(self.tokens)
             except StopIteration:  # pragma: no cover
-                raise EndOfTokens()
+                raise ParserError("unexpected end of tokens")
 
         if len(self.marks) > 0:
             self.marks[-1].append(tok)
@@ -196,7 +194,7 @@ class Parser:
             self.put(tok)
 
     def expect(
-        self, tok_text: Optional[str] = None, error: Type[Exception] = WrongTokens
+        self, tok_text: Optional[str] = None, error: Type[Exception] = Retry
     ) -> Text:
         tok = self.get()
 
@@ -207,7 +205,7 @@ class Parser:
 
         return tok
 
-    def expect_newline(self, error: Type[Exception] = WrongTokens) -> Newline:
+    def expect_newline(self, error: Type[Exception] = Retry) -> Newline:
         tok = self.get()
 
         if not isinstance(tok, Newline):
@@ -227,10 +225,7 @@ class Parser:
     def parse_stmt(self) -> Optional[Stmt]:
         if label := self.parse_label():
             # consume a newline if one exists
-            try:
-                tok = self.get()
-            except EndOfTokens:  # pragma: no cover
-                raise Exception("invariant")
+            tok = self.get()
             if not isinstance(tok, Newline):
                 self.put(tok)
 
