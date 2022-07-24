@@ -156,7 +156,7 @@ class Parser:
             try:
                 tok = next(self.tokens)
             except StopIteration:
-                raise EndOfTokens("end of tokens")
+                raise EndOfTokens()
 
         if len(self.marks) > 0:
             self.marks[-1].append(tok)
@@ -170,12 +170,12 @@ class Parser:
             if fatal:
                 raise RenderedError("expected text", tok)
             else:
-                raise WrongToken("expected text")
+                raise WrongToken()
         if tok_text is not None and tok.text != tok_text:
             if fatal:
                 raise RenderedError(f"expected '{tok_text}'", tok)
             else:
-                raise WrongToken(f"expected '{tok_text}'")
+                raise WrongToken()
 
         return tok
 
@@ -186,7 +186,7 @@ class Parser:
             if fatal:
                 raise RenderedError(f"expected end of line", tok)
             else:
-                raise WrongToken("expected end of line")
+                raise WrongToken()
 
         return tok
 
