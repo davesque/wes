@@ -39,19 +39,19 @@ incr: 1
     file = parser.parse_file()
     assert file == File(
         (
-            Op("lda", "init", dmy),
+            Op("lda", ("init",), dmy),
             Label("count_up", dmy),
-            Op("out", None, dmy),
-            Op("add", "incr", dmy),
-            Op("jc", "count_down", dmy),
-            Op("jmp", "count_up", dmy),
+            Op("out", (), dmy),
+            Op("add", ("incr",), dmy),
+            Op("jc", ("count_down",), dmy),
+            Op("jmp", ("count_up",), dmy),
             Label("count_down", dmy),
-            Op("out", None, dmy),
-            Op("sub", "incr", dmy),
-            Op("jz", "end", dmy),
-            Op("jmp", "count_down", dmy),
+            Op("out", (), dmy),
+            Op("sub", ("incr",), dmy),
+            Op("jz", ("end",), dmy),
+            Op("jmp", ("count_down",), dmy),
             Label("end", dmy),
-            Op("hlt", None, dmy),
+            Op("hlt", (), dmy),
             Label("init", dmy),
             Val(42, dmy),
             Label("incr", dmy),
@@ -86,15 +86,15 @@ b: 1
     assert file == File(
         (
             Label("loop", dmy),
-            Op("lda", "a", dmy),
-            Op("out", None, dmy),
-            Op("add", "b", dmy),
-            Op("sta", "a", dmy),
-            Op("lda", "b", dmy),
-            Op("out", None, dmy),
-            Op("add", "a", dmy),
-            Op("sta", "b", dmy),
-            Op("jmp", "loop", dmy),
+            Op("lda", ("a",), dmy),
+            Op("out", (), dmy),
+            Op("add", ("b",), dmy),
+            Op("sta", ("a",), dmy),
+            Op("lda", ("b",), dmy),
+            Op("out", (), dmy),
+            Op("add", ("a",), dmy),
+            Op("sta", ("b",), dmy),
+            Op("jmp", ("loop",), dmy),
             Label("a", dmy),
             Val(1, dmy),
             Label("b", dmy),
@@ -106,7 +106,7 @@ b: 1
 def test_parse_unary_with_val() -> None:
     parser = Parser.from_str("lda 1")
     file = parser.parse_file()
-    assert file == File((Op("lda", 1, dmy),))
+    assert file == File((Op("lda", (1,), dmy),))
 
 
 def test_parse_nullary_or_val_invalid() -> None:
@@ -149,7 +149,7 @@ def test_parser_from_buf() -> None:
     buf = StringIO("foo")
     parser = Parser.from_buf(buf)
 
-    assert parser.parse_file() == File((Op("foo", None, dmy),))
+    assert parser.parse_file() == File((Op("foo", (), dmy),))
 
 
 @pytest.mark.parametrize(

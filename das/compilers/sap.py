@@ -10,15 +10,15 @@ class SapUnary(Unary):
     code: int = None  # type: ignore
 
     def encode(self) -> Iterator[int]:
-        if isinstance(self.op.arg, str):
-            arg = self.compiler.resolve_label(self.op.arg, self.op.toks[1])
-        elif isinstance(self.op.arg, int):
-            if self.op.arg > self.compiler.max_addr:
+        if isinstance(self.op.args[0], str):
+            arg = self.compiler.resolve_label(self.op.args[0], self.op.toks[1])
+        elif isinstance(self.op.args[0], int):  # type: ignore
+            if self.op.args[0] > self.compiler.max_addr:
                 raise RenderedError(
-                    f"arg '{self.op.arg}' is too large",
+                    f"arg '{self.op.args[0]}' is too large",
                     self.op.toks[1],
                 )
-            arg = self.op.arg
+            arg = self.op.args[0]
         else:  # pragma: no cover
             raise Exception("invariant")
 

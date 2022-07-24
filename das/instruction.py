@@ -66,7 +66,7 @@ class Value(Instruction):
 
 class Nullary(Operation):
     def validate(self) -> None:
-        if self.op.arg is not None:
+        if len(self.op.args) > 0:
             raise RenderedError(
                 f"'{self.mnemonic}' instruction takes no argument",
                 self.op.toks,
@@ -75,9 +75,9 @@ class Nullary(Operation):
 
 class Unary(Operation):
     def validate(self) -> None:
-        if self.op.arg is None:
+        if len(self.op.args) != 1:
             raise RenderedError(
-                f"'{self.mnemonic}' instruction requires an argument",
+                f"'{self.mnemonic}' instruction takes one argument",
                 self.op.toks,
             )
 

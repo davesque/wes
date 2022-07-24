@@ -59,24 +59,24 @@ class Label(Stmt):
 
 
 class Op(Stmt):
-    __slots__ = ("mnemonic", "arg")
+    __slots__ = ("mnemonic", "args")
 
     mnemonic: str
-    arg: Union[str, int, None]
+    args: Tuple[Union[str, int], ...]
 
     def __init__(
-        self, mnemonic: str, arg: Union[str, int, None], toks: Tuple[Text, ...]
+        self, mnemonic: str, args: Tuple[Union[str, int], ...], toks: Tuple[Text, ...]
     ):
         self.mnemonic = mnemonic
-        self.arg = arg
+        self.args = args
         self.toks = toks
 
     def __repr__(self) -> str:  # pragma: no cover
-        return f"Op({repr(self.mnemonic)}, {repr(self.arg)})"
+        return f"Op({repr(self.mnemonic)}, {repr(self.args)})"
 
     def __eq__(self, other) -> bool:
         return type(self) is type(other) and (
-            self.mnemonic == other.mnemonic and self.arg == other.arg
+            self.mnemonic == other.mnemonic and self.args == other.args
         )
 
 
@@ -210,7 +210,7 @@ class Parser:
         name_or_val = _require_text(name_or_val, "expected a valid name or value")
 
         if NAME_RE.match(name_or_val.text):
-            return Op(name_or_val.text, None, (name_or_val,))
+            return Op(name_or_val.text, (), (name_or_val,))
         elif VAL_RE.match(name_or_val.text):
             return Val(str_to_int(name_or_val.text), (name_or_val,))
         else:
@@ -246,7 +246,7 @@ class Parser:
                 f"{repr(name_or_val.text)} is not a valid label or integer", name_or_val
             )
 
-        return Op(mnemonic.text, arg, (mnemonic, name_or_val))
+        return Op(mnemonic.text, (arg,), (mnemonic, name_or_val))
 
     def parse_eof(self) -> None:
         tok = self.get()

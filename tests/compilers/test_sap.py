@@ -68,7 +68,7 @@ def test_compile_bad_unary_op() -> None:
     with pytest.raises(RenderedError) as excinfo:
         list(compiler)
 
-    assert "requires an argument" in excinfo.value.msg
+    assert "takes one argument" in excinfo.value.msg
 
 
 def test_compile_bad_nullary_op() -> None:
