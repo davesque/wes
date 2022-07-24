@@ -175,9 +175,7 @@ def test_parse_binary_expected_mnemonic() -> None:
 def test_parse_binary() -> None:
     parser = Parser.from_str("foo bar, 42")
     file = parser.parse_file()
-    assert file == File((
-        Op('foo', ('bar', 42), dmy),
-    ))
+    assert file == File((Op("foo", ("bar", 42), dmy),))
 
 
 def test_parser_from_buf() -> None:
