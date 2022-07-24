@@ -163,6 +163,29 @@ class Parser:
 
         return tok
 
+    def reset(self) -> None:
+        if len(self.marks) == 0:
+            raise ParserError("cannot reset if no marks")
+
+        mark_toks = self.marks.pop()
+        for tok in reversed(mark_toks):
+            self.put(tok)
+
+    def peek(self, n: int) -> List[Token]:
+        toks = []
+        try:
+            for _ in range(n):
+                toks.append(self.get())
+        finally:
+            for tok in reversed(toks):
+                self.put(tok)
+
+        return toks
+
+    def drop(self, n: int) -> None:
+        for _ in range(n):
+            self.get()
+
     def expect_text(self, tok_text: Optional[str] = None, fatal: bool = False) -> Text:
         tok = self.get()
 
@@ -189,29 +212,6 @@ class Parser:
                 raise WrongToken()
 
         return tok
-
-    def reset(self) -> None:
-        if len(self.marks) == 0:
-            raise ParserError("cannot reset if no marks")
-
-        mark_toks = self.marks.pop()
-        for tok in reversed(mark_toks):
-            self.put(tok)
-
-    def peek(self, n: int) -> List[Token]:
-        toks = []
-        try:
-            for _ in range(n):
-                toks.append(self.get())
-        finally:
-            for tok in reversed(toks):
-                self.put(tok)
-
-        return toks
-
-    def drop(self, n: int) -> None:
-        for _ in range(n):
-            self.get()
 
     def parse_file(self) -> File:
         stmts = []
