@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, Iterator, TextIO, Type, TypeVar
+from typing import Dict, Iterator, TextIO, Type, TypeVar, overload
 
 from das.exceptions import RenderedError
 from das.instruction import Instruction, Value
@@ -37,12 +37,31 @@ class Compiler:
 
         return cls(file)
 
+    @overload
+    def get_instruction(self, stmt: Val) -> Value:  # pragma: no cover
+        ...
+
+    @overload
+    def get_instruction(self, stmt: Op) -> Instruction:  # pragma: no cover
+        ...
+
+    def get_instruction(self, stmt):
+        if isinstance(stmt, Op):
+            try:
+                instruction_cls = self.instructions[stmt.mnemonic]
+            except KeyError:
+                raise RenderedError(
+                    f"unrecognized instruction '{stmt.mnemonic}'", stmt.toks
+                )
+            return instruction_cls(self, stmt)
+        elif isinstance(stmt, Val):
+            return Value(self, stmt)
+        else:  # pragma: no cover
+            raise Exception("invariant")
+
     def find_labels(self) -> None:
         loc = 0
         for stmt in self.file.stmts:
-            if loc > self.max_addr:
-                raise RenderedError("statement makes program too large", stmt.toks[0])
-
             if isinstance(stmt, Label):
                 if stmt.name in self.labels:
                     raise RenderedError(
@@ -50,19 +69,16 @@ class Compiler:
                     )
 
                 self.labels[stmt.name] = loc
-            elif isinstance(stmt, Op):
-                try:
-                    instruction_cls = self.instructions[stmt.mnemonic]
-                except KeyError:
-                    raise RenderedError(
-                        f"unrecognized instruction '{stmt.mnemonic}'", stmt.toks
-                    )
+            elif isinstance(stmt, (Op, Val)):
+                inst = self.get_instruction(stmt)
+                loc += inst.size
 
-                inst = instruction_cls(self, stmt)
-                loc += inst.size
-            elif isinstance(stmt, Val):
-                inst = Value(self, stmt)
-                loc += inst.size
+                if loc > self.max_addr:
+                    raise RenderedError(
+                        "statement makes program too large", stmt.toks[0]
+                    )
+            else:  # pragma: no cover
+                raise Exception("invariant")
 
     def resolve_label(self, label: str, label_tok: Text) -> int:
         try:
@@ -74,12 +90,7 @@ class Compiler:
         self.find_labels()
 
         for stmt in self.file.stmts:
-            if isinstance(stmt, Op):
-                instruction_cls = self.instructions[stmt.mnemonic]
-
-                inst = instruction_cls(self, stmt)
-                yield from inst.encode()
-
-            elif isinstance(stmt, Val):
-                inst = Value(self, stmt)
+            if isinstance(stmt, (Op, Val)):
+                # only ops and vals generate code
+                inst = self.get_instruction(stmt)
                 yield from inst.encode()
