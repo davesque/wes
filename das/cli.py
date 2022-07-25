@@ -3,11 +3,14 @@ from io import StringIO
 from typing import TextIO
 
 from das.compilers.sap import SapCompiler
-from das.exceptions import Message
+from das.exceptions import Message, Stop
 
 
 def run(in_buf: TextIO, out_buf: TextIO) -> None:
-    compiler = SapCompiler.from_buf(in_buf)
+    try:
+        compiler = SapCompiler.from_buf(in_buf)
+    except Stop as e:
+        raise Message(e.msg, e.toks)
 
     for i, code in enumerate(compiler):
         print(f"{i:04b}: {code >> 4:04b} {code & 15:04b}", file=out_buf)

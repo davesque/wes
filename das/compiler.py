@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, Iterator, TextIO, Type, TypeVar, overload
 
-from das.exceptions import Message, Stop
+from das.exceptions import Message
 from das.instruction import Operation, Value
 from das.lexer import Text
 from das.parser import File, Label, Op, Parser, Val
@@ -26,20 +26,14 @@ class Compiler:
     @classmethod
     def from_str(cls: Type[T], text: str) -> T:
         parser = Parser.from_str(text)
-        try:
-            file = parser.parse_file()
-        except Stop as e:
-            raise Message(e.msg, e.toks)
+        file = parser.parse_file()
 
         return cls(file)
 
     @classmethod
     def from_buf(cls: Type[T], buf: TextIO) -> T:
         parser = Parser.from_buf(buf)
-        try:
-            file = parser.parse_file()
-        except Stop as e:
-            raise Message(e.msg, e.toks)
+        file = parser.parse_file()
 
         return cls(file)
 
