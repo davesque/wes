@@ -117,7 +117,7 @@ class Eof(Token):
         return f"Eof({self.line_start}, {self.line_num}, {self.col})"
 
 
-class BufferEof(Exception):
+class EndOfBuffer(Exception):
     pass
 
 
@@ -143,7 +143,7 @@ class Lexer:
     def get_line(self) -> str:
         line = self.buf.readline()
         if len(line) == 0:
-            raise BufferEof("eof")
+            raise EndOfBuffer()
 
         self.line_num += 1
         return line
@@ -156,7 +156,7 @@ class Lexer:
             while True:
                 try:
                     line = self.get_line()
-                except BufferEof:
+                except EndOfBuffer:
                     if line is None:
                         line = ""
 
