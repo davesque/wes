@@ -266,7 +266,7 @@ class Parser:
         if not NAME_RE.match(mnemonic.text):
             raise Stop(f"{repr(mnemonic.text)} is not a valid name", (mnemonic,))
 
-        arg_ = self.parse_arg(arg)
+        arg_ = self.parse_arg_token(arg)
 
         return Op(mnemonic.text, (arg_,), (mnemonic, arg))
 
@@ -281,12 +281,12 @@ class Parser:
         if not NAME_RE.match(mnemonic.text):
             raise Stop(f"{repr(mnemonic.text)} is not a valid name", (mnemonic,))
 
-        arg1_ = self.parse_arg(arg1)
-        arg2_ = self.parse_arg(arg2)
+        arg1_ = self.parse_arg_token(arg1)
+        arg2_ = self.parse_arg_token(arg2)
 
         return Op(mnemonic.text, (arg1_, arg2_), (mnemonic, arg1, comma, arg2))
 
-    def parse_arg(self, name_or_val: Text) -> Union[str, int]:
+    def parse_arg_token(self, name_or_val: Text) -> Union[str, int]:
         if VAL_RE.match(name_or_val.text):
             return str_to_int(name_or_val.text)
         elif NAME_RE.match(name_or_val.text):
