@@ -13,7 +13,7 @@ from typing import (
     Union,
 )
 
-from das.exceptions import ParserError, RenderedError, Retry, Stop
+from das.exceptions import ParserError, RenderedError, Reset, Stop
 from das.lexer import Eof, Lexer, Newline, Text, Token
 from das.utils import str_to_int
 
@@ -118,7 +118,7 @@ def marked(
             res = old_method(self)
         except Stop as e:
             raise RenderedError(e.msg, e.toks)
-        except Retry:
+        except Reset:
             self.reset()
             return None
 
@@ -192,7 +192,7 @@ class Parser:
             self.put(tok)
 
     def expect(
-        self, tok_text: Optional[str] = None, error: Type[Exception] = Retry
+        self, tok_text: Optional[str] = None, error: Type[Exception] = Reset
     ) -> Text:
         tok = self.get()
 
@@ -203,7 +203,7 @@ class Parser:
 
         return tok
 
-    def expect_newline(self, error: Type[Exception] = Retry) -> Newline:
+    def expect_newline(self, error: Type[Exception] = Reset) -> Newline:
         tok = self.get()
 
         if not isinstance(tok, Newline):

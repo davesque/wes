@@ -13,7 +13,7 @@ class TokenError(ParserError):
         self.toks = toks
 
 
-class Retry(TokenError):
+class Reset(TokenError):
     pass
 
 
