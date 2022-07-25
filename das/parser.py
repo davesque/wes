@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import re
 from typing import (
     Callable,
@@ -108,21 +109,13 @@ class Val(Stmt):
         return type(self) is type(other) and (self.val == other.val)
 
 
-def marked(
-    old_method: Callable[[Parser], Optional[T]]
+def optional(
+    old_method: Callable[[Parser], T]
 ) -> Callable[[Parser], Optional[T]]:
     def new_method(self) -> Optional[T]:
-        self.mark()
-
-        try:
+        res = None
+        with self.resettable():
             res = old_method(self)
-        except Stop as e:
-            raise RenderedError(e.msg, e.toks)
-        except Reset:
-            self.reset()
-            return None
-
-        self.unmark()
 
         return res
 
@@ -191,6 +184,16 @@ class Parser:
         for tok in reversed(mark_toks):
             self.put(tok)
 
+    @contextlib.contextmanager
+    def resettable(self) -> Iterator[None]:
+        self.mark()
+        try:
+            yield
+        except Reset:
+            self.reset()
+        else:
+            self.unmark()
+
     def expect(
         self, tok_text: Optional[str] = None, error: Type[Exception] = Reset
     ) -> Text:
@@ -223,9 +226,8 @@ class Parser:
     def parse_stmt(self) -> Optional[Stmt]:
         if label := self.parse_label():
             # consume a newline if one exists
-            tok = self.get()
-            if not isinstance(tok, Newline):
-                self.put(tok)
+            with self.resettable():
+                self.expect_newline()
 
             return label
         elif nullary_or_val := self.parse_nullary_or_val():
@@ -235,15 +237,15 @@ class Parser:
         else:
             return self.parse_binary()
 
-    @marked
-    def parse_label(self) -> Optional[Label]:
+    @optional
+    def parse_label(self) -> Label:
         name = self.expect()
         colon = self.expect(":")
 
         return Label(name.text, (name, colon))
 
-    @marked
-    def parse_nullary_or_val(self) -> Union[Op, Val, None]:
+    @optional
+    def parse_nullary_or_val(self) -> Union[Op, Val]:
         name_or_val = self.expect()
         _ = self.expect_newline()
 
@@ -257,8 +259,8 @@ class Parser:
                 (name_or_val,),
             )
 
-    @marked
-    def parse_unary(self) -> Optional[Op]:
+    @optional
+    def parse_unary(self) -> Op:
         mnemonic = self.expect()
         arg = self.expect()
         _ = self.expect_newline()
@@ -270,8 +272,8 @@ class Parser:
 
         return Op(mnemonic.text, (arg_,), (mnemonic, arg))
 
-    @marked
-    def parse_binary(self) -> Optional[Op]:
+    @optional
+    def parse_binary(self) -> Op:
         mnemonic = self.expect()
         arg1 = self.expect()
         comma = self.expect(",", error=Stop)

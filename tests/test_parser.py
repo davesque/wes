@@ -2,7 +2,7 @@ from io import StringIO
 
 import pytest
 
-from das.exceptions import RenderedError
+from das.exceptions import Stop
 from das.parser import File, Label, Op, Parser, Val
 
 
@@ -160,7 +160,7 @@ def test_parse_unary_with_val() -> None:
 def test_parse_nullary_or_val_invalid() -> None:
     parser = Parser.from_str("!!!")
 
-    with pytest.raises(RenderedError) as excinfo:
+    with pytest.raises(Stop) as excinfo:
         parser.parse_file()
 
     assert "is not a valid name or integer" in excinfo.value.msg
@@ -169,7 +169,7 @@ def test_parse_nullary_or_val_invalid() -> None:
 def test_parse_unary_invalid_mnemonic() -> None:
     parser = Parser.from_str("!!! blah")
 
-    with pytest.raises(RenderedError) as excinfo:
+    with pytest.raises(Stop) as excinfo:
         parser.parse_file()
 
     assert "is not a valid name" in excinfo.value.msg
@@ -178,7 +178,7 @@ def test_parse_unary_invalid_mnemonic() -> None:
 def test_parse_unary_invalid_op_arg() -> None:
     parser = Parser.from_str("blah !!!")
 
-    with pytest.raises(RenderedError) as excinfo:
+    with pytest.raises(Stop) as excinfo:
         parser.parse_file()
 
     assert "is not a valid name or integer" in excinfo.value.msg
@@ -187,7 +187,7 @@ def test_parse_unary_invalid_op_arg() -> None:
 def test_parse_binary_expected_comma() -> None:
     parser = Parser.from_str("foo bar baz")
 
-    with pytest.raises(RenderedError) as excinfo:
+    with pytest.raises(Stop) as excinfo:
         parser.parse_file()
 
     assert "expected ','" in excinfo.value.msg
@@ -196,7 +196,7 @@ def test_parse_binary_expected_comma() -> None:
 def test_parse_binary_expected_text() -> None:
     parser = Parser.from_str("foo bar,")
 
-    with pytest.raises(RenderedError) as excinfo:
+    with pytest.raises(Stop) as excinfo:
         parser.parse_file()
 
     assert "unexpected end of line" in excinfo.value.msg
@@ -205,7 +205,7 @@ def test_parse_binary_expected_text() -> None:
 def test_parse_binary_expected_newline() -> None:
     parser = Parser.from_str("foo bar, baz bing")
 
-    with pytest.raises(RenderedError) as excinfo:
+    with pytest.raises(Stop) as excinfo:
         parser.parse_file()
 
     assert "expected end of line" in excinfo.value.msg
@@ -214,7 +214,7 @@ def test_parse_binary_expected_newline() -> None:
 def test_parse_binary_expected_mnemonic() -> None:
     parser = Parser.from_str("!!! bar, baz")
 
-    with pytest.raises(RenderedError) as excinfo:
+    with pytest.raises(Stop) as excinfo:
         parser.parse_file()
 
     assert "is not a valid name" in excinfo.value.msg
