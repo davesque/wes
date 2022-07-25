@@ -1,6 +1,9 @@
 from io import StringIO
 
+import pytest
+
 from das.cli import run
+from das.exceptions import Message
 
 
 def test_run() -> None:
@@ -50,3 +53,11 @@ incr: 1
 1011: 0000 0001
 """[1:]
     # fmt: on
+
+
+def test_run_error() -> None:
+    in_buf = StringIO("lda init foo bar")
+    out_buf = StringIO()
+
+    with pytest.raises(Message):
+        run(in_buf, out_buf)
