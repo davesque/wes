@@ -4,7 +4,7 @@ import pytest
 
 from das.compiler import Compiler
 from das.compilers.sap import SapCompiler
-from das.exceptions import RenderedError
+from das.exceptions import Message
 
 
 def test_compiler_from_str() -> None:
@@ -54,7 +54,7 @@ def test_find_labels_too_large() -> None:
 out
 """
     )
-    with pytest.raises(RenderedError) as excinfo:
+    with pytest.raises(Message) as excinfo:
         list(compiler)
 
     assert "statement makes program too large" in excinfo.value.msg
@@ -67,7 +67,7 @@ foo: 1
 foo: 1
 """
     )
-    with pytest.raises(RenderedError) as excinfo:
+    with pytest.raises(Message) as excinfo:
         compiler.find_labels()
 
     assert "redefinition of label" in excinfo.value.msg
@@ -83,7 +83,7 @@ forty_two: 0x42
     compiler.find_labels()
 
     bad_label_tok = compiler.file.stmts[0].toks[1]
-    with pytest.raises(RenderedError) as excinfo:
+    with pytest.raises(Message) as excinfo:
         compiler.resolve_label("meaning_of_life", bad_label_tok)
     assert excinfo.value.msg == "unrecognized label 'meaning_of_life'"
     assert excinfo.value.toks == (bad_label_tok,)

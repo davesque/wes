@@ -3,7 +3,7 @@ from io import StringIO
 from typing import TextIO
 
 from das.compilers.sap import SapCompiler
-from das.exceptions import RenderedError
+from das.exceptions import Message
 
 
 def run(in_buf: TextIO, out_buf: TextIO) -> None:
@@ -28,7 +28,7 @@ def main():  # pragma: no cover
 
     try:
         run(in_buf, sys.stdout)
-    except RenderedError as e:
+    except Message as e:
         print(e.render(file_txt), file=sys.stderr)
         sys.exit(1)
 

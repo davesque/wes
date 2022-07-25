@@ -1,7 +1,7 @@
 from typing import Iterator
 
 from das.compiler import Compiler
-from das.exceptions import RenderedError
+from das.exceptions import Message
 from das.instruction import Const, Unary
 
 
@@ -14,7 +14,7 @@ class SapUnary(Unary):
             arg = self.compiler.resolve_label(self.op.args[0], self.op.toks[1])
         elif isinstance(self.op.args[0], int):  # type: ignore
             if self.op.args[0] > self.compiler.max_addr:
-                raise RenderedError(
+                raise Message(
                     f"arg '{self.op.args[0]}' is too large",
                     (self.op.toks[1],),
                 )

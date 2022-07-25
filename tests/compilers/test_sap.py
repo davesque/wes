@@ -1,7 +1,7 @@
 import pytest
 
 from das.compilers.sap import SapCompiler
-from das.exceptions import RenderedError
+from das.exceptions import Message
 
 
 def test_compile_count() -> None:
@@ -65,7 +65,7 @@ def test_compile_op_with_literal() -> None:
 
 def test_compile_bad_unary_op() -> None:
     compiler = SapCompiler.from_str("lda")
-    with pytest.raises(RenderedError) as excinfo:
+    with pytest.raises(Message) as excinfo:
         list(compiler)
 
     assert "takes one argument" in excinfo.value.msg
@@ -73,7 +73,7 @@ def test_compile_bad_unary_op() -> None:
 
 def test_compile_bad_nullary_op() -> None:
     compiler = SapCompiler.from_str("nop 1")
-    with pytest.raises(RenderedError) as excinfo:
+    with pytest.raises(Message) as excinfo:
         list(compiler)
 
     assert "takes no argument" in excinfo.value.msg
@@ -81,7 +81,7 @@ def test_compile_bad_nullary_op() -> None:
 
 def test_compile_bad_label() -> None:
     compiler = SapCompiler.from_str("lda foo")
-    with pytest.raises(RenderedError) as excinfo:
+    with pytest.raises(Message) as excinfo:
         list(compiler)
 
     assert "unrecognized label" in excinfo.value.msg
@@ -89,7 +89,7 @@ def test_compile_bad_label() -> None:
 
 def test_compile_big_op_arg() -> None:
     compiler = SapCompiler.from_str("lda 16")
-    with pytest.raises(RenderedError) as excinfo:
+    with pytest.raises(Message) as excinfo:
         list(compiler)
 
     assert "is too large" in excinfo.value.msg
@@ -97,7 +97,7 @@ def test_compile_big_op_arg() -> None:
 
 def test_compile_big_bare_literal() -> None:
     compiler = SapCompiler.from_str("256")
-    with pytest.raises(RenderedError) as excinfo:
+    with pytest.raises(Message) as excinfo:
         list(compiler)
 
     assert "is too large" in excinfo.value.msg
@@ -105,7 +105,7 @@ def test_compile_big_bare_literal() -> None:
 
 def test_compile_unrecognized_instruction() -> None:
     compiler = SapCompiler.from_str("foo")
-    with pytest.raises(RenderedError) as excinfo:
+    with pytest.raises(Message) as excinfo:
         list(compiler)
 
     assert "unrecognized instruction" in excinfo.value.msg

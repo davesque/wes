@@ -14,7 +14,7 @@ from typing import (
     Union,
 )
 
-from das.exceptions import ParserError, RenderedError, Reset, Stop
+from das.exceptions import ParserError, Reset, Stop
 from das.lexer import Eof, Lexer, Newline, Text, Token
 from das.utils import str_to_int
 
@@ -109,9 +109,7 @@ class Val(Stmt):
         return type(self) is type(other) and (self.val == other.val)
 
 
-def optional(
-    old_method: Callable[[Parser], T]
-) -> Callable[[Parser], Optional[T]]:
+def optional(old_method: Callable[[Parser], T]) -> Callable[[Parser], Optional[T]]:
     def new_method(self) -> Optional[T]:
         res = None
         with self.resettable():

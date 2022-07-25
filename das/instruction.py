@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Iterator
 
-from das.exceptions import RenderedError
+from das.exceptions import Message
 from das.parser import Op, Val
 from das.utils import byte_length
 
@@ -52,7 +52,7 @@ class Value(Instruction):
 
     def validate(self) -> None:
         if self.val.val > self.compiler.max_val:
-            raise RenderedError(
+            raise Message(
                 f"value '{self.val.toks[0].text}' is too large", (self.val.toks[0],)
             )
 
@@ -67,7 +67,7 @@ class Value(Instruction):
 class Nullary(Operation):
     def validate(self) -> None:
         if len(self.op.args) > 0:
-            raise RenderedError(
+            raise Message(
                 f"'{self.mnemonic}' instruction takes no argument",
                 self.op.toks,
             )
@@ -76,7 +76,7 @@ class Nullary(Operation):
 class Unary(Operation):
     def validate(self) -> None:
         if len(self.op.args) != 1:
-            raise RenderedError(
+            raise Message(
                 f"'{self.mnemonic}' instruction takes one argument",
                 self.op.toks,
             )

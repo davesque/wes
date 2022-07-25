@@ -8,7 +8,8 @@ from das.parser import File, Label, Op, Parser, Val
 
 @pytest.fixture
 def count_parser() -> Parser:
-    return Parser.from_str("""
+    return Parser.from_str(
+        """
 lda init
 loop:
   out
@@ -16,7 +17,8 @@ loop:
   jmp loop
 init: 0
 incr: 1
-""")
+"""
+    )
 
 
 def test_parse_count() -> None:

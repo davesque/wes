@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, Iterator, TextIO, Type, TypeVar, overload
 
-from das.exceptions import RenderedError, Stop
+from das.exceptions import Message, Stop
 from das.instruction import Operation, Value
 from das.lexer import Text
 from das.parser import File, Label, Op, Parser, Val
@@ -29,7 +29,7 @@ class Compiler:
         try:
             file = parser.parse_file()
         except Stop as e:
-            raise RenderedError(e.msg, e.toks)
+            raise Message(e.msg, e.toks)
 
         return cls(file)
 
@@ -39,7 +39,7 @@ class Compiler:
         try:
             file = parser.parse_file()
         except Stop as e:
-            raise RenderedError(e.msg, e.toks)
+            raise Message(e.msg, e.toks)
 
         return cls(file)
 
@@ -56,7 +56,7 @@ class Compiler:
             try:
                 instruction_cls = self.instructions[stmt.mnemonic]
             except KeyError:
-                raise RenderedError(
+                raise Message(
                     f"unrecognized instruction '{stmt.mnemonic}'", (stmt.toks[0],)
                 )
             return instruction_cls(self, stmt)
@@ -70,7 +70,7 @@ class Compiler:
         for stmt in self.file.stmts:
             if isinstance(stmt, Label):
                 if stmt.name in self.labels:
-                    raise RenderedError(
+                    raise Message(
                         f"redefinition of label '{stmt.name}'", (stmt.toks[0],)
                     )
 
@@ -80,9 +80,7 @@ class Compiler:
                 loc += inst.size
 
                 if loc > self.max_addr:
-                    raise RenderedError(
-                        "statement makes program too large", (stmt.toks[0],)
-                    )
+                    raise Message("statement makes program too large", (stmt.toks[0],))
             else:  # pragma: no cover
                 raise Exception("invariant")
 
@@ -90,7 +88,7 @@ class Compiler:
         try:
             return self.labels[label]
         except KeyError:
-            raise RenderedError(f"unrecognized label '{label}'", (label_tok,))
+            raise Message(f"unrecognized label '{label}'", (label_tok,))
 
     def __iter__(self) -> Iterator[int]:
         self.find_labels()

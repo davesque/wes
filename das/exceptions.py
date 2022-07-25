@@ -21,7 +21,7 @@ class Stop(TokenError):
     pass
 
 
-class RenderedError(Exception):
+class Message(Exception):
     def __init__(self, msg: str, toks: Tuple[Token, ...]):
         if len(toks) == 0:
             raise ValueError("expected one or more tokens")
