@@ -4,7 +4,6 @@ from typing import Callable, cast
 
 import pytest
 
-from das.compiler import Compiler
 from das.compilers.sap import Lda, SapCompiler
 from das.exceptions import Message
 from das.instruction import Value
@@ -97,7 +96,9 @@ fifteen: 0x44
             ("word 0\n-1: 0", in_("size of padding instruction 'word'")),
         ),
     )
-    def test_find_labels_errors(self, file_txt: str, check_msg: Callable[[str], bool]) -> None:
+    def test_find_labels_errors(
+        self, file_txt: str, check_msg: Callable[[str], bool]
+    ) -> None:
         compiler = SapCompiler.from_str(file_txt)
 
         with pytest.raises(Message) as excinfo:
@@ -130,7 +131,9 @@ label3: 0
             ("0\n0\n0: 0", re_(r"^offset '0' is before.*$")),
         ),
     )
-    def test_resolve_offsets_errors(self, file_txt: str, check_msg: Callable[[str], bool]) -> None:
+    def test_resolve_offsets_errors(
+        self, file_txt: str, check_msg: Callable[[str], bool]
+    ) -> None:
         compiler = SapCompiler.from_str(file_txt)
 
         with pytest.raises(Message) as excinfo:
