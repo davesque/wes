@@ -1,10 +1,11 @@
 NAME: [a-zA-Z_][a-zA-Z0-9_]*
-VAL: (0b[01_]+|0o[0-7_]+|[0-9_]+|0x[a-fA-F0-9_]+)
+VAL: (-)?(0b[01_]+|0o[0-7_]+|[0-9_]+|0x[a-fA-F0-9_]+)
 
 file: stmt* EOF
 
-stmt: label | op_or_val
+stmt: offset | label | op_or_val
 
+offset: VAL ':' [NEWLINE]
 label: NAME ':' [NEWLINE]
 
 op_or_val: (nullary_or_val | unary | binary)

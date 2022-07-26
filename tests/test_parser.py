@@ -3,7 +3,7 @@ from io import StringIO
 import pytest
 
 from das.exceptions import Stop
-from das.parser import File, Label, Op, Parser, Val
+from das.parser import File, Label, Offset, Op, Parser, Val
 
 
 @pytest.fixture
@@ -249,3 +249,34 @@ def test_parse_underscore_digit_grouping(int_repr: str, int_val: int) -> None:
     file = parser.parse_file()
 
     assert file == File((Val(int_val, ()),))
+
+
+def test_parse_offsets() -> None:
+    parser = Parser.from_str(
+        """
+0x8000:
+
+start:
+  lda 42
+
+hlt
+
+0xfffc:
+  word start
+0xfffe:
+  word 0
+"""
+    )
+    file = parser.parse_file()
+    assert file == File(
+        (
+            Offset(0x8000, ()),
+            Label("start", ()),
+            Op("lda", (42,), ()),
+            Op("hlt", (), ()),
+            Offset(0xFFFC, ()),
+            Op("word", ("start",), ()),
+            Offset(0xFFFE, ()),
+            Op("word", (0,), ()),
+        )
+    )

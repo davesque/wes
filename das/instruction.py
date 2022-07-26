@@ -91,3 +91,19 @@ class Const(Nullary):
     @property
     def size(self) -> int:
         return byte_length(self.output)
+
+
+class Word(Unary):
+    mnemonic = "word"
+
+    def encode(self) -> Iterator[int]:
+        arg = self.op.args[0]
+        if isinstance(arg, str):
+            arg = self.compiler.resolve_label(arg, self.op.toks[1])
+
+        yield arg & 0xff
+        yield (arg >> 8) & 0xff
+
+    @property
+    def size(self) -> int:
+        return 2

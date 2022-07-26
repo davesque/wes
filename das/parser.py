@@ -19,7 +19,7 @@ from das.lexer import Eof, Lexer, Newline, Text, Token
 from das.utils import str_to_int
 
 NAME_RE = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
-VAL_RE = re.compile(r"^(0b[01_]+|0o[0-7_]+|[0-9_]+|0x[a-fA-F0-9_]+)$")
+VAL_RE = re.compile(r"^([+-])?(0b[01_]+|0o[0-7_]+|[0-9_]+|0x[a-fA-F0-9_]+)$")
 
 T = TypeVar("T")
 
@@ -69,6 +69,22 @@ class Label(Stmt):
 
     def __eq__(self, other) -> bool:
         return type(self) is type(other) and (self.name == other.name)
+
+
+class Offset(Stmt):
+    __slots__ = ("offset",)
+
+    offset: int
+
+    def __init__(self, offset: int, toks: Tuple[Text, ...]):
+        self.offset = offset
+        self.toks = toks
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return f"Offset({self.offset})"
+
+    def __eq__(self, other) -> bool:
+        return type(self) is type(other) and (self.offset == other.offset)
 
 
 class Op(Stmt):
@@ -219,7 +235,13 @@ class Parser:
         return File(tuple(stmts))
 
     def parse_stmt(self) -> Optional[Stmt]:
-        if label := self.parse_label():
+        if offset := self.parse_offset():
+            # consume a newline if one exists
+            with self.resettable():
+                self.expect_newline()
+
+            return offset
+        elif label := self.parse_label():
             # consume a newline if one exists
             with self.resettable():
                 self.expect_newline()
@@ -233,9 +255,22 @@ class Parser:
             return self.parse_binary()
 
     @optional
+    def parse_offset(self) -> Offset:
+        val = self.expect()
+        colon = self.expect(":")
+
+        if not VAL_RE.match(val.text):
+            raise Reset(f"{repr(val.text)} is not valid offset", (val,))
+
+        return Offset(str_to_int(val.text), (val, colon))
+
+    @optional
     def parse_label(self) -> Label:
         name = self.expect()
         colon = self.expect(":")
+
+        if not NAME_RE.match(name.text):
+            raise Reset(f"{repr(name.text)} is not valid name", (name,))
 
         return Label(name.text, (name, colon))
 

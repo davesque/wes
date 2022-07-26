@@ -2,7 +2,7 @@ from typing import Iterator
 
 from das.compiler import Compiler
 from das.exceptions import Message
-from das.instruction import Const, Unary
+from das.instruction import Const, Unary, Word
 
 
 class SapUnary(Unary):
@@ -95,5 +95,6 @@ class SapCompiler(Compiler):
         Jc.mnemonic: Jc,
         Jz.mnemonic: Jz,
         Out.mnemonic: Out,
+        Word.mnemonic: Word,
         Hlt.mnemonic: Hlt,
     }
