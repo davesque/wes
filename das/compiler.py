@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import Dict, Iterator, TextIO, Type, TypeVar, overload, cast
+from typing import Dict, Iterator, TextIO, Type, TypeVar, cast, overload
 
 from das.exceptions import Message
-from das.instruction import Operation, Value, Instruction
+from das.instruction import Instruction, Operation, Value
 from das.lexer import Text
-from das.parser import File, Label, Op, Parser, Val, Offset
+from das.parser import File, Label, Offset, Op, Parser, Val
 
 T = TypeVar("T")
 
@@ -81,7 +81,7 @@ class Compiler:
 
                 if last_inst is None:
                     raise Message(
-                        f"offset must follow generated code usable as padding",
+                        "offset must follow generated code usable as padding",
                         (stmt.toks[0],),
                     )
 
@@ -92,8 +92,8 @@ class Compiler:
                     # % last_inst.size != 0` can never be true for values.
                     if isinstance(last_inst, Operation):
                         raise Message(
-                            f"size of padding instruction '{last_inst.mnemonic}' is not a "
-                            + "divisor of padding length",
+                            f"size of padding instruction '{last_inst.mnemonic}' "
+                            + "is not a divisor of padding length",
                             (stmt.toks[0],),
                         )
                     else:  # pragma: no cover

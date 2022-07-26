@@ -101,8 +101,8 @@ class Word(Unary):
         if isinstance(arg, str):
             arg = self.compiler.resolve_label(arg, self.op.toks[1])
 
-        yield arg & 0xff
-        yield (arg >> 8) & 0xff
+        yield arg & 0xFF
+        yield (arg >> 8) & 0xFF
 
     @property
     def size(self) -> int:
