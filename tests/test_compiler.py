@@ -144,8 +144,8 @@ label3: 0
     def test_resolve_label(self) -> None:
         compiler = SapCompiler.from_str(
             """
-    lda meaning_of_life
-    forty_two: 0x42
+lda meaning_of_life
+forty_two: 0x42
     """
         )
         compiler.find_labels()
@@ -170,54 +170,54 @@ label3: 0
 
         compiler = SapCompiler.from_str(
             """
-    lda init
+lda init
 
-    loop:
-      out
-      add incr
-      jmp loop
+loop:
+  out
+  add incr
+  jmp loop
 
-    nop  ; ...
-    -2:
+nop  ; ...
+-2:
 
-    init: 42
-    incr: 1
+init: 42
+incr: 1
     """
         )
         assert list(compiler) == expected_output
 
         compiler = SapCompiler.from_str(
             """
-    lda init
+lda init
 
-    loop:
-      out
-      add incr
-      jmp loop
+loop:
+  out
+  add incr
+  jmp loop
 
-    nop  ; ...
-    0xe:
+nop  ; ...
+0xe:
 
-    init: 42
-    incr: 1
+init: 42
+incr: 1
     """
         )
         assert list(compiler) == expected_output
 
         compiler = SapCompiler.from_str(
             """
-    lda init
+lda init
 
-    loop:
-      out
-      add incr
-      jmp loop
+loop:
+  out
+  add incr
+  jmp loop
 
-    nop  ; ...
-    +9:
+nop  ; ...
++9:
 
-    init: 42
-    incr: 1
+init: 42
+incr: 1
     """
         )
         assert list(compiler) == expected_output
