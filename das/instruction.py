@@ -93,16 +93,34 @@ class Const(Nullary):
         return byte_length(self.output)
 
 
+MAX_WORD = 2**16 - 1
+
+
 class Word(Unary):
     mnemonic = "word"
 
     def encode(self) -> Iterator[int]:
         arg = self.op.args[0]
         if isinstance(arg, str):
-            arg = self.compiler.resolve_label(arg, self.op.toks[1])
+            resolved = self.compiler.resolve_label(arg, self.op.toks[1])
+        else:
+            resolved = arg
 
-        yield arg & 0xFF
-        yield (arg >> 8) & 0xFF
+        if resolved > MAX_WORD:
+            if isinstance(arg, str):
+                msg = (
+                    f"arg '{arg}' of instruction '{self.mnemonic}' "
+                    + f"resolves to value '{resolved}' which does not fit in two bytes"
+                )
+            else:
+                msg = (
+                    f"arg '{arg}' of instruction '{self.mnemonic}' does not fit "
+                    + "in two bytes"
+                )
+            raise Message(msg, self.op.toks)
+
+        yield resolved & 0xFF
+        yield (resolved >> 8) & 0xFF
 
     @property
     def size(self) -> int:

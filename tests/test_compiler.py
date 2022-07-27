@@ -1,4 +1,3 @@
-import re
 from io import StringIO
 from typing import Callable, cast
 
@@ -9,28 +8,7 @@ from das.exceptions import Message
 from das.instruction import Value
 from das.parser import Op, Val
 
-
-def eq_(x: str) -> Callable[[str], bool]:
-    def f(y: str) -> bool:
-        return x == y
-
-    return f
-
-
-def re_(pat: str) -> Callable[[str], bool]:
-    pat_re = re.compile(pat)
-
-    def f(s: str) -> bool:
-        return bool(pat_re.match(s))
-
-    return f
-
-
-def in_(x: str) -> Callable[[str], bool]:
-    def f(y: str) -> bool:
-        return x in y
-
-    return f
+from .utils import Eq, In, Re
 
 
 class TestCompiler:
@@ -89,11 +67,11 @@ fifteen: 0x44
     @pytest.mark.parametrize(
         "file_txt,check_msg",
         (
-            ("0\n0xf: 0\n0", in_("makes program too large")),
-            ("lda: 0", eq_("label 'lda' uses reserved name")),
-            ("foo: 0\nfoo: 0", eq_("redefinition of label 'foo'")),
-            ("-1: 0", in_("offset must follow")),
-            ("word 0\n-1: 0", in_("size of padding instruction 'word'")),
+            ("0\n0xf: 0\n0", In("makes program too large")),
+            ("lda: 0", Eq("label 'lda' uses reserved name")),
+            ("foo: 0\nfoo: 0", Eq("redefinition of label 'foo'")),
+            ("-1: 0", In("offset must follow")),
+            ("word 0\n-1: 0", In("size of padding instruction 'word'")),
         ),
     )
     def test_find_labels_errors(
@@ -127,8 +105,8 @@ label3: 0
     @pytest.mark.parametrize(
         "file_txt,check_msg",
         (
-            ("0x10: 0", re_(r"^offset '0x10' resolves .* address '16'$")),
-            ("0\n0\n0: 0", re_(r"^offset '0' is before.*$")),
+            ("0x10: 0", Re(r"^offset '0x10' resolves .* address '16'$")),
+            ("0\n0\n0: 0", Re(r"^offset '0' is before.*$")),
         ),
     )
     def test_resolve_offsets_errors(
