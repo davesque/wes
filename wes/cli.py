@@ -2,18 +2,29 @@ import argparse
 import shutil
 import sys
 from io import StringIO
-from typing import Callable, TextIO
+from typing import BinaryIO, Generic, TextIO, TypeVar
 
 from wes.compiler import Compiler
 from wes.compilers.sap import SapCompiler
 from wes.exceptions import Message, Stop
 
-Formatter = Callable[[Compiler], None]
+IoType = TypeVar("IoType", TextIO, BinaryIO)
 
 
-def binary_text(compiler: Compiler) -> None:
-    for i, code in enumerate(compiler):
-        print(f"{i:04b}: {code >> 4:04b} {code & 15:04b}", file=sys.stdout)
+class Formatter(Generic[IoType]):
+    buf: IoType
+
+    def __init__(self, buf: IoType):
+        self.buf = buf
+
+    def format(self, compiler: Compiler) -> None:
+        raise NotImplementedError("must implement `format`")
+
+
+class BinaryText(Formatter[TextIO]):
+    def format(self, compiler: Compiler) -> None:
+        for i, code in enumerate(compiler):
+            print(f"{i:04b}: {code >> 4:04b} {code & 15:04b}", file=self.buf)
 
 
 class ReadCompiler:
@@ -36,22 +47,23 @@ class ReadCompiler:
         return bytes(bs)
 
 
-def binary(compiler: Compiler) -> None:
-    shutil.copyfileobj(ReadCompiler(compiler), sys.stdout.buffer)
+class Binary(Formatter[BinaryIO]):
+    def format(self, compiler: Compiler) -> None:
+        shutil.copyfileobj(ReadCompiler(compiler), self.buf)
 
 
-def run(in_buf: TextIO, formatter: Formatter) -> None:
+def run(in_buf: TextIO, formatter: Formatter[IoType]) -> None:
     try:
         compiler = SapCompiler.from_buf(in_buf)
     except Stop as e:
         raise Message(e.msg, e.toks)
 
-    formatter(compiler)
+    formatter.format(compiler)
 
 
 FORMATTERS = {
-    "binary_text": binary_text,
-    "binary": binary,
+    "binary_text": BinaryText(sys.stdout),
+    "binary": Binary(sys.stdout.buffer),
 }
 
 parser = argparse.ArgumentParser(description="Compile an assembly file.")
@@ -66,7 +78,7 @@ parser.add_argument(
     "-f",
     "--format",
     help="format of compiled output",
-    default="binary_text",
+    default="binary",
     choices=FORMATTERS.keys(),
     required=False,
 )
