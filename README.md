@@ -246,6 +246,29 @@ Likewise, `10` (the address location of the line immediately after the `hlt`
 instruction) plus `4` is `14`.  So the absolute offset `14` is equivalent to
 the forward offset `+4` when located on the line after `hlt`.
 
+This feature becomes particularly useful when generating ROMs for the W65C02S.
+The W65C02S microprocessor expects a reset vector of two bytes at offset
+`0xfffc` in memory.  We may also wish to locate the beginning of our program at
+some address other than zero.  We can meet both of those requirements using
+offsets:
+```asm
+0x8000: start:
+lda 0
+; ...
+
+0
+0xfffc: word start
+```
+The above program snippet locates the beginning of instructions at address
+`0x8000`, labeled as `start`.  We can then write arbitrary program code after
+this label.  We then specify the offset `0xfffc` (the reset vector address) as
+containing the two little-endian bytes of the address labeled by `start`. Since
+the offset `0xfffc` was preceded by a literal zero, all bytes after our program
+code and before offset `0xfffc` will be zero.  The W65C02S will inspect the
+data at `0xfffc` to determine the start address for program execution and find
+the little-endian value `0x8000`.  Therefore, execution will begin at address
+`0x8000`.
+
 ## Examples and contribution
 
 A couple example programs are included in the "examples" directory to get you
