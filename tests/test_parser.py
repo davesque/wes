@@ -280,3 +280,10 @@ hlt
             Op("word", (0,), ()),
         )
     )
+
+
+def test_invalid_label_name() -> None:
+    parser = Parser.from_str("foo!#@$: 0")
+    label = parser.parse_label()
+
+    assert label is None
