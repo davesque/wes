@@ -23,18 +23,15 @@ class ReadCompiler:
     def read(self, n: int = -1) -> bytes:
         bs = []
 
-        if n == -1:
-            try:
+        try:
+            if n == -1:
                 while True:
                     bs.append(next(self.it))
-            except StopIteration:
-                pass
-        else:
-            try:
+            else:
                 for _ in range(n):
                     bs.append(next(self.it))
-            except StopIteration:
-                pass
+        except StopIteration:
+            pass
 
         return bytes(bs)
 
