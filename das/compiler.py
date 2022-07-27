@@ -166,7 +166,7 @@ class Compiler:
                     yield from last_inst.encode()
                     output_len += last_inst.size
 
-                if padding_len != output_len:
+                if padding_len != output_len:  # pragma: no cover
                     Exception("invariant")
 
                 loc = offset_loc

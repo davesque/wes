@@ -159,6 +159,28 @@ forty_two: 0x42
         good_label_tok = compiler.file.stmts[1].toks[1]
         assert compiler.resolve_label("forty_two", good_label_tok) == 1
 
+    def test_compile_basic(self) -> None:
+        # fmt: off
+        expected_output = (
+            [0b00010100, 0b11100000, 0b00100101, 0b01100001, 0b00101010, 0b00000001]
+        )
+        # fmt: on
+
+        compiler = SapCompiler.from_str(
+            """
+lda init
+
+loop:
+  out
+  add incr
+  jmp loop
+
+init: 42
+incr: 1
+    """
+        )
+        assert list(compiler) == expected_output
+
     def test_compile_offsets(self) -> None:
         # fmt: off
         expected_output = (
