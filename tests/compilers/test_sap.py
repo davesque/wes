@@ -1,7 +1,7 @@
 import pytest
 
-from das.compilers.sap import SapCompiler
-from das.exceptions import Message
+from wes.compilers.sap import SapCompiler
+from wes.exceptions import Message
 
 
 def test_compile_count() -> None:

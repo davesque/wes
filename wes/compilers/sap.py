@@ -1,8 +1,8 @@
 from typing import Iterator
 
-from das.compiler import Compiler
-from das.exceptions import Message
-from das.instruction import Const, Unary, Word
+from wes.compiler import Compiler
+from wes.exceptions import Message
+from wes.instruction import Const, Unary, Word
 
 
 class SapUnary(Unary):

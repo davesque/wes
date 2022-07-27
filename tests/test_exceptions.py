@@ -1,7 +1,7 @@
 import pytest
 
-from das.exceptions import Message
-from das.lexer import Lexer
+from wes.exceptions import Message
+from wes.lexer import Lexer
 
 
 def test_rendered_error_render_text() -> None:

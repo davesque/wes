@@ -2,8 +2,8 @@ import sys
 from io import StringIO
 from typing import TextIO
 
-from das.compilers.sap import SapCompiler
-from das.exceptions import Message, Stop
+from wes.compilers.sap import SapCompiler
+from wes.exceptions import Message, Stop
 
 
 def run(in_buf: TextIO, out_buf: TextIO) -> None:
@@ -22,7 +22,7 @@ def main():  # pragma: no cover
         in_buf = StringIO(file_txt)
     else:
         if sys.argv[1] == "-h":
-            sys.stderr.write("usage: das <filename> | das < <filename>\n")
+            sys.stderr.write("usage: wes <filename> | wes < <filename>\n")
             sys.exit(1)
 
         with open(sys.argv[1], "r") as f:

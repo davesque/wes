@@ -23,15 +23,15 @@ extras_require["dev"] += extras_require["test"] + extras_require["lint"]
 
 
 setup(
-    name="das",
+    name="wes",
     version="0.1.0",
     install_requires=[],
     entry_points={
         "console_scripts": [
-            "das=das.cli:main",
+            "wes=wes.cli:main",
         ]
     },
     python_requires=">=3.8",
     extras_require=extras_require,
-    packages=["das"],
+    packages=["wes"],
 )

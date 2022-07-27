@@ -3,10 +3,10 @@ from typing import Callable, cast
 
 import pytest
 
-from das.compilers.sap import Lda, SapCompiler
-from das.exceptions import Message
-from das.instruction import Value
-from das.parser import Op, Val
+from wes.compilers.sap import Lda, SapCompiler
+from wes.exceptions import Message
+from wes.instruction import Value
+from wes.parser import Op, Val
 
 from .utils import Eq, In, Re
 

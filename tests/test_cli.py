@@ -2,8 +2,8 @@ from io import StringIO
 
 import pytest
 
-from das.cli import run
-from das.exceptions import Message
+from wes.cli import run
+from wes.exceptions import Message
 
 
 def test_run() -> None:

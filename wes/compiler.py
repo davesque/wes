@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import Dict, Iterator, TextIO, Type, TypeVar, cast, overload
 
-from das.exceptions import Message
-from das.instruction import Instruction, Operation, Value
-from das.lexer import Text
-from das.parser import File, Label, Offset, Op, Parser, Val
+from wes.exceptions import Message
+from wes.instruction import Instruction, Operation, Value
+from wes.lexer import Text
+from wes.parser import File, Label, Offset, Op, Parser, Val
 
 T = TypeVar("T")
 

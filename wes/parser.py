@@ -14,9 +14,9 @@ from typing import (
     Union,
 )
 
-from das.exceptions import ParserError, Reset, Stop
-from das.lexer import Eof, Lexer, Newline, Text, Token
-from das.utils import str_to_int
+from wes.exceptions import ParserError, Reset, Stop
+from wes.lexer import Eof, Lexer, Newline, Text, Token
+from wes.utils import str_to_int
 
 NAME_RE = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
 VAL_RE = re.compile(r"^([+-])?(0b[01_]+|0o[0-7_]+|[0-9_]+|0x[a-fA-F0-9_]+)$")

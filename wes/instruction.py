@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Iterator
 
-from das.exceptions import Message
-from das.parser import Op, Val
-from das.utils import byte_length
+from wes.exceptions import Message
+from wes.parser import Op, Val
+from wes.utils import byte_length
 
 if TYPE_CHECKING:  # pragma: no cover
-    from das.compiler import Compiler
+    from wes.compiler import Compiler
 
 
 class Instruction:

@@ -1,4 +1,4 @@
-from das.lexer import Eof, Lexer, Newline, Text, tokenize
+from wes.lexer import Eof, Lexer, Newline, Text, tokenize
 
 
 def test_tokenize() -> None:

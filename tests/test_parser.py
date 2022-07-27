@@ -2,8 +2,8 @@ from io import StringIO
 
 import pytest
 
-from das.exceptions import Stop
-from das.parser import File, Label, Offset, Op, Parser, Val
+from wes.exceptions import Stop
+from wes.parser import File, Label, Offset, Op, Parser, Val
 
 
 @pytest.fixture

@@ -1,4 +1,4 @@
-CHECK_ARGS=das tests setup.py
+CHECK_ARGS=wes tests setup.py
 
 .PHONY: dev_install
 dev_install:
@@ -6,7 +6,7 @@ dev_install:
 
 .PHONY: test
 test:
-	pytest --cov-report=term-missing --cov=das
+	pytest --cov-report=term-missing --cov=wes
 
 .PHONY: lint
 lint:

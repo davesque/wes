@@ -1,4 +1,4 @@
-from das.utils import str_to_int
+from wes.utils import str_to_int
 
 
 def test_str_to_int() -> None:

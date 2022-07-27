@@ -1,9 +1,12 @@
-# das
+# wes, the WEird aSsembler
 
-This is a bare bones assembler that can be used to generate program code for
-Ben Eater's 8-bit computer project (see here: https://eater.net/8bit).  The
-name "das" stands for David's Assembler.  If you're frustrated with the lack of
-features, you can call it Dumb Assembler, but that'll cost you some karma.
+This is a little assembler that can be used to generate program code for Ben
+Eater's 8-bit computer, also known as the SAP-1 (see here:
+https://eater.net/8bit).
+
+It might eventually develop into something more general purpose with some
+convenience features targeted at embedded programming.  For example, W65C02S
+support is currently in the works.
 
 ## Installation and Usage
 
@@ -14,9 +17,9 @@ know I know).  From that, you need at least python 3.8.
 To get started, clone the repo, make a virtualenv, and install the package
 locally:
 ```bash
-git clone https://github.com/davesque/das.git
+git clone https://github.com/davesque/wes.git
 
-cd das
+cd wes
 python3 -mvenv venv
 source venv/bin/activate
 
@@ -25,8 +28,8 @@ pip install .
 
 Then, try compiling one of the example files:
 ```bash
-# pipe a file into das
-das < examples/count.asm
+# pipe a file into wes
+wes < examples/count.asm
 0000: 0001 1010
 0001: 1110 0000
 0010: 0010 1011
@@ -41,7 +44,7 @@ das < examples/count.asm
 1011: 0000 0001
 
 # or, specify a file path as an arg
-das examples/count.asm
+wes examples/count.asm
 # ...
 ```
 
@@ -164,10 +167,84 @@ hlt
 
 This version of the program again compiles to the same output code.
 
-## Disclaimer
+### Offsets
 
-You might ask, "Why do this?  Isn't this a bit overkill?"  My answers are "For
-fun!" and "Yes!", respectively.  And respectfully!  Thanks for asking!
+Another interesting feature provided by wes is called *offsets*.  Offsets are
+mostly useful for generating ROM images.  In our count program from above, the
+two variable labels "init" and "incr" end up pointing to locations in memory
+that depend on the length of program code that came before.  However, it is
+sometimes convenient to locate labels at specific locations in memory.  Here's
+another version of the count program that positions the two values "init" and
+"incr" at the last two locations in memory:
+```asm
+lda init
+
+count_up:
+  out
+  add incr
+  jc count_down
+  jmp count_up
+
+count_down:
+  out
+  sub incr
+  jz end
+  jmp count_down
+
+end: hlt
+
+-2:
+init: 42
+incr: 1
+```
+
+Since `hlt` is the last instruction to appear before the offset `-2:`, its
+encoding is used as a padding value to fill the region of memory between `hlt`
+and the literal value `42`.  If we had wanted another padding value, say zeros
+for example, we could have written the program as follows:
+```asm
+; ...
+
+end: hlt
+
+0
+-2:
+init: 42
+incr: 1
+```
+
+Note that `0` is now the most recent "instruction" to appear before the offset
+`-2:`.  So all memory locations between `hlt` and `42` become zeros.
+
+There are two other ways of specifying offsets.  Assuming we were fine with
+`hlt` being used for padding, we could have written the above program in the
+following two identical ways.  First, using an absolute offset:
+```asm
+; ...
+
+end: hlt
+
+14:
+init: 42
+incr: 1
+```
+
+Second, using a forward relative offset:
+```asm
+; ...
+
+end: hlt
+
++4:
+init: 42
+incr: 1
+```
+
+Note that `16` (the address space size for the SAP-1) minus `2` is `14`.  So
+the absolute offset `14` is equivalent to the backward relative offset `-2`.
+Likewise, `10` (the address location of the line immediately after the `hlt`
+instruction) plus `4` is `14`.  So the absolute offset `14` is equivalent to
+the forward offset `+4` when located on the line after `hlt`.
 
 ## Examples and contribution
 

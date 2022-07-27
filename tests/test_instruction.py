@@ -2,10 +2,10 @@ from typing import Callable, List
 
 import pytest
 
-from das.compiler import Compiler
-from das.compilers.sap import SapCompiler
-from das.exceptions import Message
-from das.instruction import Word
+from wes.compiler import Compiler
+from wes.compilers.sap import SapCompiler
+from wes.exceptions import Message
+from wes.instruction import Word
 
 from .utils import In, Re
 
