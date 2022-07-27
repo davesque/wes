@@ -17,7 +17,7 @@ class Formatter(Generic[IoType]):
     def __init__(self, buf: IoType):
         self.buf = buf
 
-    def format(self, compiler: Compiler) -> None:
+    def format(self, compiler: Compiler) -> None:  # pragma: no cover
         raise NotImplementedError("must implement `format`")
 
 
@@ -36,7 +36,7 @@ class ReadCompiler:
 
         try:
             if n == -1:
-                while True:
+                while True:  # pragma: no cover
                     bs.append(next(self.it))
             else:
                 for _ in range(n):
@@ -62,8 +62,8 @@ def run(in_buf: TextIO, formatter: Formatter[IoType]) -> None:
 
 
 FORMATTERS = {
-    "binary_text": BinaryText(sys.stdout),
     "binary": Binary(sys.stdout.buffer),
+    "binary_text": BinaryText(sys.stdout),
 }
 
 parser = argparse.ArgumentParser(description="Compile an assembly file.")
