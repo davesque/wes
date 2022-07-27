@@ -263,7 +263,7 @@ The above program snippet locates the beginning of instructions at address
 `0x8000`, labeled as `start`.  We can then write arbitrary program code after
 this label.  We then specify the offset `0xfffc` (the reset vector address) as
 containing the two little-endian bytes of the address labeled by `start`. Since
-the offset `0xfffc` was preceded by a literal zero, all bytes after our program
+the offset `0xfffc` was preceded by a literal `0`, all bytes after our program
 code and before offset `0xfffc` will be zero.  The W65C02S will inspect the
 data at `0xfffc` to determine the start address for program execution and find
 the little-endian value `0x8000`.  Therefore, execution will begin at address
