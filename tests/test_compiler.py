@@ -105,8 +105,8 @@ label3: 0
     @pytest.mark.parametrize(
         "file_txt,check_msg",
         (
-            ("0x10: 0", Re(r"^offset '0x10' resolves .* address '16'$")),
-            ("0\n0\n0: 0", Re(r"^offset '0' is before.*$")),
+            ("0x10: 0", Eq("offset resolves to oversized location '16'")),
+            ("0\n0\n0: 0", Re(r"^offset .* location '0' before current position$")),
         ),
     )
     def test_resolve_offsets_errors(

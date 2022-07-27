@@ -270,13 +270,13 @@ hlt
     file = parser.parse_file()
     assert file == File(
         (
-            Offset(0x8000, ()),
+            Offset(0x8000, None, ()),
             Label("start", ()),
             Op("lda", (42,), ()),
             Op("hlt", (), ()),
-            Offset(0xFFFC, ()),
+            Offset(0xFFFC, None, ()),
             Op("word", ("start",), ()),
-            Offset(0xFFFE, ()),
+            Offset(0xFFFE, None, ()),
             Op("word", (0,), ()),
         )
     )
@@ -285,5 +285,19 @@ hlt
 def test_invalid_label_name() -> None:
     parser = Parser.from_str("foo!#@$: 0")
     label = parser.parse_label()
+
+    assert label is None
+
+
+def test_invalid_forward_offset_val() -> None:
+    parser = Parser.from_str("+foo: 0")
+    label = parser.parse_forward_relative_offset()
+
+    assert label is None
+
+
+def test_invalid_backward_offset_val() -> None:
+    parser = Parser.from_str("-foo: 0")
+    label = parser.parse_backward_relative_offset()
 
     assert label is None

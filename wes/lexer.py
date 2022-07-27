@@ -6,20 +6,25 @@ from typing import Any, Callable, Iterator, TextIO
 COMMENT_CHR = ";"
 
 
-def _char_type(c: str) -> int:
+class NeverEqual:
+    def __eq__(self, _: Any) -> bool:
+        return False
+
+never_equal = NeverEqual()
+
+
+def _char_type(c: str) -> Any:
     """
     Helper function for the low-level tokenizer.  All that matters is that this
     function outputs values that are considered different by the equality
-    operator for different character types.
+    operator for different character regions.
     """
     if c.isspace():
         return 0
-    elif c == ":":
-        return 1
-    elif c == ",":
-        return 2
+    elif c in ":,+-[]":
+        return never_equal
     else:
-        return 3
+        return 1
 
 
 def tokenize(s: str, *, split_f: Callable[[str], Any] = _char_type) -> Iterator[str]:
@@ -31,7 +36,7 @@ def tokenize(s: str, *, split_f: Callable[[str], Any] = _char_type) -> Iterator[
 
     last_pos = 0
     last_type = split_f(s[0])
-    i = 0
+    i = 1
 
     while i < len(s):
         curr_type = split_f(s[i])

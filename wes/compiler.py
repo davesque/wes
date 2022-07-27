@@ -77,12 +77,12 @@ class Compiler:
                 self.labels[stmt.name] = loc
 
             elif isinstance(stmt, Offset):
-                offset_loc = self.resolve_offset(loc, stmt.offset, stmt.toks[0])
+                offset_loc = self.resolve_offset(loc, stmt)
 
                 if last_inst is None:
                     raise Message(
                         "offset must follow generated code usable as padding",
-                        (stmt.toks[0],),
+                        stmt.toks,
                     )
 
                 padding_len = offset_loc - loc
@@ -94,7 +94,7 @@ class Compiler:
                         raise Message(
                             f"size of padding instruction '{last_inst.mnemonic}' "
                             + "is not a divisor of padding length",
-                            (stmt.toks[0],),
+                            stmt.toks,
                         )
                     else:  # pragma: no cover
                         raise Exception("invariant")
@@ -117,26 +117,26 @@ class Compiler:
         except KeyError:
             raise Message(f"unrecognized label '{label}'", (label_tok,))
 
-    def resolve_offset(self, loc: int, offset: int, tok: Text) -> int:
-        if tok.text.startswith("+"):
+    def resolve_offset(self, loc: int, offset: Offset) -> int:
+        if offset.relative == "+":
             # offset moves forward from current loc
-            offset_loc = loc + offset
-        elif tok.text.startswith("-"):
+            offset_loc = loc + offset.offset
+        elif offset.relative == "-":
             # offset moves back from end of address space
-            offset_loc = self.max_addr + offset + 1
+            offset_loc = self.max_addr - offset.offset + 1
         else:
             # offset is absolute
-            offset_loc = offset
+            offset_loc = offset.offset
 
         if offset_loc > self.max_addr:
             raise Message(
-                f"offset '{tok.text}' resolves to oversized address '{offset_loc}'",
-                (tok,),
+                f"offset resolves to oversized location '{offset_loc}'",
+                offset.toks,
             )
         if offset_loc < loc:
             raise Message(
-                f"offset '{tok.text}' is before current location in generated code",
-                (tok,),
+                f"offset resolves to location '{offset_loc}' before current position",
+                offset.toks,
             )
 
         return offset_loc
@@ -155,7 +155,7 @@ class Compiler:
                 loc += last_inst.size
 
             elif isinstance(stmt, Offset):
-                offset_loc = self.resolve_offset(loc, stmt.offset, stmt.toks[0])
+                offset_loc = self.resolve_offset(loc, stmt)
 
                 # we know this from the `find_labels` pass
                 last_inst = cast(Instruction, last_inst)

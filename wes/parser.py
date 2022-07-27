@@ -3,6 +3,7 @@ from __future__ import annotations
 import contextlib
 import re
 from typing import (
+    Any,
     Callable,
     Iterator,
     List,
@@ -19,7 +20,7 @@ from wes.lexer import Eof, Lexer, Newline, Text, Token
 from wes.utils import str_to_int
 
 NAME_RE = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
-VAL_RE = re.compile(r"^([+-])?(0b[01_]+|0o[0-7_]+|[0-9_]+|0x[a-fA-F0-9_]+)$")
+VAL_RE = re.compile(r"^(0b[01_]+|0o[0-7_]+|[0-9_]+|0x[a-fA-F0-9_]+)$")
 
 T = TypeVar("T")
 
@@ -47,7 +48,7 @@ class File(Node):
     def __repr__(self) -> str:  # pragma: no cover
         return f"File({repr(self.stmts)})"
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Any) -> bool:
         return type(self) is type(other) and (self.stmts == other.stmts)
 
 
@@ -67,24 +68,31 @@ class Label(Stmt):
     def __repr__(self) -> str:  # pragma: no cover
         return f"Label({repr(self.name)})"
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Any) -> bool:
         return type(self) is type(other) and (self.name == other.name)
 
 
 class Offset(Stmt):
-    __slots__ = ("offset",)
+    __slots__ = ("offset", "relative")
 
     offset: int
+    relative: Optional[str]
 
-    def __init__(self, offset: int, toks: Tuple[Text, ...]):
+    def __init__(self, offset: int, relative: Optional[str], toks: Tuple[Text, ...]):
         self.offset = offset
+        self.relative = relative
         self.toks = toks
 
     def __repr__(self) -> str:  # pragma: no cover
-        return f"Offset({self.offset})"
+        if self.relative is None:
+            return f"Offset({self.offset})"
+        else:
+            return f"Offset({self.relative}{self.offset})"
 
-    def __eq__(self, other) -> bool:
-        return type(self) is type(other) and (self.offset == other.offset)
+    def __eq__(self, other: Any) -> bool:
+        return type(self) is type(other) and (
+            self.offset == other.offset and self.relative == other.relative
+        )
 
 
 class Op(Stmt):
@@ -103,7 +111,7 @@ class Op(Stmt):
     def __repr__(self) -> str:  # pragma: no cover
         return f"Op({repr(self.mnemonic)}, {repr(self.args)})"
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Any) -> bool:
         return type(self) is type(other) and (
             self.mnemonic == other.mnemonic and self.args == other.args
         )
@@ -121,7 +129,7 @@ class Val(Stmt):
     def __repr__(self) -> str:  # pragma: no cover
         return f"Val({self.val})"
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Any) -> bool:
         return type(self) is type(other) and (self.val == other.val)
 
 
@@ -254,15 +262,45 @@ class Parser:
         else:
             return self.parse_binary()
 
+    def parse_offset(self) -> Optional[Offset]:
+        if off := self.parse_forward_relative_offset():
+            return off
+        elif off := self.parse_backward_relative_offset():
+            return off
+        else:
+            return self.parse_absolute_offset()
+
     @optional
-    def parse_offset(self) -> Offset:
+    def parse_forward_relative_offset(self) -> Offset:
+        relative = self.expect("+")
         val = self.expect()
         colon = self.expect(":")
 
         if not VAL_RE.match(val.text):
             raise Reset(f"{repr(val.text)} is not valid offset", (val,))
 
-        return Offset(str_to_int(val.text), (val, colon))
+        return Offset(str_to_int(val.text), "+", (relative, val, colon))
+
+    @optional
+    def parse_backward_relative_offset(self) -> Offset:
+        relative = self.expect("-")
+        val = self.expect()
+        colon = self.expect(":")
+
+        if not VAL_RE.match(val.text):
+            raise Reset(f"{repr(val.text)} is not valid offset", (val,))
+
+        return Offset(str_to_int(val.text), "-", (relative, val, colon))
+
+    @optional
+    def parse_absolute_offset(self) -> Offset:
+        val = self.expect()
+        colon = self.expect(":")
+
+        if not VAL_RE.match(val.text):
+            raise Reset(f"{repr(val.text)} is not valid offset", (val,))
+
+        return Offset(str_to_int(val.text), None, (val, colon))
 
     @optional
     def parse_label(self) -> Label:
