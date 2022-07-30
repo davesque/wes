@@ -161,11 +161,11 @@ class Parser:
         lexer = Lexer(buf)
         return cls(lexer)
 
-    def get(self) -> Token:
+    def get(self, error: Type[Exception] = Reset) -> Token:
         try:
             return self.toks.get()
         except EndOfTokens:
-            raise Reset("unexpected end of tokens", ())
+            raise error("unexpected end of tokens", ())
 
     @contextlib.contextmanager
     def reset(self) -> Iterator[None]:
