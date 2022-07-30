@@ -114,45 +114,6 @@ b: 1
     )
 
 
-def test_parser_mark_api(count_parser: Parser) -> None:
-    parser = count_parser
-
-    parser.mark()
-    assert parser.expect().text == "lda"
-    assert parser.expect().text == "init"
-    parser.reset()
-    assert parser.expect().text == "lda"
-    assert parser.expect().text == "init"
-
-
-def test_parser_nested_reset(count_parser: Parser) -> None:
-    parser = count_parser
-
-    parser.mark()
-    assert parser.expect().text == "lda"
-    parser.mark()
-    assert parser.expect().text == "init"
-    parser.reset()
-    assert parser.expect().text == "init"
-    parser.reset()
-    assert parser.expect().text == "lda"
-    assert parser.expect().text == "init"
-
-
-def test_parser_nested_unmark(count_parser: Parser) -> None:
-    parser = count_parser
-
-    parser.mark()
-    assert parser.expect().text == "lda"
-    parser.mark()
-    assert parser.expect().text == "init"
-    parser.unmark()
-    assert parser.expect_newline()
-    parser.reset()
-    assert parser.expect().text == "lda"
-    assert parser.expect().text == "init"
-
-
 def test_parse_unary_with_val() -> None:
     parser = Parser.from_str("lda 1")
     file = parser.parse_file()

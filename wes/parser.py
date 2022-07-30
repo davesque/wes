@@ -6,7 +6,6 @@ from typing import (
     Any,
     Callable,
     Iterator,
-    List,
     Optional,
     TextIO,
     Tuple,
@@ -15,8 +14,8 @@ from typing import (
     Union,
 )
 
-from wes.exceptions import ParserError, Reset, Stop
-from wes.lexer import Eof, Lexer, Newline, Text, Token
+from wes.exceptions import EndOfTokens, Reset, Stop
+from wes.lexer import Eof, Lexer, Newline, Text, Token, TokenStream
 from wes.utils import str_to_int
 
 NAME_RE = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
@@ -145,17 +144,12 @@ def optional(old_method: Callable[[Parser], T]) -> Callable[[Parser], Optional[T
 
 
 class Parser:
-    __slots__ = ("lexer", "tokens", "buf", "marks")
+    __slots__ = ("toks",)
 
-    lexer: Lexer
-    tokens: Iterator[Token]
-    buf: List[Token]
+    toks: TokenStream
 
     def __init__(self, lexer: Lexer):
-        self.lexer = lexer
-        self.tokens = iter(lexer)
-        self.buf = []
-        self.marks = []
+        self.toks = TokenStream(lexer)
 
     @classmethod
     def from_str(cls, text: str) -> Parser:
@@ -168,50 +162,18 @@ class Parser:
         return cls(lexer)
 
     def get(self) -> Token:
-        if len(self.buf) > 0:
-            tok = self.buf.pop()
-        else:
-            try:
-                tok = next(self.tokens)
-            except StopIteration:  # pragma: no cover
-                raise Reset("unexpected end of tokens", ())
-
-        if len(self.marks) > 0:
-            self.marks[-1].append(tok)
-
-        return tok
-
-    def put(self, tok: Token) -> None:
-        self.buf.append(tok)
-
-    def mark(self) -> None:
-        self.marks.append([])
-
-    def unmark(self) -> None:
-        if len(self.marks) == 0:  # pragma: no cover
-            raise ParserError("no marks to unmark")
-
-        mark_toks = self.marks.pop()
-        if len(self.marks) > 0:
-            self.marks[-1].extend(mark_toks)
-
-    def reset(self) -> None:
-        if len(self.marks) == 0:  # pragma: no cover
-            raise ParserError("no marks to reset")
-
-        mark_toks = self.marks.pop()
-        for tok in reversed(mark_toks):
-            self.put(tok)
+        try:
+            return self.toks.get()
+        except EndOfTokens:
+            raise Reset("unexpected end of tokens", ())
 
     @contextlib.contextmanager
     def resettable(self) -> Iterator[None]:
-        self.mark()
+        pos = self.toks.mark()
         try:
             yield
         except Reset:
-            self.reset()
-        else:
-            self.unmark()
+            self.toks.reset(pos)
 
     def expect(
         self, tok_text: Optional[str] = None, error: Type[Exception] = Reset

@@ -1,6 +1,9 @@
-from typing import Tuple
+from __future__ import annotations
 
-from wes.lexer import Eof, Newline, Text, Token
+from typing import Tuple, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from wes.lexer import Token
 
 
 class ParserError(Exception):
@@ -44,6 +47,8 @@ class Message(Exception):
         return file_txt[line_start:line_end]
 
     def render(self, file_txt: str) -> str:
+        from wes.lexer import Eof, Newline, Text
+
         fst, lst = self.toks[0], self.toks[-1]
         line = self._get_line(file_txt, fst.line_start).strip()
 
@@ -75,3 +80,7 @@ at line {fst.line_num}, col {fst.col}:
 {self.msg}
 """[1:-1]
         # fmt: on
+
+
+class EndOfTokens(Exception):
+    pass

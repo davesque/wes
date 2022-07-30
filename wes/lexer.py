@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from io import StringIO
-from typing import Any, Callable, Iterator, TextIO
+from typing import Any, Callable, Iterator, List, TextIO
+
+from wes.exceptions import EndOfTokens
 
 COMMENT_CHR = ";"
 
@@ -198,3 +200,35 @@ class Lexer:
             )
 
             self.pos += len(line)
+
+
+class TokenStream:
+    __slots__ = ("toks", "hist", "i")
+
+    toks: Iterator[Token]
+    hist: List[Token]
+    i: int
+
+    def __init__(self, lexer: Lexer):
+        self.toks = iter(lexer)
+        self.hist = []
+        self.i = 0
+
+    def get(self) -> Token:
+        if self.i < len(self.hist):
+            tok = self.hist[self.i]
+        else:
+            try:
+                tok = next(self.toks)
+            except StopIteration:
+                raise EndOfTokens("end of tokens")
+            self.hist.append(tok)
+
+        self.i += 1
+        return tok
+
+    def mark(self) -> int:
+        return self.i
+
+    def reset(self, i: int) -> None:
+        self.i = i
