@@ -1,7 +1,11 @@
+from typing import Callable
+
 import pytest
 
-from wes.exceptions import EndOfTokens
+from wes.exceptions import EndOfTokens, Message
 from wes.lexer import Eof, Lexer, Newline, Text, TokenStream, tokenize
+
+from .utils import Eq
 
 
 def test_tokenize() -> None:
@@ -166,3 +170,59 @@ foo 42, 0x2a
 
     with pytest.raises(EndOfTokens):
         toks.get()
+
+
+@pytest.mark.parametrize(
+    "file_txt,check_msg",
+    (
+        ("(", Eq("unmatched opening delimiter '('")),
+        ("[", Eq("unmatched opening delimiter '['")),
+        (")", Eq("unmatched closing delimiter ')'")),
+        ("]", Eq("unmatched closing delimiter ']'")),
+        ("(]", Eq("delimiter mistmatch: expected ')', got ']'")),
+        ("[)", Eq("delimiter mistmatch: expected ']', got ')'")),
+    ),
+)
+def test_lexer_delimeter_errors(
+    file_txt: str, check_msg: Callable[[str], bool]
+) -> None:
+    lexer = Lexer.from_str(file_txt)
+
+    with pytest.raises(Message) as excinfo:
+        list(lexer)
+
+    assert check_msg(excinfo.value.msg)
+
+
+def test_lexer_delimeters() -> None:
+    lexer = Lexer.from_str(
+        """
+(
+[
+(([[
+a
+]]))
+]
+)
+b
+"""
+    )
+    assert list(lexer) == [
+        Text("(", 1, 2, 0),
+        Text("[", 3, 3, 0),
+        Text("(", 5, 4, 0),
+        Text("(", 5, 4, 1),
+        Text("[", 5, 4, 2),
+        Text("[", 5, 4, 3),
+        Text("a", 10, 5, 0),
+        Text("]", 12, 6, 0),
+        Text("]", 12, 6, 1),
+        Text(")", 12, 6, 2),
+        Text(")", 12, 6, 3),
+        Text("]", 17, 7, 0),
+        Text(")", 19, 8, 0),
+        Newline(19, 8, 1),
+        Text("b", 21, 9, 0),
+        Newline(21, 9, 1),
+        Eof(21, 9, 2),
+    ]

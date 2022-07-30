@@ -3,7 +3,7 @@ from __future__ import annotations
 from io import StringIO
 from typing import Any, Callable, Iterator, List, TextIO
 
-from wes.exceptions import EndOfTokens
+from wes.exceptions import EndOfTokens, Message
 
 COMMENT_CHR = ";"
 
@@ -16,7 +16,7 @@ def _char_type(c: str) -> Any:
     """
     if c.isspace():
         return 0
-    elif c in ":,+-[]":
+    elif c in ":,+-[]()":
         return float("nan")
     else:
         return 1
@@ -117,23 +117,51 @@ class Eof(Token):
         return f"Eof({self.line_start}, {self.line_num}, {self.col})"
 
 
+class LexerError(Exception):
+    pass
+
+
 class EndOfBuffer(Exception):
     pass
 
 
 class Lexer:
-    __slots__ = ("buf", "line_num", "pos")
+    __slots__ = ("buf", "line_num", "pos", "delims")
 
     buf: TextIO
 
     line_num: int
     pos: int
+    delims: List[Text]
+
+    DELIM_PAIRS = {
+        "[": "]",
+        "(": ")",
+    }
 
     def __init__(self, buf: TextIO):
         self.buf = buf
 
         self.line_num = 0
         self.pos = 0
+        self.delims = []
+
+    def push_delim(self, tok: Text) -> None:
+        self.delims.append(tok)
+
+    def pop_delim(self, tok: Text) -> None:
+        if len(self.delims) == 0:
+            raise Message(f"unmatched closing delimiter '{tok.text}'", (tok,))
+
+        prev = self.delims[-1].text
+        expected = self.DELIM_PAIRS[prev]
+        if tok.text != expected:
+            raise Message(
+                f"delimiter mistmatch: expected '{expected}', got '{tok.text}'",
+                (tok,),
+            )
+
+        self.delims.pop()
 
     @classmethod
     def from_str(cls, text: str) -> Lexer:
@@ -160,6 +188,12 @@ class Lexer:
                     if line is None:
                         line = ""
 
+                    if len(self.delims) > 0:
+                        tok = self.delims[-1]
+                        raise Message(
+                            f"unmatched opening delimiter '{tok.text}'",
+                            (tok,),
+                        )
                     yield Eof(
                         self.pos - len(line),
                         self.line_num,
@@ -188,16 +222,23 @@ class Lexer:
                     # line.
                     break
 
-                yield Text(part, self.pos, self.line_num, col)
+                tok = Text(part, self.pos, self.line_num, col)
 
+                if part in ("[", "("):
+                    self.push_delim(tok)
+                elif part in ("]", ")"):
+                    self.pop_delim(tok)
+
+                yield tok
                 col += len(part)
 
-            # semantic newline token
-            yield Newline(
-                self.pos,
-                self.line_num,
-                len(line) - 1 if line[-1] == "\n" else len(line),
-            )
+            # no semantic newline if we're inside of delimiters
+            if len(self.delims) == 0:
+                yield Newline(
+                    self.pos,
+                    self.line_num,
+                    len(line) - 1 if line[-1] == "\n" else len(line),
+                )
 
             self.pos += len(line)
 
