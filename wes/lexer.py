@@ -6,13 +6,6 @@ from typing import Any, Callable, Iterator, TextIO
 COMMENT_CHR = ";"
 
 
-class NeverEqual:
-    def __eq__(self, _: Any) -> bool:
-        return False
-
-never_equal = NeverEqual()
-
-
 def _char_type(c: str) -> Any:
     """
     Helper function for the low-level tokenizer.  All that matters is that this
@@ -22,7 +15,7 @@ def _char_type(c: str) -> Any:
     if c.isspace():
         return 0
     elif c in ":,+-[]":
-        return never_equal
+        return float("nan")
     else:
         return 1
 
