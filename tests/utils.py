@@ -1,7 +1,6 @@
 import re
 from typing import Callable
 
-
 PredFn = Callable[[str], bool]
 
 
