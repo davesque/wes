@@ -2,7 +2,7 @@ from io import StringIO
 
 import pytest
 
-from wes.exceptions import Stop
+from wes.exceptions import Reset, Stop
 from wes.parser import File, Label, Offset, Op, Parser, Val
 
 
@@ -262,3 +262,14 @@ def test_invalid_backward_offset_val() -> None:
     label = parser.parse_backward_relative_offset()
 
     assert label is None
+
+
+def test_parser_get_error() -> None:
+    parser = Parser.from_str("lda 1")
+    file = parser.parse_file()
+    assert file == File((Op("lda", (1,), ()),))
+
+    with pytest.raises(Reset) as excinfo:
+        parser.get()
+
+    assert excinfo.value.msg == "unexpected end of tokens"
