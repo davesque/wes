@@ -135,7 +135,7 @@ class Val(Stmt):
 def optional(old_method: Callable[[Parser], T]) -> Callable[[Parser], Optional[T]]:
     def new_method(self) -> Optional[T]:
         res = None
-        with self.resettable():
+        with self.reset():
             res = old_method(self)
 
         return res
@@ -168,7 +168,7 @@ class Parser:
             raise Reset("unexpected end of tokens", ())
 
     @contextlib.contextmanager
-    def resettable(self) -> Iterator[None]:
+    def reset(self) -> Iterator[None]:
         pos = self.toks.mark()
         try:
             yield
@@ -207,13 +207,13 @@ class Parser:
     def parse_stmt(self) -> Optional[Stmt]:
         if offset := self.parse_offset():
             # consume a newline if one exists
-            with self.resettable():
+            with self.reset():
                 self.expect_newline()
 
             return offset
         elif label := self.parse_label():
             # consume a newline if one exists
-            with self.resettable():
+            with self.reset():
                 self.expect_newline()
 
             return label
