@@ -1,4 +1,7 @@
-from wes.lexer import Eof, Lexer, Newline, Text, tokenize
+import pytest
+
+from wes.exceptions import EndOfTokens
+from wes.lexer import Eof, Lexer, Newline, Text, TokenStream, tokenize
 
 
 def test_tokenize() -> None:
@@ -137,3 +140,29 @@ lda a , 1
         Newline(9, 3, 9),
         Eof(9, 3, 10),
     ]
+
+
+def test_token_stream() -> None:
+    text = """
+lda a, 1
+foo 42, 0x2a
+"""
+    expected = list(Lexer.from_str(text))
+
+    toks = TokenStream(Lexer.from_str(text))
+    # we can assert internal state, can't we?
+    assert toks.hist == []
+    assert toks.i == 0
+
+    actual = [toks.get() for _ in range(len(expected))]
+    assert actual == expected
+
+    for i in range(1, len(expected)):
+        toks.reset(i)
+        assert toks.mark() == i
+
+        actual = [toks.get() for _ in range(i, len(expected))]
+        assert actual == expected[i:]
+
+    with pytest.raises(EndOfTokens):
+        toks.get()
