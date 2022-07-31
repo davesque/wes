@@ -209,23 +209,10 @@ class Parser:
 
     def parse_stmt(self) -> Optional[Stmt]:
         if offset := self.parse_offset():
-            # consume a newline if one exists
-            with self.reset():
-                self.expect_newline()
-
             return offset
         elif label := self.parse_label():
-            # consume a newline if one exists
-            with self.reset():
-                self.expect_newline()
-
             return label
-        elif nullary_or_val := self.parse_nullary_or_val():
-            return nullary_or_val
-        elif unary := self.parse_unary():
-            return unary
-        else:
-            return self.parse_binary()
+        return self.parse_inst()
 
     def parse_offset(self) -> Optional[Offset]:
         if off := self.parse_relative():
@@ -242,6 +229,10 @@ class Parser:
         if not VAL_RE.match(val.text):
             raise Reset(f"{repr(val.text)} is not valid offset", (val,))
 
+        # optional trailing newline
+        with self.reset():
+            self.expect_newline()
+
         return Offset(str_to_int(val.text), relative.text, (relative, val, colon))
 
     @optional
@@ -251,6 +242,10 @@ class Parser:
 
         if not VAL_RE.match(val.text):
             raise Reset(f"{repr(val.text)} is not valid offset", (val,))
+
+        # optional trailing newline
+        with self.reset():
+            self.expect_newline()
 
         return Offset(str_to_int(val.text), None, (val, colon))
 
@@ -262,10 +257,21 @@ class Parser:
         if not NAME_RE.match(name.text):
             raise Reset(f"{repr(name.text)} is not valid name", (name,))
 
+        # optional trailing newline
+        with self.reset():
+            self.expect_newline()
+
         return Label(name.text, (name, colon))
 
+    def parse_inst(self) -> Union[Op, Val, None]:
+        if nullary := self.parse_nullary():
+            return nullary
+        elif unary := self.parse_unary():
+            return unary
+        return self.parse_binary()
+
     @optional
-    def parse_nullary_or_val(self) -> Union[Op, Val]:
+    def parse_nullary(self) -> Union[Op, Val]:
         name_or_val = self.expect()
         _ = self.expect_newline()
 

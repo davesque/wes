@@ -3,7 +3,7 @@ VAL: (0b[01_]+|0o[0-7_]+|[0-9_]+|0x[a-fA-F0-9_]+)
 
 file: stmt* EOF
 
-stmt: offset | label | op_or_val
+stmt: offset | label | inst
 
 offset: relative | absolute
 
@@ -12,9 +12,9 @@ absolute: VAL ':' [NEWLINE]
 
 label: NAME ':' [NEWLINE]
 
-op_or_val: nullary_or_val | unary | binary
+inst: nullary | unary | binary
 
-nullary_or_val: (NAME | VAL) NEWLINE
+nullary: (NAME | VAL) NEWLINE
 unary: NAME arg NEWLINE
 binary: NAME arg ',' arg NEWLINE
 
