@@ -33,24 +33,25 @@ class Node:
         self.toks = toks
 
     @property
-    def _slot_values(self) -> Tuple[Any, ...]:
+    def slot_values(self) -> Tuple[Any, ...]:
         return tuple(getattr(self, s) for s in self.__slots__ if s != "toks")
 
     def __repr__(self) -> str:  # pragma: no cover
-        elems_repr = ", ".join(repr(i) for i in self._slot_values)
+        elems_repr = ", ".join(repr(i) for i in self.slot_values)
         cls_name = self.__class__.__qualname__
 
         return f"{cls_name}({elems_repr})"
 
     def __eq__(self, other: Any) -> bool:
-        types_match = type(self) is type(other)
-        # a bit faster to check the negative condition here to avoid doing the
-        # comparison for all values if we encounter one mismatch
-        slots_mismatch = any(
-            x != y for x, y in zip(self._slot_values, other._slot_values)
-        )
+        if type(self) is not type(other):
+            return False
 
-        return types_match and not slots_mismatch
+        # fail early if we find a mismatch
+        for x, y in zip(self.slot_values, other.slot_values):
+            if x != y:
+                return False
+
+        return True
 
 
 class File(Node):
