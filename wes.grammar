@@ -7,15 +7,27 @@ stmt: offset | label | inst
 
 offset: relative | absolute
 
-relative: ['+' | '-'] VAL ':' [NEWLINE]
+relative: ('+' | '-') VAL ':' [NEWLINE]
 absolute: VAL ':' [NEWLINE]
 
 label: NAME ':' [NEWLINE]
 
 inst: nullary | unary | binary
 
-nullary: (NAME | VAL) NEWLINE
+nullary: expr NEWLINE
 unary: NAME arg NEWLINE
 binary: NAME arg ',' arg NEWLINE
 
-arg: NAME | VAL
+arg: deref | expr
+
+deref: '[' expr ']'
+
+expr: '(' inner ')' | inner
+inner: un_expr | bin_expr | atom
+
+un_expr: un_op expr
+bin_expr: expr bin_op expr
+atom: NAME | VAL
+
+un_op: '-' | '~'
+bin_op: '-' | '+' | '*' | '/' | '>>' | '<<' | '^' | '&' | '|' | '**' | '%'
