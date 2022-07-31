@@ -31,7 +31,10 @@ class Node:
 
     toks: Tuple[Text, ...]  # type: ignore
 
-    def __init__(self, toks: Tuple[Text, ...]):
+    def __init__(self, *, toks: Optional[Tuple[Text, ...]] = None):
+        if toks is None:
+            toks = ()
+
         self.toks = toks
 
     @property
@@ -65,7 +68,7 @@ class File(Node):
         self.stmts = stmts
 
         # we have all the tokens in the statement nodes
-        super().__init__(tuple())
+        super().__init__(toks=tuple())
 
 
 class Stmt(Node):
@@ -77,10 +80,10 @@ class Label(Stmt):
 
     name: str
 
-    def __init__(self, name: str, toks: Tuple[Text, ...]):
+    def __init__(self, name: str, **kwargs: Any):
         self.name = name
 
-        super().__init__(toks)
+        super().__init__(**kwargs)
 
 
 class Offset(Stmt):
@@ -89,11 +92,11 @@ class Offset(Stmt):
     offset: int
     relative: Optional[str]
 
-    def __init__(self, offset: int, relative: Optional[str], toks: Tuple[Text, ...]):
+    def __init__(self, offset: int, relative: Optional[str], **kwargs: Any):
         self.offset = offset
         self.relative = relative
 
-        super().__init__(toks)
+        super().__init__(**kwargs)
 
 
 class Op(Stmt):
@@ -102,13 +105,11 @@ class Op(Stmt):
     mnemonic: str
     args: Tuple[Union[str, int], ...]
 
-    def __init__(
-        self, mnemonic: str, args: Tuple[Union[str, int], ...], toks: Tuple[Text, ...]
-    ):
+    def __init__(self, mnemonic: str, args: Tuple[Union[str, int], ...], **kwargs: Any):
         self.mnemonic = mnemonic
         self.args = args
 
-        super().__init__(toks)
+        super().__init__(**kwargs)
 
 
 class Expr(Node):
@@ -120,10 +121,10 @@ class Name(Expr):
 
     name: str
 
-    def __init__(self, name: str, toks: Tuple[Text, ...]):
+    def __init__(self, name: str, **kwargs: Any):
         self.name = name
 
-        super().__init__(toks)
+        super().__init__(**kwargs)
 
 
 class Val(Expr):
@@ -131,10 +132,10 @@ class Val(Expr):
 
     val: int
 
-    def __init__(self, val: int, toks: Tuple[Text, ...]):
+    def __init__(self, val: int, **kwargs: Any):
         self.val = val
 
-        super().__init__(toks)
+        super().__init__(**kwargs)
 
 
 class UnExpr(Expr):
@@ -143,11 +144,11 @@ class UnExpr(Expr):
     op: str
     x: Expr
 
-    def __init__(self, op: str, x: Expr, toks: Tuple[Text, ...]):
+    def __init__(self, op: str, x: Expr, **kwargs: Any):
         self.op = op
         self.x = x
 
-        super().__init__(toks)
+        super().__init__(**kwargs)
 
 
 class BinExpr(Expr):
@@ -157,12 +158,12 @@ class BinExpr(Expr):
     op: str
     y: Expr
 
-    def __init__(self, x: Expr, op: str, y: Expr, toks: Tuple[Text, ...]):
+    def __init__(self, x: Expr, op: str, y: Expr, **kwargs: Any):
         self.x = x
         self.op = op
         self.y = y
 
-        super().__init__(toks)
+        super().__init__(**kwargs)
 
 
 def optional(old_method: Callable[[Parser], T]) -> Callable[[Parser], Optional[T]]:
@@ -335,7 +336,7 @@ class Parser:
         with self.reset():
             self.expect_newline()
 
-        return Offset(str_to_int(val.text), relative.text, (relative, val, colon))
+        return Offset(str_to_int(val.text), relative.text, toks=(relative, val, colon))
 
     @optional
     def parse_absolute(self) -> Offset:
@@ -349,7 +350,7 @@ class Parser:
         with self.reset():
             self.expect_newline()
 
-        return Offset(str_to_int(val.text), None, (val, colon))
+        return Offset(str_to_int(val.text), None, toks=(val, colon))
 
     @optional
     def parse_label(self) -> Label:
@@ -363,7 +364,7 @@ class Parser:
         with self.reset():
             self.expect_newline()
 
-        return Label(name.text, (name, colon))
+        return Label(name.text, toks=(name, colon))
 
     def parse_inst(self) -> Union[Op, Val, None]:
         if nullary := self.parse_nullary():
@@ -378,9 +379,9 @@ class Parser:
         _ = self.expect_newline()
 
         if NAME_RE.match(name_or_val.text):
-            return Op(name_or_val.text, (), (name_or_val,))
+            return Op(name_or_val.text, (), toks=(name_or_val,))
         elif VAL_RE.match(name_or_val.text):
-            return Val(str_to_int(name_or_val.text), (name_or_val,))
+            return Val(str_to_int(name_or_val.text), toks=(name_or_val,))
         else:
             raise Stop(
                 f"{repr(name_or_val.text)} is not a valid name or integer",
@@ -398,7 +399,7 @@ class Parser:
 
         arg_ = self.parse_arg_token(arg)
 
-        return Op(mnemonic.text, (arg_,), (mnemonic, arg))
+        return Op(mnemonic.text, (arg_,), toks=(mnemonic, arg))
 
     @optional
     def parse_binary(self) -> Op:
@@ -414,7 +415,7 @@ class Parser:
         arg1_ = self.parse_arg_token(arg1)
         arg2_ = self.parse_arg_token(arg2)
 
-        return Op(mnemonic.text, (arg1_, arg2_), (mnemonic, arg1, comma, arg2))
+        return Op(mnemonic.text, (arg1_, arg2_), toks=(mnemonic, arg1, comma, arg2))
 
     def parse_arg_token(self, name_or_val: Text) -> Union[str, int]:
         if VAL_RE.match(name_or_val.text):
@@ -444,9 +445,7 @@ class Parser:
         r_paren = self.expect(")")
 
         new_toks = (l_paren,) + expr.toks + (r_paren,)
-        new_args = expr.slot_values + (new_toks,)
-
-        return type(expr)(*new_args)
+        return type(expr)(*expr.slot_values, toks=new_toks)
 
     def parse_inner(self) -> Optional[Expr]:
         if expr := self.parse_un_expr():
@@ -463,7 +462,7 @@ class Parser:
         if x is None:
             raise Stop(f"expected expression after unary operator '{op.text}'", (op,))
 
-        return UnExpr(op.text, x, (op,) + x.toks)
+        return UnExpr(op.text, x, toks=(op,) + x.toks)
 
     @optional
     def parse_bin_expr(self) -> BinExpr:
@@ -477,16 +476,16 @@ class Parser:
         if y is None:
             raise Stop("", ())
 
-        return BinExpr(x, op.text, y, x.toks + (op,) + y.toks)
+        return BinExpr(x, op.text, y, toks=x.toks + (op,) + y.toks)
 
     @optional
     def parse_atom(self) -> Union[Name, Val, None]:
         name_or_val = self.expect()
 
         if VAL_RE.match(name_or_val.text):
-            return Val(str_to_int(name_or_val.text), (name_or_val,))
+            return Val(str_to_int(name_or_val.text), toks=(name_or_val,))
         elif NAME_RE.match(name_or_val.text):
-            return Name(name_or_val.text, (name_or_val,))
+            return Name(name_or_val.text, toks=(name_or_val,))
         else:
             raise Reset(
                 f"{repr(name_or_val.text)} is not a valid name or integer",

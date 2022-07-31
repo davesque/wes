@@ -1,10 +1,9 @@
 from io import StringIO
-from typing import Callable, Optional, Tuple
+from typing import Any, Callable, Optional, Tuple
 
 import pytest
 
 from wes.exceptions import Reset, Stop
-from wes.lexer import Text
 from wes.parser import (
     BinExpr,
     Expr,
@@ -28,27 +27,27 @@ class MyNode(Node):
     foo: Tuple[str, ...]
     bar: int
 
-    def __init__(self, foo: Tuple[str, ...], bar: int, toks: Tuple[Text, ...]):
+    def __init__(self, foo: Tuple[str, ...], bar: int, **kwargs: Any):
         self.foo = foo
         self.bar = bar
 
-        super().__init__(toks)
+        super().__init__(**kwargs)
 
 
 def test_node_slot_values() -> None:
-    node = MyNode(("asdf", "zxcv"), 2, ())
+    node = MyNode(("asdf", "zxcv"), 2)
     assert node.slot_values == (("asdf", "zxcv"), 2)
 
 
 def test_node_repr() -> None:
-    node = MyNode(("asdf", "zxcv"), 2, ())
+    node = MyNode(("asdf", "zxcv"), 2)
     assert repr(node) == "MyNode(('asdf', 'zxcv'), 2)"
 
 
 def test_node_eq() -> None:
-    node1 = MyNode(("asdf", "zxcv"), 2, ())
-    node2 = MyNode(("asdf", "zxcv"), 2, ())
-    node3 = MyNode(("asdd", "zxcv"), 2, ())
+    node1 = MyNode(("asdf", "zxcv"), 2)
+    node2 = MyNode(("asdf", "zxcv"), 2)
+    node3 = MyNode(("asdd", "zxcv"), 2)
 
     assert node1 == node2
     assert node1 != node3
@@ -99,23 +98,23 @@ incr: 1
     file = parser.parse_file()
     assert file == File(
         (
-            Op("lda", ("init",), ()),
-            Label("count_up", ()),
-            Op("out", (), ()),
-            Op("add", ("incr",), ()),
-            Op("jc", ("count_down",), ()),
-            Op("jmp", ("count_up",), ()),
-            Label("count_down", ()),
-            Op("out", (), ()),
-            Op("sub", ("incr",), ()),
-            Op("jz", ("end",), ()),
-            Op("jmp", ("count_down",), ()),
-            Label("end", ()),
-            Op("hlt", (), ()),
-            Label("init", ()),
-            Val(42, ()),
-            Label("incr", ()),
-            Val(1, ()),
+            Op("lda", ("init",)),
+            Label("count_up"),
+            Op("out", ()),
+            Op("add", ("incr",)),
+            Op("jc", ("count_down",)),
+            Op("jmp", ("count_up",)),
+            Label("count_down"),
+            Op("out", ()),
+            Op("sub", ("incr",)),
+            Op("jz", ("end",)),
+            Op("jmp", ("count_down",)),
+            Label("end"),
+            Op("hlt", ()),
+            Label("init"),
+            Val(42),
+            Label("incr"),
+            Val(1),
         )
     )
 
@@ -145,20 +144,20 @@ b: 1
     file = parser.parse_file()
     assert file == File(
         (
-            Label("loop", ()),
-            Op("lda", ("a",), ()),
-            Op("out", (), ()),
-            Op("add", ("b",), ()),
-            Op("sta", ("a",), ()),
-            Op("lda", ("b",), ()),
-            Op("out", (), ()),
-            Op("add", ("a",), ()),
-            Op("sta", ("b",), ()),
-            Op("jmp", ("loop",), ()),
-            Label("a", ()),
-            Val(1, ()),
-            Label("b", ()),
-            Val(1, ()),
+            Label("loop"),
+            Op("lda", ("a",)),
+            Op("out", ()),
+            Op("add", ("b",)),
+            Op("sta", ("a",)),
+            Op("lda", ("b",)),
+            Op("out", ()),
+            Op("add", ("a",)),
+            Op("sta", ("b",)),
+            Op("jmp", ("loop",)),
+            Label("a"),
+            Val(1),
+            Label("b"),
+            Val(1),
         )
     )
 
@@ -166,7 +165,7 @@ b: 1
 def test_parse_unary_with_val() -> None:
     parser = Parser.from_str("lda 1")
     file = parser.parse_file()
-    assert file == File((Op("lda", (1,), ()),))
+    assert file == File((Op("lda", (1,)),))
 
 
 def test_parse_nullary_or_val_invalid() -> None:
@@ -235,14 +234,14 @@ def test_parse_binary_expected_mnemonic() -> None:
 def test_parse_binary() -> None:
     parser = Parser.from_str("foo bar, 42")
     file = parser.parse_file()
-    assert file == File((Op("foo", ("bar", 42), ()),))
+    assert file == File((Op("foo", ("bar", 42)),))
 
 
 def test_parser_from_buf() -> None:
     buf = StringIO("foo")
     parser = Parser.from_buf(buf)
 
-    assert parser.parse_file() == File((Op("foo", (), ()),))
+    assert parser.parse_file() == File((Op("foo", ()),))
 
 
 @pytest.mark.parametrize(
@@ -258,7 +257,7 @@ def test_parse_underscore_digit_grouping(int_repr: str, int_val: int) -> None:
     parser = Parser.from_str(int_repr)
     file = parser.parse_file()
 
-    assert file == File((Val(int_val, ()),))
+    assert file == File((Val(int_val),))
 
 
 def test_parse_offsets() -> None:
@@ -280,14 +279,14 @@ hlt
     file = parser.parse_file()
     assert file == File(
         (
-            Offset(0x8000, None, ()),
-            Label("start", ()),
-            Op("lda", (42,), ()),
-            Op("hlt", (), ()),
-            Offset(0xFFFC, None, ()),
-            Op("word", ("start",), ()),
-            Offset(0xFFFE, None, ()),
-            Op("word", (0,), ()),
+            Offset(0x8000, None),
+            Label("start"),
+            Op("lda", (42,)),
+            Op("hlt", ()),
+            Offset(0xFFFC, None),
+            Op("word", ("start",)),
+            Offset(0xFFFE, None),
+            Op("word", (0,)),
         )
     )
 
@@ -316,7 +315,7 @@ def test_invalid_backward_offset_val() -> None:
 def test_parser_get_error() -> None:
     parser = Parser.from_str("lda 1")
     file = parser.parse_file()
-    assert file == File((Op("lda", (1,), ()),))
+    assert file == File((Op("lda", (1,)),))
 
     with pytest.raises(Reset) as excinfo:
         parser.get()
@@ -327,10 +326,10 @@ def test_parser_get_error() -> None:
 @pytest.mark.parametrize(
     "file_txt,expected",
     (
-        ("-2", UnExpr("-", Val(2, ()), ())),
-        ("-foo", UnExpr("-", Name("foo", ()), ())),
-        ("~2", UnExpr("~", Val(2, ()), ())),
-        ("~foo", UnExpr("~", Name("foo", ()), ())),
+        ("-2", UnExpr("-", Val(2))),
+        ("-foo", UnExpr("-", Name("foo"))),
+        ("~2", UnExpr("~", Val(2))),
+        ("~foo", UnExpr("~", Name("foo"))),
         ("+2", None),
     ),
 )
@@ -357,17 +356,17 @@ def test_parse_un_expr_error(file_txt: str, check_msg: Callable[[str], bool]) ->
 @pytest.mark.parametrize(
     "file_txt,expected",
     (
-        ("0 - 0", BinExpr(Val(0, ()), "-", Val(0, ()), ())),
-        ("0 + 0", BinExpr(Val(0, ()), "+", Val(0, ()), ())),
-        ("0 * 0", BinExpr(Val(0, ()), "*", Val(0, ()), ())),
-        ("0 / 0", BinExpr(Val(0, ()), "/", Val(0, ()), ())),
-        ("0 >> 0", BinExpr(Val(0, ()), ">>", Val(0, ()), ())),
-        ("0 << 0", BinExpr(Val(0, ()), "<<", Val(0, ()), ())),
-        ("0 ^ 0", BinExpr(Val(0, ()), "^", Val(0, ()), ())),
-        ("0 & 0", BinExpr(Val(0, ()), "&", Val(0, ()), ())),
-        ("0 | 0", BinExpr(Val(0, ()), "|", Val(0, ()), ())),
-        ("0 ** 0", BinExpr(Val(0, ()), "**", Val(0, ()), ())),
-        ("0 % 0", BinExpr(Val(0, ()), "%", Val(0, ()), ())),
+        ("0 - 0", BinExpr(Val(0), "-", Val(0))),
+        ("0 + 0", BinExpr(Val(0), "+", Val(0))),
+        ("0 * 0", BinExpr(Val(0), "*", Val(0))),
+        ("0 / 0", BinExpr(Val(0), "/", Val(0))),
+        ("0 >> 0", BinExpr(Val(0), ">>", Val(0))),
+        ("0 << 0", BinExpr(Val(0), "<<", Val(0))),
+        ("0 ^ 0", BinExpr(Val(0), "^", Val(0))),
+        ("0 & 0", BinExpr(Val(0), "&", Val(0))),
+        ("0 | 0", BinExpr(Val(0), "|", Val(0))),
+        ("0 ** 0", BinExpr(Val(0), "**", Val(0))),
+        ("0 % 0", BinExpr(Val(0), "%", Val(0))),
         # ("-foo", UnExpr("-", Name("foo", ()), ())),
         # ("~2", UnExpr("~", Val(2, ()), ())),
         # ("~foo", UnExpr("~", Name("foo", ()), ())),
@@ -385,7 +384,7 @@ def test_parse_bin_expr(file_txt: str, expected: Optional[Expr]) -> None:
 #     "file_txt,check_msg",
 #     (("-!!!", Eq("expected expression after binary operator '-'")),),
 # )
-# def test_parse_bin_expr_error(file_txt: str, check_msg: Callable[[str], bool]) -> None:
+# def test_parse_bin_expr_error(file_txt: str, check_msg: Callable[[str], bool]) -> None:  # noqa: E501
 #     parser = Parser.from_str(file_txt)
 
 #     with pytest.raises(Stop) as excinfo:
@@ -397,9 +396,9 @@ def test_parse_bin_expr(file_txt: str, expected: Optional[Expr]) -> None:
 @pytest.mark.parametrize(
     "file_txt,expected",
     (
-        ("2", Val(2, ())),
-        ("0x2a", Val(42, ())),
-        ("foo", Name("foo", ())),
+        ("2", Val(2)),
+        ("0x2a", Val(42)),
+        ("foo", Name("foo")),
         ("(*&#@(*&@", None),
     ),
 )
