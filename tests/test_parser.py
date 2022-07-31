@@ -3,22 +3,22 @@ from typing import Any, Callable, Optional, Tuple
 
 import pytest
 
-from wes.exceptions import Reset, Stop
+from wes.exceptions import Reset, Stop, TokenError
 from wes.parser import (
-    BinExpr,
+    BinExpr as B,
     Expr,
     File,
     Label,
-    Name,
+    Name as N,
     Node,
     Offset,
     Op,
     Parser,
-    UnExpr,
-    Val,
+    UnExpr as U,
+    Val as V,
 )
 
-from .utils import Eq
+from .utils import Eq, Predicate, In
 
 
 class MyNode(Node):
@@ -112,9 +112,9 @@ incr: 1
             Label("end"),
             Op("hlt", ()),
             Label("init"),
-            Val(42),
+            V(42),
             Label("incr"),
-            Val(1),
+            V(1),
         )
     )
 
@@ -155,9 +155,9 @@ b: 1
             Op("sta", ("b",)),
             Op("jmp", ("loop",)),
             Label("a"),
-            Val(1),
+            V(1),
             Label("b"),
-            Val(1),
+            V(1),
         )
     )
 
@@ -257,7 +257,7 @@ def test_parse_underscore_digit_grouping(int_repr: str, int_val: int) -> None:
     parser = Parser.from_str(int_repr)
     file = parser.parse_file()
 
-    assert file == File((Val(int_val),))
+    assert file == File((V(int_val),))
 
 
 def test_parse_offsets() -> None:
@@ -326,9 +326,9 @@ def test_parser_get_error() -> None:
 # @pytest.mark.parametrize(
 #     "file_txt,expected",
 #     (
-#         ("-2", UnExpr("-", Val(2))),
+#         ("-2", UnExpr("-", V(2))),
 #         ("-foo", UnExpr("-", Name("foo"))),
-#         ("~2", UnExpr("~", Val(2))),
+#         ("~2", UnExpr("~", V(2))),
 #         ("~foo", UnExpr("~", Name("foo"))),
 #         ("+2", None),
 #     ),
@@ -353,8 +353,35 @@ def test_parser_get_error() -> None:
 #     assert check_msg(excinfo.value.msg)
 
 
-B = BinExpr
-V = Val
+@pytest.mark.parametrize(
+    "method_name,file_txt,expected",
+    (
+        # parse_atom
+        ("parse_atom", "0", V(0)),
+        ("parse_atom", "foo", N("foo")),
+        ("parse_atom", "(foo)", N("foo")),
+        ("parse_atom", "!!!", None),
+
+        # parse_power
+        ("parse_power", "!!!", None),
+        ("parse_power", "0", V(0)),
+        ("parse_power", "0 ** 1 ** 2", B(V(0), "**", B(V(1), "**", V(2)))),
+        ("parse_power", "(0 ** 1) ** 2", B(B(V(0), "**", V(1)), "**", V(2))),
+        ("parse_power", "0 **", In("expected expression after '**'")),
+    ),
+)
+def test_expr_parsers(method_name: str, file_txt: str, expected: Any) -> None:
+    parser = Parser.from_str(file_txt)
+
+    if expected is None or isinstance(expected, str):
+        actual = getattr(parser, method_name)()
+
+        assert actual == expected
+    elif isinstance(expected, Predicate):
+        with pytest.raises(TokenError) as excinfo:
+            getattr(parser, method_name)()
+
+        assert expected(excinfo.value.msg)
 
 
 @pytest.mark.parametrize(
@@ -376,7 +403,7 @@ V = Val
         # operator precedence
         # ("0 * 0 + 0 * 0", B(B(z, "*", z), "+", B(z, "*", z))),
         # ("-foo", UnExpr("-", Name("foo", ()), ())),
-        # ("~2", UnExpr("~", Val(2, ()), ())),
+        # ("~2", UnExpr("~", V(2, ()), ())),
         # ("~foo", UnExpr("~", Name("foo", ()), ())),
         # ("+2", None),
     ),
@@ -404,8 +431,8 @@ def test_parse_bin_expr(file_txt: str, expected: Optional[Expr]) -> None:
 # @pytest.mark.parametrize(
 #     "file_txt,expected",
 #     (
-#         ("2", Val(2)),
-#         ("0x2a", Val(42)),
+#         ("2", V(2)),
+#         ("0x2a", V(42)),
 #         ("foo", Name("foo")),
 #         ("(*&#@(*&@", None),
 #     ),

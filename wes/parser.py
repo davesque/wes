@@ -463,6 +463,32 @@ class Parser:
                     (name_or_val,),
                 )
 
+    def parse_power(self: Parser) -> Optional[Expr]:
+        x = self.parse_atom()
+        if x is None:
+            return None
+
+        if op := self.maybe("**"):
+            y = self.parse_factor()
+            if y is None:
+                raise Stop(f"expected expression after '{op.text}' operator", (op,))
+
+            return BinExpr(x, op.text, y, toks=x.toks + (op,) + y.toks)
+        else:
+            return x
+
+    @cache_left_rec
+    @optional
+    def parse_factor(self: Parser) -> Optional[Expr]:
+        if op := self.maybe("-", "~"):
+            x = self.parse_factor()
+            if x is None:
+                raise Stop(f"expected expression after '{op.text}' operator", (op,))
+
+            return UnExpr(op.text, x, toks=(op,) + x.toks)
+
+        return self.parse_power()
+
     @staticmethod
     def make_expr_parser(
         name: str,
@@ -477,7 +503,7 @@ class Parser:
 
                 y = rhs(self)
                 if y is None:
-                    raise Stop(f"expected expression after '{op.text} operator", (op,))
+                    raise Stop(f"expected expression after '{op.text}' operator", (op,))
 
                 return BinExpr(x, op.text, y, toks=x.toks + (op,) + y.toks)
 
@@ -486,20 +512,6 @@ class Parser:
         parser.__name__ = name
 
         return parser
-
-    parse_power = make_expr_parser("parse_power", ("**",), parse_atom)
-
-    @cache_left_rec
-    @optional
-    def parse_factor(self: Parser) -> Optional[Expr]:
-        if op := self.maybe("-", "~"):
-            x = self.parse_factor()
-            if x is None:
-                raise Stop(f"expected expression after '{op.text} operator", (op,))
-
-            return UnExpr(op.text, x, toks=(op,) + x.toks)
-
-        return self.parse_power()
 
     parse_term = make_expr_parser("parse_term", ("*", "/", "%"), parse_factor)
     parse_sum = make_expr_parser("parse_sum", ("+", "-"), parse_term)
