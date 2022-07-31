@@ -1,11 +1,25 @@
 from io import StringIO
-from typing import Optional, Tuple
+from typing import Callable, Optional, Tuple
 
 import pytest
 
 from wes.exceptions import Reset, Stop
 from wes.lexer import Text
-from wes.parser import Expr, File, Label, Node, Offset, Op, Parser, Val
+from wes.parser import (
+    BinExpr,
+    Expr,
+    File,
+    Label,
+    Name,
+    Node,
+    Offset,
+    Op,
+    Parser,
+    UnExpr,
+    Val,
+)
+
+from .utils import Eq
 
 
 class MyNode(Node):
@@ -308,3 +322,89 @@ def test_parser_get_error() -> None:
         parser.get()
 
     assert excinfo.value.msg == "unexpected end of tokens"
+
+
+@pytest.mark.parametrize(
+    "file_txt,expected",
+    (
+        ("-2", UnExpr("-", Val(2, ()), ())),
+        ("-foo", UnExpr("-", Name("foo", ()), ())),
+        ("~2", UnExpr("~", Val(2, ()), ())),
+        ("~foo", UnExpr("~", Name("foo", ()), ())),
+        ("+2", None),
+    ),
+)
+def test_parse_un_expr(file_txt: str, expected: Optional[Expr]) -> None:
+    parser = Parser.from_str(file_txt)
+    actual = parser.parse_un_expr()
+
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "file_txt,check_msg",
+    (("-!!!", Eq("expected expression after unary operator '-'")),),
+)
+def test_parse_un_expr_error(file_txt: str, check_msg: Callable[[str], bool]) -> None:
+    parser = Parser.from_str(file_txt)
+
+    with pytest.raises(Stop) as excinfo:
+        parser.parse_un_expr()
+
+    assert check_msg(excinfo.value.msg)
+
+
+@pytest.mark.parametrize(
+    "file_txt,expected",
+    (
+        ("0 - 0", BinExpr(Val(0, ()), "-", Val(0, ()), ())),
+        ("0 + 0", BinExpr(Val(0, ()), "+", Val(0, ()), ())),
+        ("0 * 0", BinExpr(Val(0, ()), "*", Val(0, ()), ())),
+        ("0 / 0", BinExpr(Val(0, ()), "/", Val(0, ()), ())),
+        ("0 >> 0", BinExpr(Val(0, ()), ">>", Val(0, ()), ())),
+        ("0 << 0", BinExpr(Val(0, ()), "<<", Val(0, ()), ())),
+        ("0 ^ 0", BinExpr(Val(0, ()), "^", Val(0, ()), ())),
+        ("0 & 0", BinExpr(Val(0, ()), "&", Val(0, ()), ())),
+        ("0 | 0", BinExpr(Val(0, ()), "|", Val(0, ()), ())),
+        ("0 ** 0", BinExpr(Val(0, ()), "**", Val(0, ()), ())),
+        ("0 % 0", BinExpr(Val(0, ()), "%", Val(0, ()), ())),
+        # ("-foo", UnExpr("-", Name("foo", ()), ())),
+        # ("~2", UnExpr("~", Val(2, ()), ())),
+        # ("~foo", UnExpr("~", Name("foo", ()), ())),
+        # ("+2", None),
+    ),
+)
+def test_parse_bin_expr(file_txt: str, expected: Optional[Expr]) -> None:
+    parser = Parser.from_str(file_txt)
+    actual = parser.parse_expr()
+
+    assert actual == expected
+
+
+# @pytest.mark.parametrize(
+#     "file_txt,check_msg",
+#     (("-!!!", Eq("expected expression after binary operator '-'")),),
+# )
+# def test_parse_bin_expr_error(file_txt: str, check_msg: Callable[[str], bool]) -> None:
+#     parser = Parser.from_str(file_txt)
+
+#     with pytest.raises(Stop) as excinfo:
+#         parser.parse_bin_expr()
+
+#     assert check_msg(excinfo.value.msg)
+
+
+@pytest.mark.parametrize(
+    "file_txt,expected",
+    (
+        ("2", Val(2, ())),
+        ("0x2a", Val(42, ())),
+        ("foo", Name("foo", ())),
+        ("(*&#@(*&@", None),
+    ),
+)
+def test_parse_atom(file_txt: str, expected: Optional[Expr]) -> None:
+    parser = Parser.from_str(file_txt)
+    actual = parser.parse_atom()
+
+    assert actual == expected

@@ -5,6 +5,7 @@ import re
 from typing import (
     Any,
     Callable,
+    Dict,
     Iterator,
     Optional,
     TextIO,
@@ -12,11 +13,12 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    cast,
 )
 
 from wes.exceptions import EndOfTokens, Reset, Stop
 from wes.lexer import Eof, Lexer, Newline, Text, Token, TokenStream
-from wes.utils import str_to_int
+from wes.utils import serialize_dict, str_to_int
 
 NAME_RE = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
 VAL_RE = re.compile(r"^(0b[01_]+|0o[0-7_]+|[0-9_]+|0x[a-fA-F0-9_]+)$")
@@ -57,9 +59,9 @@ class Node:
 class File(Node):
     __slots__ = ("stmts",)
 
-    stmts: Tuple[Stmt, ...]
+    stmts: Tuple[Union[Stmt, Expr], ...]
 
-    def __init__(self, stmts: Tuple[Stmt, ...]):
+    def __init__(self, stmts: Tuple[Union[Stmt, Expr], ...]):
         self.stmts = stmts
 
         # we have all the tokens in the statement nodes
@@ -109,13 +111,56 @@ class Op(Stmt):
         super().__init__(toks)
 
 
-class Val(Stmt):
+class Expr(Node):
+    __slots__ = tuple()
+
+
+class Name(Expr):
+    __slots__ = ("name",)
+
+    name: str
+
+    def __init__(self, name: str, toks: Tuple[Text, ...]):
+        self.name = name
+
+        super().__init__(toks)
+
+
+class Val(Expr):
     __slots__ = ("val",)
 
     val: int
 
     def __init__(self, val: int, toks: Tuple[Text, ...]):
         self.val = val
+
+        super().__init__(toks)
+
+
+class UnExpr(Expr):
+    __slots__ = ("op", "x")
+
+    op: str
+    x: Expr
+
+    def __init__(self, op: str, x: Expr, toks: Tuple[Text, ...]):
+        self.op = op
+        self.x = x
+
+        super().__init__(toks)
+
+
+class BinExpr(Expr):
+    __slots__ = ("x", "op", "y")
+
+    x: Expr
+    op: str
+    y: Expr
+
+    def __init__(self, x: Expr, op: str, y: Expr, toks: Tuple[Text, ...]):
+        self.x = x
+        self.op = op
+        self.y = y
 
         super().__init__(toks)
 
@@ -131,13 +176,84 @@ def optional(old_method: Callable[[Parser], T]) -> Callable[[Parser], Optional[T
     return new_method
 
 
+U = TypeVar("U", bound=Node)
+
+
+def cache(method: Callable[..., Optional[U]]) -> Callable[..., Optional[U]]:
+    def new_method(self: Parser, *args: Any, **kwargs: Any) -> Optional[U]:
+        key = (self.toks.mark(), method, args, serialize_dict(kwargs))
+
+        if key in self.cache:
+            res, end = self.cache[key]
+            self.toks.reset(end)
+        else:
+            res = method(self, *args, **kwargs)
+            end = self.toks.mark()
+            self.cache[key] = res, end
+
+        return cast(Optional[U], res)
+
+    return new_method
+
+
+def cache_left_rec(method: Callable[..., Optional[U]]) -> Callable[..., Optional[U]]:
+    """
+    This technique of handling left-recursion taken from Guido van
+    Rossum's article series on PEG parsing:
+
+    https://medium.com/@gvanrossum_83706/peg-parsing-series-de5d41b2ed60
+    """
+
+    def new_method(self: Parser, *args: Any, **kwargs: Any) -> Optional[U]:
+        pos = self.toks.mark()
+        key = (pos, method, args, serialize_dict(kwargs))
+
+        if key in self.cache:
+            res, end = self.cache[key]
+            self.toks.reset(end)
+        else:
+            # prime cache with failure result
+            last_res, last_pos = None, pos
+            self.cache[key] = last_res, last_pos
+
+            # loop until no longer parse result is obtained
+            while True:
+                self.toks.reset(pos)
+                res = method(self, *args, **kwargs)
+
+                end = self.toks.mark()
+                if end <= last_pos:
+                    break
+
+                last_res, last_pos = res, end
+                self.cache[key] = last_res, last_pos
+
+            res = last_res
+            self.toks.reset(last_pos)
+
+        return cast(Optional[U], res)
+
+    return new_method
+
+
+Pos = int
+ParserMethod = Callable[..., Any]
+Args = Tuple[Any, ...]
+Kwargs = Tuple[Tuple[str, Any], ...]
+
+CacheKey = Tuple[Pos, ParserMethod, Args, Kwargs]
+CacheValue = Tuple[Optional[Node], Pos]
+
+
 class Parser:
-    __slots__ = ("toks",)
+    __slots__ = ("toks", "cache")
 
     toks: TokenStream
+    cache: Dict[CacheKey, CacheValue]
 
     def __init__(self, lexer: Lexer):
         self.toks = TokenStream(lexer)
+        self.cache = {}
 
     @classmethod
     def from_str(cls, text: str) -> Parser:
@@ -193,7 +309,7 @@ class Parser:
 
         return File(tuple(stmts))
 
-    def parse_stmt(self) -> Optional[Stmt]:
+    def parse_stmt(self) -> Optional[Union[Stmt, Expr]]:
         if offset := self.parse_offset():
             return offset
         elif label := self.parse_label():
@@ -307,6 +423,72 @@ class Parser:
             return name_or_val.text
         else:
             raise Stop(
+                f"{repr(name_or_val.text)} is not a valid name or integer",
+                (name_or_val,),
+            )
+
+    @cache_left_rec
+    def parse_expr(self) -> Optional[Expr]:
+        if expr := self.parse_paren_inner():
+            return expr
+        return self.parse_inner()
+
+    @optional
+    def parse_paren_inner(self) -> Expr:
+        l_paren = self.expect("(")
+
+        expr = self.parse_inner()
+        if expr is None:
+            raise Stop("", ())
+
+        r_paren = self.expect(")")
+
+        new_toks = (l_paren,) + expr.toks + (r_paren,)
+        new_args = expr.slot_values + (new_toks,)
+
+        return type(expr)(*new_args)
+
+    def parse_inner(self) -> Optional[Expr]:
+        if expr := self.parse_un_expr():
+            return expr
+        elif expr := self.parse_bin_expr():
+            return expr
+        return self.parse_atom()
+
+    @optional
+    def parse_un_expr(self) -> UnExpr:
+        op = self.expect("-", "~")
+
+        x = self.parse_expr()
+        if x is None:
+            raise Stop(f"expected expression after unary operator '{op.text}'", (op,))
+
+        return UnExpr(op.text, x, (op,) + x.toks)
+
+    @optional
+    def parse_bin_expr(self) -> BinExpr:
+        x = self.parse_expr()
+        if x is None:
+            raise Reset("", ())
+
+        op = self.expect("-", "+", "*", "/", ">>", "<<", "^", "&", "|", "**", "%")
+
+        y = self.parse_expr()
+        if y is None:
+            raise Stop("", ())
+
+        return BinExpr(x, op.text, y, x.toks + (op,) + y.toks)
+
+    @optional
+    def parse_atom(self) -> Union[Name, Val, None]:
+        name_or_val = self.expect()
+
+        if VAL_RE.match(name_or_val.text):
+            return Val(str_to_int(name_or_val.text), (name_or_val,))
+        elif NAME_RE.match(name_or_val.text):
+            return Name(name_or_val.text, (name_or_val,))
+        else:
+            raise Reset(
                 f"{repr(name_or_val.text)} is not a valid name or integer",
                 (name_or_val,),
             )
