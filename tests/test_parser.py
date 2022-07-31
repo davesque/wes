@@ -406,6 +406,47 @@ def test_parser_get_error() -> None:
         ("parse_sum", "0 + 1 * 2", B(V(0), "+", B(V(1), "*", V(2)))),
         # hard failures
         ("parse_sum", "0 *", In("expected expression after '*'")),
+        # ========= parse_shift =========
+        ("parse_shift", "!!!", None),  # returns `None` on fail
+        ("parse_shift", "0", V(0)),  # tries alternative
+        ("parse_shift", "0 << 1", B(V(0), "<<", V(1))),
+        ("parse_shift", "0 >> 1", B(V(0), ">>", V(1))),
+        # associativity
+        ("parse_shift", "0 >> 1 >> 2", B(B(V(0), ">>", V(1)), ">>", V(2))),
+        # neighboring operator precedence
+        ("parse_shift", "0 >> 1 + 2", B(V(0), ">>", B(V(1), "+", V(2)))),
+        # hard failures
+        ("parse_shift", "0 >>", In("expected expression after '>>'")),
+        # ========= parse_and =========
+        ("parse_and", "!!!", None),  # returns `None` on fail
+        ("parse_and", "0", V(0)),  # tries alternative
+        ("parse_and", "0 & 1", B(V(0), "&", V(1))),
+        # associativity
+        ("parse_and", "0 & 1 & 2", B(B(V(0), "&", V(1)), "&", V(2))),
+        # neighboring operator precedence
+        ("parse_and", "0 & 1 >> 2", B(V(0), "&", B(V(1), ">>", V(2)))),
+        # hard failures
+        ("parse_and", "0 &", In("expected expression after '&'")),
+        # ========= parse_xor =========
+        ("parse_xor", "!!!", None),  # returns `None` on fail
+        ("parse_xor", "0", V(0)),  # tries alternative
+        ("parse_xor", "0 ^ 1", B(V(0), "^", V(1))),
+        # associativity
+        ("parse_xor", "0 ^ 1 ^ 2", B(B(V(0), "^", V(1)), "^", V(2))),
+        # neighboring operator precedence
+        ("parse_xor", "0 ^ 1 & 2", B(V(0), "^", B(V(1), "&", V(2)))),
+        # hard failures
+        ("parse_xor", "0 ^", In("expected expression after '^'")),
+        # ========= parse_expr =========
+        ("parse_expr", "!!!", None),  # returns `None` on fail
+        ("parse_expr", "0", V(0)),  # tries alternative
+        ("parse_expr", "0 | 1", B(V(0), "|", V(1))),
+        # associativity
+        ("parse_expr", "0 | 1 | 2", B(B(V(0), "|", V(1)), "|", V(2))),
+        # neighboring operator precedence
+        ("parse_expr", "0 | 1 ^ 2", B(V(0), "|", B(V(1), "^", V(2)))),
+        # hard failures
+        ("parse_expr", "0 |", In("expected expression after '|'")),
     ),
 )
 def test_expr_parsers(method_name: str, file_txt: str, expected: Any) -> None:
