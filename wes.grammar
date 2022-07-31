@@ -5,10 +5,10 @@ file: stmt* EOF
 
 stmt: offset | label | op_or_val
 
-offset: relative_offset | absolute_offset
+offset: relative | absolute
 
-relative_offset: ['+' | '-'] VAL ':' [NEWLINE]
-absolute_offset: VAL ':' [NEWLINE]
+relative: ['+' | '-'] VAL ':' [NEWLINE]
+absolute: VAL ':' [NEWLINE]
 
 label: NAME ':' [NEWLINE]
 

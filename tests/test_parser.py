@@ -252,14 +252,14 @@ def test_invalid_label_name() -> None:
 
 def test_invalid_forward_offset_val() -> None:
     parser = Parser.from_str("+foo: 0")
-    label = parser.parse_forward_relative_offset()
+    label = parser.parse_relative()
 
     assert label is None
 
 
 def test_invalid_backward_offset_val() -> None:
     parser = Parser.from_str("-foo: 0")
-    label = parser.parse_backward_relative_offset()
+    label = parser.parse_relative()
 
     assert label is None
 

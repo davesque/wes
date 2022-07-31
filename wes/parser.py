@@ -176,14 +176,17 @@ class Parser:
             self.toks.reset(pos)
 
     def expect(
-        self, tok_text: Optional[str] = None, error: Type[Exception] = Reset
+        self, *alts: str, error: Type[Exception] = Reset
     ) -> Text:
         tok = self.get()
 
         if not isinstance(tok, Text):
             raise error("unexpected end of line", (tok,))
-        if tok_text is not None and tok.text != tok_text:
-            raise error(f"expected '{tok_text}'", (tok,))
+        if len(alts) > 0 and tok.text not in alts:
+            if len(alts) == 1:
+                raise error(f"expected '{alts[0]}'", (tok,))
+            else:
+                raise error(f"expected one of {repr(alts)}", (tok,))
 
         return tok
 
@@ -225,37 +228,24 @@ class Parser:
             return self.parse_binary()
 
     def parse_offset(self) -> Optional[Offset]:
-        if off := self.parse_forward_relative_offset():
-            return off
-        elif off := self.parse_backward_relative_offset():
+        if off := self.parse_relative():
             return off
         else:
-            return self.parse_absolute_offset()
+            return self.parse_absolute()
 
     @optional
-    def parse_forward_relative_offset(self) -> Offset:
-        relative = self.expect("+")
+    def parse_relative(self) -> Offset:
+        relative = self.expect("+", "-")
         val = self.expect()
         colon = self.expect(":")
 
         if not VAL_RE.match(val.text):
             raise Reset(f"{repr(val.text)} is not valid offset", (val,))
 
-        return Offset(str_to_int(val.text), "+", (relative, val, colon))
+        return Offset(str_to_int(val.text), relative.text, (relative, val, colon))
 
     @optional
-    def parse_backward_relative_offset(self) -> Offset:
-        relative = self.expect("-")
-        val = self.expect()
-        colon = self.expect(":")
-
-        if not VAL_RE.match(val.text):
-            raise Reset(f"{repr(val.text)} is not valid offset", (val,))
-
-        return Offset(str_to_int(val.text), "-", (relative, val, colon))
-
-    @optional
-    def parse_absolute_offset(self) -> Offset:
+    def parse_absolute(self) -> Offset:
         val = self.expect()
         colon = self.expect(":")
 
