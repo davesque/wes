@@ -7,6 +7,13 @@ from wes.exceptions import EndOfTokens, Message
 
 COMMENT_CHR = ";"
 
+# Continuous runs of these characters will be joined into one token.  This
+# simplifies parsing of the '**', '<<', and '>>' operators.
+JOINED = "*<>"
+
+# Continuous runs of these characters will all be treated as separate tokens.
+DISJOINED = "-~+/^&|%:,[]()"
+
 
 def _char_type(c: str) -> Any:
     """
@@ -16,10 +23,12 @@ def _char_type(c: str) -> Any:
     """
     if c.isspace():
         return 0
-    elif c in ":,+-[]()":
+    elif c in JOINED:
+        return 1
+    elif c in DISJOINED:
         return float("nan")
     else:
-        return 1
+        return 2
 
 
 def tokenize(s: str, *, split_f: Callable[[str], Any] = _char_type) -> Iterator[str]:
