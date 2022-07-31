@@ -162,9 +162,7 @@ class Parser:
         except Reset:
             self.toks.reset(pos)
 
-    def expect(
-        self, *alts: str, error: Type[Exception] = Reset
-    ) -> Text:
+    def expect(self, *alts: str, error: Type[Exception] = Reset) -> Text:
         tok = self.get()
 
         if not isinstance(tok, Text):
