@@ -323,50 +323,58 @@ def test_parser_get_error() -> None:
     assert excinfo.value.msg == "unexpected end of tokens"
 
 
+# @pytest.mark.parametrize(
+#     "file_txt,expected",
+#     (
+#         ("-2", UnExpr("-", Val(2))),
+#         ("-foo", UnExpr("-", Name("foo"))),
+#         ("~2", UnExpr("~", Val(2))),
+#         ("~foo", UnExpr("~", Name("foo"))),
+#         ("+2", None),
+#     ),
+# )
+# def test_parse_un_expr(file_txt: str, expected: Optional[Expr]) -> None:
+#     parser = Parser.from_str(file_txt)
+#     actual = parser.parse_un_expr()
+
+#     assert actual == expected
+
+
+# @pytest.mark.parametrize(
+#     "file_txt,check_msg",
+#     (("-!!!", Eq("expected expression after unary operator '-'")),),
+# )
+# def test_parse_un_expr_error(file_txt: str, check_msg: Callable[[str], bool]) -> None:
+#     parser = Parser.from_str(file_txt)
+
+#     with pytest.raises(Stop) as excinfo:
+#         parser.parse_un_expr()
+
+#     assert check_msg(excinfo.value.msg)
+
+
+B = BinExpr
+V = Val
+
+
 @pytest.mark.parametrize(
     "file_txt,expected",
     (
-        ("-2", UnExpr("-", Val(2))),
-        ("-foo", UnExpr("-", Name("foo"))),
-        ("~2", UnExpr("~", Val(2))),
-        ("~foo", UnExpr("~", Name("foo"))),
-        ("+2", None),
-    ),
-)
-def test_parse_un_expr(file_txt: str, expected: Optional[Expr]) -> None:
-    parser = Parser.from_str(file_txt)
-    actual = parser.parse_un_expr()
-
-    assert actual == expected
-
-
-@pytest.mark.parametrize(
-    "file_txt,check_msg",
-    (("-!!!", Eq("expected expression after unary operator '-'")),),
-)
-def test_parse_un_expr_error(file_txt: str, check_msg: Callable[[str], bool]) -> None:
-    parser = Parser.from_str(file_txt)
-
-    with pytest.raises(Stop) as excinfo:
-        parser.parse_un_expr()
-
-    assert check_msg(excinfo.value.msg)
-
-
-@pytest.mark.parametrize(
-    "file_txt,expected",
-    (
-        ("0 - 0", BinExpr(Val(0), "-", Val(0))),
-        ("0 + 0", BinExpr(Val(0), "+", Val(0))),
-        ("0 * 0", BinExpr(Val(0), "*", Val(0))),
-        ("0 / 0", BinExpr(Val(0), "/", Val(0))),
-        ("0 >> 0", BinExpr(Val(0), ">>", Val(0))),
-        ("0 << 0", BinExpr(Val(0), "<<", Val(0))),
-        ("0 ^ 0", BinExpr(Val(0), "^", Val(0))),
-        ("0 & 0", BinExpr(Val(0), "&", Val(0))),
-        ("0 | 0", BinExpr(Val(0), "|", Val(0))),
-        ("0 ** 0", BinExpr(Val(0), "**", Val(0))),
-        ("0 % 0", BinExpr(Val(0), "%", Val(0))),
+        # basic binary expressions
+        # ("0 - 0", B(z, "-", z)),
+        # ("0 + 0", B(z, "+", z)),
+        # ("0 * 0", B(z, "*", z)),
+        # ("0 / 0", B(z, "/", z)),
+        # ("0 >> 0", B(z, ">>", z)),
+        # ("0 << 0", B(z, "<<", z)),
+        # ("0 ^ 0", B(z, "^", z)),
+        ("0 & 0", B(V(0), "&", V(0))),
+        ("0 | 0", B(V(0), "|", V(0))),
+        ("(0 & 1) | 2", B(B(V(0), "&", V(1)), "|", V(2))),
+        # ("0 ** 0", B(z, "**", z)),
+        # ("0 % 0", B(z, "%", z)),
+        # operator precedence
+        # ("0 * 0 + 0 * 0", B(B(z, "*", z), "+", B(z, "*", z))),
         # ("-foo", UnExpr("-", Name("foo", ()), ())),
         # ("~2", UnExpr("~", Val(2, ()), ())),
         # ("~foo", UnExpr("~", Name("foo", ()), ())),
@@ -393,17 +401,17 @@ def test_parse_bin_expr(file_txt: str, expected: Optional[Expr]) -> None:
 #     assert check_msg(excinfo.value.msg)
 
 
-@pytest.mark.parametrize(
-    "file_txt,expected",
-    (
-        ("2", Val(2)),
-        ("0x2a", Val(42)),
-        ("foo", Name("foo")),
-        ("(*&#@(*&@", None),
-    ),
-)
-def test_parse_atom(file_txt: str, expected: Optional[Expr]) -> None:
-    parser = Parser.from_str(file_txt)
-    actual = parser.parse_atom()
+# @pytest.mark.parametrize(
+#     "file_txt,expected",
+#     (
+#         ("2", Val(2)),
+#         ("0x2a", Val(42)),
+#         ("foo", Name("foo")),
+#         ("(*&#@(*&@", None),
+#     ),
+# )
+# def test_parse_atom(file_txt: str, expected: Optional[Expr]) -> None:
+#     parser = Parser.from_str(file_txt)
+#     actual = parser.parse_atom()
 
-    assert actual == expected
+#     assert actual == expected

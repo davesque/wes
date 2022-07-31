@@ -22,12 +22,14 @@ arg: deref | expr
 
 deref: '[' expr ']'
 
-expr: '(' inner ')' | inner
-inner: un_expr | bin_expr | atom
+expr: expr '|' xor | xor
+xor: xor '^' and | and
+and: and '&' shift | shift
+shift: shift ('<<' | '>>' ) sum | sum
 
-un_expr: un_op expr
-bin_expr: expr bin_op expr
-atom: NAME | VAL
+sum: sum ('+' | '-') term | term
+term: term ('*' | '/' | '%') factor
+factor: ('-' | '~') factor | power
+power: power '**' atom | atom
 
-un_op: '-' | '~'
-bin_op: '-' | '+' | '*' | '/' | '>>' | '<<' | '^' | '&' | '|' | '**' | '%'
+atom: NAME | VAL | '(' expr ')'

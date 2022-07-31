@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import re
+import functools
 from typing import (
     Any,
     Callable,
@@ -29,7 +30,7 @@ T = TypeVar("T")
 class Node:
     __slots__ = ("toks",)
 
-    toks: Tuple[Text, ...]  # type: ignore
+    toks: Tuple[Text, ...]
 
     def __init__(self, *, toks: Optional[Tuple[Text, ...]] = None):
         if toks is None:
@@ -166,11 +167,12 @@ class BinExpr(Expr):
         super().__init__(**kwargs)
 
 
-def optional(old_method: Callable[[Parser], T]) -> Callable[[Parser], Optional[T]]:
+def optional(method: Callable[[Parser], T]) -> Callable[[Parser], Optional[T]]:
+    @functools.wraps(method)
     def new_method(self) -> Optional[T]:
         res = None
         with self.reset():
-            res = old_method(self)
+            res = method(self)
 
         return res
 
@@ -181,6 +183,7 @@ U = TypeVar("U", bound=Node)
 
 
 def cache(method: Callable[..., Optional[U]]) -> Callable[..., Optional[U]]:
+    @functools.wraps(method)
     def new_method(self: Parser, *args: Any, **kwargs: Any) -> Optional[U]:
         key = (self.toks.mark(), method, args, serialize_dict(kwargs))
 
@@ -205,6 +208,7 @@ def cache_left_rec(method: Callable[..., Optional[U]]) -> Callable[..., Optional
     https://medium.com/@gvanrossum_83706/peg-parsing-series-de5d41b2ed60
     """
 
+    @functools.wraps(method)
     def new_method(self: Parser, *args: Any, **kwargs: Any) -> Optional[U]:
         pos = self.toks.mark()
         key = (pos, method, args, serialize_dict(kwargs))
@@ -300,6 +304,13 @@ class Parser:
             raise error("expected end of line", (tok,))
 
         return tok
+
+    def maybe(self, *alts: str) -> Optional[Text]:
+        res = None
+        with self.reset():
+            res = self.expect(*alts)
+
+        return res
 
     def parse_file(self) -> File:
         stmts = []
@@ -428,69 +439,74 @@ class Parser:
                 (name_or_val,),
             )
 
-    @cache_left_rec
-    def parse_expr(self) -> Optional[Expr]:
-        if expr := self.parse_paren_inner():
-            return expr
-        return self.parse_inner()
-
     @optional
-    def parse_paren_inner(self) -> Expr:
-        l_paren = self.expect("(")
+    def parse_atom(self) -> Expr:
+        if l_paren := self.maybe('('):
+            expr = self.parse_expr()
+            if expr is None:
+                raise Stop(f"expected expression after '{l_paren.text}'", (l_paren,))
+            r_paren = self.expect(')')
 
-        expr = self.parse_inner()
-        if expr is None:
-            raise Stop("", ())
+            new_toks = (l_paren,) + expr.toks + (r_paren,)
+            return type(expr)(*expr.slot_values, toks=new_toks)
 
-        r_paren = self.expect(")")
-
-        new_toks = (l_paren,) + expr.toks + (r_paren,)
-        return type(expr)(*expr.slot_values, toks=new_toks)
-
-    def parse_inner(self) -> Optional[Expr]:
-        if expr := self.parse_un_expr():
-            return expr
-        elif expr := self.parse_bin_expr():
-            return expr
-        return self.parse_atom()
-
-    @optional
-    def parse_un_expr(self) -> UnExpr:
-        op = self.expect("-", "~")
-
-        x = self.parse_expr()
-        if x is None:
-            raise Stop(f"expected expression after unary operator '{op.text}'", (op,))
-
-        return UnExpr(op.text, x, toks=(op,) + x.toks)
-
-    @optional
-    def parse_bin_expr(self) -> BinExpr:
-        x = self.parse_expr()
-        if x is None:
-            raise Reset("", ())
-
-        op = self.expect("-", "+", "*", "/", ">>", "<<", "^", "&", "|", "**", "%")
-
-        y = self.parse_expr()
-        if y is None:
-            raise Stop("", ())
-
-        return BinExpr(x, op.text, y, toks=x.toks + (op,) + y.toks)
-
-    @optional
-    def parse_atom(self) -> Union[Name, Val, None]:
-        name_or_val = self.expect()
-
-        if VAL_RE.match(name_or_val.text):
-            return Val(str_to_int(name_or_val.text), toks=(name_or_val,))
-        elif NAME_RE.match(name_or_val.text):
-            return Name(name_or_val.text, toks=(name_or_val,))
         else:
-            raise Reset(
-                f"{repr(name_or_val.text)} is not a valid name or integer",
-                (name_or_val,),
-            )
+            name_or_val = self.expect()
+
+            if VAL_RE.match(name_or_val.text):
+                return Val(str_to_int(name_or_val.text), toks=(name_or_val,))
+            elif NAME_RE.match(name_or_val.text):
+                return Name(name_or_val.text, toks=(name_or_val,))
+            else:
+                raise Reset(
+                    f"{repr(name_or_val.text)} is not a valid name or integer",
+                    (name_or_val,),
+                )
+
+    @staticmethod
+    def make_expr_parser(
+        name: str,
+        ops: Tuple[str, ...],
+        rhs: Callable[[Parser], Optional[Expr]],
+    ) -> Callable[[Parser], Optional[Expr]]:
+        @cache_left_rec
+        @optional
+        def parser(self: Parser) -> Optional[Expr]:
+            if x := parser(self):
+                op = self.expect(*ops)
+
+                y = rhs(self)
+                if y is None:
+                    raise Stop(f"expected expression after '{op.text} operator", (op,))
+
+                return BinExpr(x, op.text, y, toks=x.toks + (op,) + y.toks)
+
+            return rhs(self)
+
+        parser.__name__ = name
+
+        return parser
+
+    parse_power = make_expr_parser("parse_power", ("**",), parse_atom)
+
+    @cache_left_rec
+    @optional
+    def parse_factor(self: Parser) -> Optional[Expr]:
+        if op := self.maybe("-", "~"):
+            x = self.parse_factor()
+            if x is None:
+                raise Stop(f"expected expression after '{op.text} operator", (op,))
+
+            return UnExpr(op.text, x, toks=(op,) + x.toks)
+
+        return self.parse_power()
+
+    parse_term = make_expr_parser("parse_term", ("*", "/", "%"), parse_factor)
+    parse_sum = make_expr_parser("parse_sum", ("+", "-"), parse_term)
+    parse_shift = make_expr_parser("parse_shift", ("<<", ">>"), parse_sum)
+    parse_and = make_expr_parser("parse_and", ("&",), parse_shift)
+    parse_xor = make_expr_parser("parse_xor", ("^",), parse_and)
+    parse_expr = make_expr_parser("parse_expr", ("|",), parse_xor)
 
     def parse_eof(self) -> None:
         tok = self.get()
