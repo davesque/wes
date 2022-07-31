@@ -25,11 +25,11 @@ deref: '[' expr ']'
 expr: expr '|' xor | xor
 xor: xor '^' and | and
 and: and '&' shift | shift
-shift: shift ('<<' | '>>' ) sum | sum
+shift: shift ('<<' | '>>') sum | sum
 
 sum: sum ('+' | '-') term | term
-term: term ('*' | '/' | '%') factor
+term: term ('*' | '/' | '%') factor | factor
 factor: ('-' | '~') factor | power
-power: power '**' atom | atom
+power: atom '**' factor | atom
 
-atom: NAME | VAL | '(' expr ')'
+atom: '(' expr ')' | NAME | VAL

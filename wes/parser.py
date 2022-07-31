@@ -478,7 +478,6 @@ class Parser:
             return x
 
     @cache_left_rec
-    @optional
     def parse_factor(self: Parser) -> Optional[Expr]:
         if op := self.maybe("-", "~"):
             x = self.parse_factor()
@@ -495,23 +494,24 @@ class Parser:
         ops: Tuple[str, ...],
         rhs: Callable[[Parser], Optional[Expr]],
     ) -> Callable[[Parser], Optional[Expr]]:
-        @cache_left_rec
-        @optional
         def parser(self: Parser) -> Optional[Expr]:
-            if x := parser(self):
-                op = self.expect(*ops)
+            with self.reset():
+                if x := parser_(self):
+                    op = self.expect(*ops)
 
-                y = rhs(self)
-                if y is None:
-                    raise Stop(f"expected expression after '{op.text}' operator", (op,))
+                    y = rhs(self)
+                    if y is None:
+                        raise Stop(f"expected expression after '{op.text}' operator", (op,))
 
-                return BinExpr(x, op.text, y, toks=x.toks + (op,) + y.toks)
+                    return BinExpr(x, op.text, y, toks=x.toks + (op,) + y.toks)
 
             return rhs(self)
 
         parser.__name__ = name
 
-        return parser
+        parser_ = cache_left_rec(parser)
+
+        return parser_
 
     parse_term = make_expr_parser("parse_term", ("*", "/", "%"), parse_factor)
     parse_sum = make_expr_parser("parse_sum", ("+", "-"), parse_term)

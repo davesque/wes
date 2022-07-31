@@ -356,24 +356,62 @@ def test_parser_get_error() -> None:
 @pytest.mark.parametrize(
     "method_name,file_txt,expected",
     (
-        # parse_atom
+        # ========= parse_atom =========
         ("parse_atom", "0", V(0)),
         ("parse_atom", "foo", N("foo")),
         ("parse_atom", "(foo)", N("foo")),
         ("parse_atom", "!!!", None),
-
-        # parse_power
-        ("parse_power", "!!!", None),
-        ("parse_power", "0", V(0)),
+        # hard failures
+        ("parse_atom", "(!!!)", Eq("expected expression after '('")),
+        # ========= parse_power =========
+        ("parse_power", "!!!", None),  # returns `None` on fail
+        ("parse_power", "0", V(0)),  # tries alternative
+        ("parse_power", "0 ** 1", B(V(0), "**", V(1))),
+        # associativity
         ("parse_power", "0 ** 1 ** 2", B(V(0), "**", B(V(1), "**", V(2)))),
         ("parse_power", "(0 ** 1) ** 2", B(B(V(0), "**", V(1)), "**", V(2))),
+        # hard failures
         ("parse_power", "0 **", In("expected expression after '**'")),
+        # ========= parse_factor =========
+        ("parse_factor", "!!!", None),  # returns `None` on fail
+        ("parse_factor", "0", V(0)),  # tries alternative
+        ("parse_factor", "-0", U("-", V(0))),
+        ("parse_factor", "~0", U("~", V(0))),
+        # associativity
+        ("parse_factor", "-~0", U("-", U("~", V(0)))),
+        # neighboring operator precedence
+        ("parse_factor", "-0 ** 1", U("-", B(V(0), "**", V(1)))),
+        # hard failures
+        ("parse_factor", "-", In("expected expression after '-'")),
+        # ========= parse_term =========
+        ("parse_term", "!!!", None),  # returns `None` on fail
+        ("parse_term", "0", V(0)),  # tries alternative
+        ("parse_term", "0 * 1", B(V(0), "*", V(1))),
+        ("parse_term", "0 / 1", B(V(0), "/", V(1))),
+        ("parse_term", "0 % 1", B(V(0), "%", V(1))),
+        # associativity
+        ("parse_term", "0 * 1 * 2", B(B(V(0), "*", V(1)), "*", V(2))),
+        # neighboring operator precedence
+        ("parse_term", "-0 * 1", B(U("-", V(0)), "*", V(1))),
+        # hard failures
+        ("parse_term", "0 *", In("expected expression after '*'")),
+        # ========= parse_sum =========
+        ("parse_sum", "!!!", None),  # returns `None` on fail
+        ("parse_sum", "0", V(0)),  # tries alternative
+        ("parse_sum", "0 + 1", B(V(0), "+", V(1))),
+        ("parse_sum", "0 - 1", B(V(0), "-", V(1))),
+        # associativity
+        ("parse_sum", "0 + 1 + 2", B(B(V(0), "+", V(1)), "+", V(2))),
+        # neighboring operator precedence
+        ("parse_sum", "0 + 1 * 2", B(V(0), "+", B(V(1), "*", V(2)))),
+        # hard failures
+        ("parse_sum", "0 *", In("expected expression after '*'")),
     ),
 )
 def test_expr_parsers(method_name: str, file_txt: str, expected: Any) -> None:
     parser = Parser.from_str(file_txt)
 
-    if expected is None or isinstance(expected, str):
+    if expected is None or isinstance(expected, Node):
         actual = getattr(parser, method_name)()
 
         assert actual == expected
