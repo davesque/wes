@@ -29,6 +29,29 @@ class Node:
 
     toks: Tuple[Text, ...]  # type: ignore
 
+    def __init__(self, toks: Tuple[Text, ...]):
+        self.toks = toks
+
+    @property
+    def _slot_values(self) -> Tuple[Any, ...]:
+        return tuple(getattr(self, s) for s in self.__slots__ if s != "toks")
+
+    def __repr__(self) -> str:  # pragma: no cover
+        elems_repr = ", ".join(repr(i) for i in self._slot_values)
+        cls_name = self.__class__.__qualname__
+
+        return f"{cls_name}({elems_repr})"
+
+    def __eq__(self, other: Any) -> bool:
+        types_match = type(self) is type(other)
+        # a bit faster to check the negative condition here to avoid doing the
+        # comparison for all values if we encounter one mismatch
+        slots_mismatch = any(
+            x != y for x, y in zip(self._slot_values, other._slot_values)
+        )
+
+        return types_match and not slots_mismatch
+
 
 class File(Node):
     __slots__ = ("stmts",)
@@ -38,17 +61,8 @@ class File(Node):
     def __init__(self, stmts: Tuple[Stmt, ...]):
         self.stmts = stmts
 
-        toks = []
-        for stmt in stmts:
-            toks.extend(stmt.toks)
-
-        self.toks = tuple(toks)
-
-    def __repr__(self) -> str:  # pragma: no cover
-        return f"File({repr(self.stmts)})"
-
-    def __eq__(self, other: Any) -> bool:
-        return type(self) is type(other) and (self.stmts == other.stmts)
+        # we have all the tokens in the statement nodes
+        super().__init__(tuple())
 
 
 class Stmt(Node):
@@ -62,13 +76,8 @@ class Label(Stmt):
 
     def __init__(self, name: str, toks: Tuple[Text, ...]):
         self.name = name
-        self.toks = toks
 
-    def __repr__(self) -> str:  # pragma: no cover
-        return f"Label({repr(self.name)})"
-
-    def __eq__(self, other: Any) -> bool:
-        return type(self) is type(other) and (self.name == other.name)
+        super().__init__(toks)
 
 
 class Offset(Stmt):
@@ -80,18 +89,8 @@ class Offset(Stmt):
     def __init__(self, offset: int, relative: Optional[str], toks: Tuple[Text, ...]):
         self.offset = offset
         self.relative = relative
-        self.toks = toks
 
-    def __repr__(self) -> str:  # pragma: no cover
-        if self.relative is None:
-            return f"Offset({self.offset})"
-        else:
-            return f"Offset({self.relative}{self.offset})"
-
-    def __eq__(self, other: Any) -> bool:
-        return type(self) is type(other) and (
-            self.offset == other.offset and self.relative == other.relative
-        )
+        super().__init__(toks)
 
 
 class Op(Stmt):
@@ -105,15 +104,8 @@ class Op(Stmt):
     ):
         self.mnemonic = mnemonic
         self.args = args
-        self.toks = toks
 
-    def __repr__(self) -> str:  # pragma: no cover
-        return f"Op({repr(self.mnemonic)}, {repr(self.args)})"
-
-    def __eq__(self, other: Any) -> bool:
-        return type(self) is type(other) and (
-            self.mnemonic == other.mnemonic and self.args == other.args
-        )
+        super().__init__(toks)
 
 
 class Val(Stmt):
@@ -123,13 +115,8 @@ class Val(Stmt):
 
     def __init__(self, val: int, toks: Tuple[Text, ...]):
         self.val = val
-        self.toks = toks
 
-    def __repr__(self) -> str:  # pragma: no cover
-        return f"Val({self.val})"
-
-    def __eq__(self, other: Any) -> bool:
-        return type(self) is type(other) and (self.val == other.val)
+        super().__init__(toks)
 
 
 def optional(old_method: Callable[[Parser], T]) -> Callable[[Parser], Optional[T]]:
