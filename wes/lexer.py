@@ -264,7 +264,7 @@ class TokenStream:
         self.hist = []
         self.i = 0
 
-    def get(self) -> Token:
+    def peek(self) -> Token:
         if self.i < len(self.hist):
             tok = self.hist[self.i]
         else:
@@ -274,7 +274,12 @@ class TokenStream:
                 raise EndOfTokens("end of tokens")
             self.hist.append(tok)
 
+        return tok
+
+    def get(self) -> Token:
+        tok = self.peek()
         self.i += 1
+
         return tok
 
     def mark(self) -> int:
