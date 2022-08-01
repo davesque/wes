@@ -179,7 +179,7 @@ class Expr(Node):
             y = self.y.eval(scope)
 
             return fn(x, y)
-        else:
+        else:  # pragma: no cover
             raise Exception("invariant")
 
 

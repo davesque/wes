@@ -475,3 +475,9 @@ def test_expr_is_deref() -> None:
     expr = op.args[0]
 
     assert expr.is_deref
+
+    parser = Parser.from_str("foo [!!!]")
+    with pytest.raises(Stop) as excinfo:
+        parser.parse_file()
+
+    assert "expected expression after '['" in excinfo.value.msg
