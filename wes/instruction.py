@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Iterator
 
 from wes.exceptions import Message
-from wes.parser import Name, Op, Val
+from wes.parser import Op, Val
 from wes.utils import byte_length
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -53,7 +53,7 @@ class Value(Instruction):
     def validate(self) -> None:
         if self.val.val > self.compiler.max_val:
             raise Message(
-                f"value '{self.val.toks[0].text}' is too large", (self.val.toks[0],)
+                f"evaluated result '{self.val.val}' is too large", self.val.toks
             )
 
     def encode(self) -> Iterator[int]:

@@ -5,7 +5,7 @@ from typing import Dict, Iterator, TextIO, Type, TypeVar, cast, overload
 from wes.exceptions import Message
 from wes.instruction import Instruction, Operation, Value
 from wes.lexer import Text
-from wes.parser import File, Label, Offset, Op, Parser, Val, Name
+from wes.parser import Expr, File, Label, Name, Offset, Op, Parser, Val
 
 T = TypeVar("T")
 
@@ -101,13 +101,17 @@ class Compiler:
 
                 loc = offset_loc
 
-            elif isinstance(stmt, (Op, Val, Name)):
+            elif isinstance(stmt, (Op, Expr)):
                 if loc > self.max_addr:
                     raise Message("statement makes program too large", (stmt.toks[0],))
 
-                # rewrite free standing names as nullary ops
                 if isinstance(stmt, Name):
+                    # rewrite free standing names as nullary ops
                     stmt = Op(stmt.name, (), toks=stmt.toks)
+                elif isinstance(stmt, Expr):
+                    # rewrite any other expression as a literal value after
+                    # evaluation
+                    stmt = Val(stmt.eval(self.labels), toks=stmt.toks)
 
                 last_inst = self.get_instruction(stmt)
                 loc += last_inst.size
@@ -152,10 +156,14 @@ class Compiler:
         loc = 0
 
         for stmt in self.file.stmts:
-            if isinstance(stmt, (Op, Val, Name)):
-                # rewrite free standing names as nullary ops
+            if isinstance(stmt, (Op, Expr)):
                 if isinstance(stmt, Name):
+                    # rewrite free standing names as nullary ops
                     stmt = Op(stmt.name, (), toks=stmt.toks)
+                elif isinstance(stmt, Expr):
+                    # rewrite any other expression as a literal value after
+                    # evaluation
+                    stmt = Val(stmt.eval(self.labels), toks=stmt.toks)
 
                 last_inst = self.get_instruction(stmt)
                 yield from last_inst.encode()
