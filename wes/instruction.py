@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Iterator
 
 from wes.exceptions import Message
-from wes.parser import Op, Val
+from wes.parser import Name, Op, Val
 from wes.utils import byte_length
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -101,20 +101,24 @@ class Word(Unary):
 
     def encode(self) -> Iterator[int]:
         arg = self.op.args[0]
-        if isinstance(arg, str):
-            resolved = self.compiler.resolve_label(arg, self.op.toks[1])
+        if isinstance(arg, Name):
+            resolved = self.compiler.resolve_label(arg.name, self.op.toks[1])
+        elif isinstance(arg, Val):
+            resolved = arg.val
         else:
-            resolved = arg
+            raise Message(
+                f"'{self.mnemonic}' expects name or value as argument", arg.toks
+            )
 
         if resolved > MAX_WORD:
-            if isinstance(arg, str):
+            if isinstance(arg, Name):
                 msg = (
-                    f"arg '{arg}' of instruction '{self.mnemonic}' "
+                    f"arg '{arg.name}' of instruction '{self.mnemonic}' "
                     + f"resolves to value '{resolved}' which does not fit in two bytes"
                 )
             else:
                 msg = (
-                    f"arg '{arg}' of instruction '{self.mnemonic}' does not fit "
+                    f"arg '{arg.val}' of instruction '{self.mnemonic}' does not fit "
                     + "in two bytes"
                 )
             raise Message(msg, self.op.toks)
