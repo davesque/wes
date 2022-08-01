@@ -1,8 +1,8 @@
 """
 ACKNOWLEDGEMENTS:
 
-Many of these parsing routines were inspired by (or taken from) Guido van
-Rossum's article series on PEG parsing:
+Many of these parsing routines taken from or inspired by Guido van Rossum's
+article series on PEG parsing:
 
 https://medium.com/@gvanrossum_83706/peg-parsing-series-de5d41b2ed60
 """
