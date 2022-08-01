@@ -8,9 +8,9 @@ https://medium.com/@gvanrossum_83706/peg-parsing-series-de5d41b2ed60
 """
 from __future__ import annotations
 
-import operator
 import contextlib
 import functools
+import operator
 import re
 from typing import (
     Any,
@@ -26,7 +26,7 @@ from typing import (
     cast,
 )
 
-from wes.exceptions import Reset, Stop, Message
+from wes.exceptions import Message, Reset, Stop
 from wes.lexer import Eof, Lexer, Newline, Text, TokenStream
 from wes.utils import serialize_dict, str_to_int
 
@@ -246,9 +246,7 @@ def optional(method: Callable[[Parser], T]) -> Callable[[Parser], Optional[T]]:
 U = TypeVar("U", bound=Node)
 
 
-def cache(
-    method: Callable[..., Optional[U]]
-) -> Callable[..., Optional[U]]:  # pragma: no cover
+def cache_result(method: Callable[..., Optional[U]]) -> Callable[..., Optional[U]]:
     @functools.wraps(method)
     def new_method(self: Parser, *args: Any, **kwargs: Any) -> Optional[U]:
         key = (self.toks.mark(), method, args, serialize_dict(kwargs))
@@ -402,7 +400,7 @@ class Parser:
         colon = self.expect(":")
 
         if not VAL_RE.match(val.text):
-            raise Reset(f"{repr(val.text)} is not valid offset", (val,))
+            raise Stop(f"{repr(val.text)} is not a valid offset", (val,))
 
         # optional trailing newline
         with self.reset():
@@ -416,7 +414,7 @@ class Parser:
         colon = self.expect(":")
 
         if not VAL_RE.match(val.text):
-            raise Reset(f"{repr(val.text)} is not valid offset", (val,))
+            raise Reset(f"{repr(val.text)} is not a valid offset", (val,))
 
         # optional trailing newline
         with self.reset():
@@ -430,7 +428,7 @@ class Parser:
         colon = self.expect(":")
 
         if not NAME_RE.match(name.text):
-            raise Reset(f"{repr(name.text)} is not valid name", (name,))
+            raise Stop(f"{repr(name.text)} is not a valid name or offset", (name,))
 
         # optional trailing newline
         with self.reset():
@@ -495,6 +493,7 @@ class Parser:
         toks = (mnemonic,) + arg1.toks + (comma,) + arg2.toks
         return Op(mnemonic.text, (arg1, arg2), toks=toks)
 
+    @cache_result
     def parse_arg(self) -> Optional[Expr]:
         if deref := self.parse_deref():
             return deref

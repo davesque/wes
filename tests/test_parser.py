@@ -286,23 +286,29 @@ hlt
 
 def test_invalid_label_name() -> None:
     parser = Parser.from_str("foo!#@$: 0")
-    label = parser.parse_label()
 
-    assert label is None
+    with pytest.raises(Stop) as excinfo:
+        parser.parse_label()
+
+    assert "is not a valid name or offset" in excinfo.value.msg
 
 
 def test_invalid_forward_offset_val() -> None:
     parser = Parser.from_str("+foo: 0")
-    label = parser.parse_relative()
 
-    assert label is None
+    with pytest.raises(Stop) as excinfo:
+        parser.parse_offset()
+
+    assert "is not a valid offset" in excinfo.value.msg
 
 
 def test_invalid_backward_offset_val() -> None:
     parser = Parser.from_str("-foo: 0")
-    label = parser.parse_relative()
 
-    assert label is None
+    with pytest.raises(Stop) as excinfo:
+        parser.parse_offset()
+
+    assert "is not a valid offset" in excinfo.value.msg
 
 
 @pytest.mark.parametrize(
