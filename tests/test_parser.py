@@ -1,24 +1,17 @@
 from io import StringIO
-from typing import Any, Callable, Optional, Tuple
+from typing import Any, Tuple
 
 import pytest
 
-from wes.exceptions import Reset, Stop, TokenError
-from wes.parser import (
-    BinExpr as B,
-    Expr,
-    File,
-    Label,
-    Name as N,
-    Node,
-    Offset,
-    Op,
-    Parser,
-    UnExpr as U,
-    Val as V,
-)
+from wes.exceptions import Stop, TokenError
+from wes.parser import BinExpr as B
+from wes.parser import File, Label
+from wes.parser import Name as N
+from wes.parser import Node, Offset, Op, Parser
+from wes.parser import UnExpr as U
+from wes.parser import Val as V
 
-from .utils import Eq, Predicate, In
+from .utils import Eq, In, Predicate
 
 
 class MyNode(Node):
@@ -100,17 +93,17 @@ incr: 1
         (
             Op("lda", ("init",)),
             Label("count_up"),
-            Op("out", ()),
+            N("out"),
             Op("add", ("incr",)),
             Op("jc", ("count_down",)),
             Op("jmp", ("count_up",)),
             Label("count_down"),
-            Op("out", ()),
+            N("out"),
             Op("sub", ("incr",)),
             Op("jz", ("end",)),
             Op("jmp", ("count_down",)),
             Label("end"),
-            Op("hlt", ()),
+            N("hlt"),
             Label("init"),
             V(42),
             Label("incr"),
@@ -146,11 +139,11 @@ b: 1
         (
             Label("loop"),
             Op("lda", ("a",)),
-            Op("out", ()),
+            N("out"),
             Op("add", ("b",)),
             Op("sta", ("a",)),
             Op("lda", ("b",)),
-            Op("out", ()),
+            N("out"),
             Op("add", ("a",)),
             Op("sta", ("b",)),
             Op("jmp", ("loop",)),
@@ -174,7 +167,7 @@ def test_parse_nullary_or_val_invalid() -> None:
     with pytest.raises(Stop) as excinfo:
         parser.parse_file()
 
-    assert "is not a valid name or integer" in excinfo.value.msg
+    assert "is not a valid name" in excinfo.value.msg
 
 
 def test_parse_unary_invalid_mnemonic() -> None:
@@ -241,7 +234,7 @@ def test_parser_from_buf() -> None:
     buf = StringIO("foo")
     parser = Parser.from_buf(buf)
 
-    assert parser.parse_file() == File((Op("foo", ()),))
+    assert parser.parse_file() == File((N("foo"),))
 
 
 @pytest.mark.parametrize(
@@ -282,7 +275,7 @@ hlt
             Offset(0x8000, None),
             Label("start"),
             Op("lda", (42,)),
-            Op("hlt", ()),
+            N("hlt"),
             Offset(0xFFFC, None),
             Op("word", ("start",)),
             Offset(0xFFFE, None),
@@ -310,47 +303,6 @@ def test_invalid_backward_offset_val() -> None:
     label = parser.parse_relative()
 
     assert label is None
-
-
-def test_parser_get_error() -> None:
-    parser = Parser.from_str("lda 1")
-    file = parser.parse_file()
-    assert file == File((Op("lda", (1,)),))
-
-    with pytest.raises(Reset) as excinfo:
-        parser.get()
-
-    assert excinfo.value.msg == "unexpected end of tokens"
-
-
-# @pytest.mark.parametrize(
-#     "file_txt,expected",
-#     (
-#         ("-2", UnExpr("-", V(2))),
-#         ("-foo", UnExpr("-", Name("foo"))),
-#         ("~2", UnExpr("~", V(2))),
-#         ("~foo", UnExpr("~", Name("foo"))),
-#         ("+2", None),
-#     ),
-# )
-# def test_parse_un_expr(file_txt: str, expected: Optional[Expr]) -> None:
-#     parser = Parser.from_str(file_txt)
-#     actual = parser.parse_un_expr()
-
-#     assert actual == expected
-
-
-# @pytest.mark.parametrize(
-#     "file_txt,check_msg",
-#     (("-!!!", Eq("expected expression after unary operator '-'")),),
-# )
-# def test_parse_un_expr_error(file_txt: str, check_msg: Callable[[str], bool]) -> None:
-#     parser = Parser.from_str(file_txt)
-
-#     with pytest.raises(Stop) as excinfo:
-#         parser.parse_un_expr()
-
-#     assert check_msg(excinfo.value.msg)
 
 
 @pytest.mark.parametrize(
@@ -461,63 +413,3 @@ def test_expr_parsers(method_name: str, file_txt: str, expected: Any) -> None:
             getattr(parser, method_name)()
 
         assert expected(excinfo.value.msg)
-
-
-@pytest.mark.parametrize(
-    "file_txt,expected",
-    (
-        # basic binary expressions
-        # ("0 - 0", B(z, "-", z)),
-        # ("0 + 0", B(z, "+", z)),
-        # ("0 * 0", B(z, "*", z)),
-        # ("0 / 0", B(z, "/", z)),
-        # ("0 >> 0", B(z, ">>", z)),
-        # ("0 << 0", B(z, "<<", z)),
-        # ("0 ^ 0", B(z, "^", z)),
-        ("0 & 0", B(V(0), "&", V(0))),
-        ("0 | 0", B(V(0), "|", V(0))),
-        ("(0 & 1) | 2", B(B(V(0), "&", V(1)), "|", V(2))),
-        # ("0 ** 0", B(z, "**", z)),
-        # ("0 % 0", B(z, "%", z)),
-        # operator precedence
-        # ("0 * 0 + 0 * 0", B(B(z, "*", z), "+", B(z, "*", z))),
-        # ("-foo", UnExpr("-", Name("foo", ()), ())),
-        # ("~2", UnExpr("~", V(2, ()), ())),
-        # ("~foo", UnExpr("~", Name("foo", ()), ())),
-        # ("+2", None),
-    ),
-)
-def test_parse_bin_expr(file_txt: str, expected: Optional[Expr]) -> None:
-    parser = Parser.from_str(file_txt)
-    actual = parser.parse_expr()
-
-    assert actual == expected
-
-
-# @pytest.mark.parametrize(
-#     "file_txt,check_msg",
-#     (("-!!!", Eq("expected expression after binary operator '-'")),),
-# )
-# def test_parse_bin_expr_error(file_txt: str, check_msg: Callable[[str], bool]) -> None:  # noqa: E501
-#     parser = Parser.from_str(file_txt)
-
-#     with pytest.raises(Stop) as excinfo:
-#         parser.parse_bin_expr()
-
-#     assert check_msg(excinfo.value.msg)
-
-
-# @pytest.mark.parametrize(
-#     "file_txt,expected",
-#     (
-#         ("2", V(2)),
-#         ("0x2a", V(42)),
-#         ("foo", Name("foo")),
-#         ("(*&#@(*&@", None),
-#     ),
-# )
-# def test_parse_atom(file_txt: str, expected: Optional[Expr]) -> None:
-#     parser = Parser.from_str(file_txt)
-#     actual = parser.parse_atom()
-
-#     assert actual == expected

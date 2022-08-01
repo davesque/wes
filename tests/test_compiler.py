@@ -23,7 +23,7 @@ class TestCompiler:
             """
 lda 1  ; valid op
 2      ; valid value
-foo    ; invalid instruction
+foo 42 ; invalid instruction
 """
         )
         file = compiler.file

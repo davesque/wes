@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import contextlib
-import re
 import functools
+import re
 from typing import (
     Any,
     Callable,
@@ -17,8 +17,8 @@ from typing import (
     cast,
 )
 
-from wes.exceptions import EndOfTokens, Reset, Stop
-from wes.lexer import Eof, Lexer, Newline, Text, Token, TokenStream
+from wes.exceptions import Reset, Stop
+from wes.lexer import Eof, Lexer, Newline, Text, TokenStream
 from wes.utils import serialize_dict, str_to_int
 
 NAME_RE = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
@@ -251,14 +251,16 @@ CacheValue = Tuple[Optional[Node], Pos]
 
 
 class Parser:
-    __slots__ = ("toks", "cache")
+    __slots__ = ("toks", "cache", "last_reset")
 
     toks: TokenStream
     cache: Dict[CacheKey, CacheValue]
+    last_reset: Optional[Reset]
 
     def __init__(self, lexer: Lexer):
         self.toks = TokenStream(lexer)
         self.cache = {}
+        self.last_reset = None
 
     @classmethod
     def from_str(cls, text: str) -> Parser:
@@ -270,22 +272,17 @@ class Parser:
         lexer = Lexer(buf)
         return cls(lexer)
 
-    def get(self, error: Type[Exception] = Reset) -> Token:
-        try:
-            return self.toks.get()
-        except EndOfTokens:
-            raise error("unexpected end of tokens", ())
-
     @contextlib.contextmanager
     def reset(self) -> Iterator[None]:
         pos = self.toks.mark()
         try:
             yield
-        except Reset:
+        except Reset as e:
+            self.last_reset = e
             self.toks.reset(pos)
 
     def expect(self, *alts: str, error: Type[Exception] = Reset) -> Text:
-        tok = self.get()
+        tok = self.toks.get()
 
         if not isinstance(tok, Text):
             raise error("unexpected end of line", (tok,))
@@ -298,7 +295,7 @@ class Parser:
         return tok
 
     def expect_newline(self, error: Type[Exception] = Reset) -> Newline:
-        tok = self.get()
+        tok = self.toks.get()
 
         if not isinstance(tok, Newline):
             raise error("expected end of line", (tok,))
@@ -317,7 +314,12 @@ class Parser:
         while stmt := self.parse_stmt():
             stmts.append(stmt)
 
-        self.parse_eof()
+        tok = self.toks.get()
+        if not isinstance(tok, Eof):
+            if self.last_reset is None:
+                raise Exception("invariant")
+
+            raise Stop(self.last_reset.msg, self.last_reset.toks) from self.last_reset
 
         return File(tuple(stmts))
 
@@ -377,7 +379,7 @@ class Parser:
 
         return Label(name.text, toks=(name, colon))
 
-    def parse_inst(self) -> Union[Op, Val, None]:
+    def parse_inst(self) -> Union[Op, Expr, None]:
         if nullary := self.parse_nullary():
             return nullary
         elif unary := self.parse_unary():
@@ -385,28 +387,20 @@ class Parser:
         return self.parse_binary()
 
     @optional
-    def parse_nullary(self) -> Union[Op, Val]:
-        name_or_val = self.expect()
-        _ = self.expect_newline()
+    def parse_nullary(self) -> Optional[Expr]:
+        expr = self.parse_expr()
+        self.expect_newline()
 
-        if NAME_RE.match(name_or_val.text):
-            return Op(name_or_val.text, (), toks=(name_or_val,))
-        elif VAL_RE.match(name_or_val.text):
-            return Val(str_to_int(name_or_val.text), toks=(name_or_val,))
-        else:
-            raise Stop(
-                f"{repr(name_or_val.text)} is not a valid name or integer",
-                (name_or_val,),
-            )
+        return expr
 
     @optional
     def parse_unary(self) -> Op:
         mnemonic = self.expect()
-        arg = self.expect()
-        _ = self.expect_newline()
-
         if not NAME_RE.match(mnemonic.text):
-            raise Stop(f"{repr(mnemonic.text)} is not a valid name", (mnemonic,))
+            raise Reset(f"{repr(mnemonic.text)} is not a valid name", (mnemonic,))
+
+        arg = self.expect()
+        self.expect_newline()
 
         arg_ = self.parse_arg_token(arg)
 
@@ -415,13 +409,13 @@ class Parser:
     @optional
     def parse_binary(self) -> Op:
         mnemonic = self.expect()
+        if not NAME_RE.match(mnemonic.text):
+            raise Reset(f"{repr(mnemonic.text)} is not a valid name", (mnemonic,))
+
         arg1 = self.expect()
         comma = self.expect(",", error=Stop)
         arg2 = self.expect(error=Stop)
-        _ = self.expect_newline(error=Stop)
-
-        if not NAME_RE.match(mnemonic.text):
-            raise Stop(f"{repr(mnemonic.text)} is not a valid name", (mnemonic,))
+        self.expect_newline(error=Stop)
 
         arg1_ = self.parse_arg_token(arg1)
         arg2_ = self.parse_arg_token(arg2)
@@ -441,11 +435,11 @@ class Parser:
 
     @optional
     def parse_atom(self) -> Expr:
-        if l_paren := self.maybe('('):
+        if l_paren := self.maybe("("):
             expr = self.parse_expr()
             if expr is None:
                 raise Stop(f"expected expression after '{l_paren.text}'", (l_paren,))
-            r_paren = self.expect(')')
+            r_paren = self.expect(")")
 
             new_toks = (l_paren,) + expr.toks + (r_paren,)
             return type(expr)(*expr.slot_values, toks=new_toks)
@@ -501,7 +495,9 @@ class Parser:
 
                     y = rhs(self)
                     if y is None:
-                        raise Stop(f"expected expression after '{op.text}' operator", (op,))
+                        raise Stop(
+                            f"expected expression after '{op.text}' operator", (op,)
+                        )
 
                     return BinExpr(x, op.text, y, toks=x.toks + (op,) + y.toks)
 
@@ -519,8 +515,3 @@ class Parser:
     parse_and = make_expr_parser("parse_and", ("&",), parse_shift)
     parse_xor = make_expr_parser("parse_xor", ("^",), parse_and)
     parse_expr = make_expr_parser("parse_expr", ("|",), parse_xor)
-
-    def parse_eof(self) -> None:
-        tok = self.get()
-        if not isinstance(tok, Eof):  # pragma: no cover
-            raise Stop("expected end of file", (tok,))

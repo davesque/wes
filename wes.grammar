@@ -12,11 +12,11 @@ absolute: VAL ':' [NEWLINE]
 
 label: NAME ':' [NEWLINE]
 
-inst: nullary | unary | binary
+inst: binary | unary | nullary
 
-nullary: expr NEWLINE
-unary: NAME arg NEWLINE
 binary: NAME arg ',' arg NEWLINE
+unary: NAME arg NEWLINE
+nullary: expr NEWLINE
 
 arg: deref | expr
 
