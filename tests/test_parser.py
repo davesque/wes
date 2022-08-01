@@ -167,7 +167,7 @@ def test_parse_nullary_or_val_invalid() -> None:
     with pytest.raises(Stop) as excinfo:
         parser.parse_file()
 
-    assert "is not a valid name" in excinfo.value.msg
+    assert "is not a valid name or expression" in excinfo.value.msg
 
 
 def test_parse_unary_invalid_mnemonic() -> None:
@@ -176,7 +176,7 @@ def test_parse_unary_invalid_mnemonic() -> None:
     with pytest.raises(Stop) as excinfo:
         parser.parse_file()
 
-    assert "is not a valid name" in excinfo.value.msg
+    assert "is not a valid name or expression" in excinfo.value.msg
 
 
 def test_parse_unary_invalid_op_arg() -> None:
@@ -185,7 +185,7 @@ def test_parse_unary_invalid_op_arg() -> None:
     with pytest.raises(Stop) as excinfo:
         parser.parse_file()
 
-    assert "is not a valid name or integer" in excinfo.value.msg
+    assert "is not a valid name or expression" in excinfo.value.msg
 
 
 def test_parse_binary_expected_comma() -> None:
@@ -221,7 +221,7 @@ def test_parse_binary_expected_mnemonic() -> None:
     with pytest.raises(Stop) as excinfo:
         parser.parse_file()
 
-    assert "is not a valid name" in excinfo.value.msg
+    assert "is not a valid name or expression" in excinfo.value.msg
 
 
 def test_parse_binary() -> None:

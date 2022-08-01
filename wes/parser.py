@@ -1,3 +1,11 @@
+"""
+ACKNOWLEDGEMENTS:
+
+Many of these parsing routines were inspired by (or taken from) Guido van
+Rossum's article series on PEG parsing:
+
+https://medium.com/@gvanrossum_83706/peg-parsing-series-de5d41b2ed60
+"""
 from __future__ import annotations
 
 import contextlib
@@ -182,7 +190,9 @@ def optional(method: Callable[[Parser], T]) -> Callable[[Parser], Optional[T]]:
 U = TypeVar("U", bound=Node)
 
 
-def cache(method: Callable[..., Optional[U]]) -> Callable[..., Optional[U]]:
+def cache(
+    method: Callable[..., Optional[U]]
+) -> Callable[..., Optional[U]]:  # pragma: no cover
     @functools.wraps(method)
     def new_method(self: Parser, *args: Any, **kwargs: Any) -> Optional[U]:
         key = (self.toks.mark(), method, args, serialize_dict(kwargs))
@@ -201,13 +211,6 @@ def cache(method: Callable[..., Optional[U]]) -> Callable[..., Optional[U]]:
 
 
 def cache_left_rec(method: Callable[..., Optional[U]]) -> Callable[..., Optional[U]]:
-    """
-    This technique of handling left-recursion taken from Guido van
-    Rossum's article series on PEG parsing:
-
-    https://medium.com/@gvanrossum_83706/peg-parsing-series-de5d41b2ed60
-    """
-
     @functools.wraps(method)
     def new_method(self: Parser, *args: Any, **kwargs: Any) -> Optional[U]:
         pos = self.toks.mark()
@@ -316,7 +319,7 @@ class Parser:
 
         tok = self.toks.get()
         if not isinstance(tok, Eof):
-            if self.last_reset is None:
+            if self.last_reset is None:  # pragma: no cover
                 raise Exception("invariant")
 
             raise Stop(self.last_reset.msg, self.last_reset.toks) from self.last_reset
@@ -410,7 +413,9 @@ class Parser:
     def parse_binary(self) -> Op:
         mnemonic = self.expect()
         if not NAME_RE.match(mnemonic.text):
-            raise Reset(f"{repr(mnemonic.text)} is not a valid name", (mnemonic,))
+            raise Reset(
+                f"{repr(mnemonic.text)} is not a valid name or expression", (mnemonic,)
+            )
 
         arg1 = self.expect()
         comma = self.expect(",", error=Stop)
@@ -429,7 +434,7 @@ class Parser:
             return name_or_val.text
         else:
             raise Stop(
-                f"{repr(name_or_val.text)} is not a valid name or integer",
+                f"{repr(name_or_val.text)} is not a valid name or expression",
                 (name_or_val,),
             )
 
