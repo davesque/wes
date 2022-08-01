@@ -476,6 +476,8 @@ def test_expr_is_deref() -> None:
 
     assert expr.is_deref
 
+
+def test_parse_deref_error() -> None:
     parser = Parser.from_str("foo [!!!]")
     with pytest.raises(Stop) as excinfo:
         parser.parse_file()
