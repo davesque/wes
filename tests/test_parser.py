@@ -91,17 +91,17 @@ incr: 1
     file = parser.parse_file()
     assert file == File(
         (
-            Op("lda", ("init",)),
+            Op("lda", (N("init"),)),
             Label("count_up"),
             N("out"),
-            Op("add", ("incr",)),
-            Op("jc", ("count_down",)),
-            Op("jmp", ("count_up",)),
+            Op("add", (N("incr"),)),
+            Op("jc", (N("count_down"),)),
+            Op("jmp", (N("count_up"),)),
             Label("count_down"),
             N("out"),
-            Op("sub", ("incr",)),
-            Op("jz", ("end",)),
-            Op("jmp", ("count_down",)),
+            Op("sub", (N("incr"),)),
+            Op("jz", (N("end"),)),
+            Op("jmp", (N("count_down"),)),
             Label("end"),
             N("hlt"),
             Label("init"),
@@ -138,15 +138,15 @@ b: 1
     assert file == File(
         (
             Label("loop"),
-            Op("lda", ("a",)),
+            Op("lda", (N("a"),)),
             N("out"),
-            Op("add", ("b",)),
-            Op("sta", ("a",)),
-            Op("lda", ("b",)),
+            Op("add", (N("b"),)),
+            Op("sta", (N("a"),)),
+            Op("lda", (N("b"),)),
             N("out"),
-            Op("add", ("a",)),
-            Op("sta", ("b",)),
-            Op("jmp", ("loop",)),
+            Op("add", (N("a"),)),
+            Op("sta", (N("b"),)),
+            Op("jmp", (N("loop"),)),
             Label("a"),
             V(1),
             Label("b"),
@@ -158,7 +158,7 @@ b: 1
 def test_parse_unary_with_val() -> None:
     parser = Parser.from_str("lda 1")
     file = parser.parse_file()
-    assert file == File((Op("lda", (1,)),))
+    assert file == File((Op("lda", (V(1),)),))
 
 
 def test_parse_nullary_or_val_invalid() -> None:
@@ -185,7 +185,7 @@ def test_parse_unary_invalid_op_arg() -> None:
     with pytest.raises(Stop) as excinfo:
         parser.parse_file()
 
-    assert "is not a valid name or expression" in excinfo.value.msg
+    assert "expected expression after mnemonic 'blah'" in excinfo.value.msg
 
 
 def test_parse_binary_expected_comma() -> None:
@@ -203,7 +203,7 @@ def test_parse_binary_expected_text() -> None:
     with pytest.raises(Stop) as excinfo:
         parser.parse_file()
 
-    assert "unexpected end of line" in excinfo.value.msg
+    assert "expected expression after ','" in excinfo.value.msg
 
 
 def test_parse_binary_expected_newline() -> None:
@@ -227,7 +227,7 @@ def test_parse_binary_expected_mnemonic() -> None:
 def test_parse_binary() -> None:
     parser = Parser.from_str("foo bar, 42")
     file = parser.parse_file()
-    assert file == File((Op("foo", ("bar", 42)),))
+    assert file == File((Op("foo", (N("bar"), V(42))),))
 
 
 def test_parser_from_buf() -> None:
@@ -274,12 +274,12 @@ hlt
         (
             Offset(0x8000, None),
             Label("start"),
-            Op("lda", (42,)),
+            Op("lda", (V(42),)),
             N("hlt"),
             Offset(0xFFFC, None),
-            Op("word", ("start",)),
+            Op("word", (N("start"),)),
             Offset(0xFFFE, None),
-            Op("word", (0,)),
+            Op("word", (V(0),)),
         )
     )
 
