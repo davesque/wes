@@ -101,30 +101,15 @@ class Word(Unary):
 
     def encode(self) -> Iterator[int]:
         arg = self.op.args[0]
-        if isinstance(arg, Name):
-            resolved = self.compiler.resolve_label(arg.name, self.op.toks[1])
-        elif isinstance(arg, Val):
-            resolved = arg.val
-        else:
+        evaled = arg.eval(self.compiler.labels)
+
+        if evaled > MAX_WORD:
             raise Message(
-                f"'{self.mnemonic}' expects name or value as argument", arg.toks
+                f"evaluated result '{evaled}' does not fit in two bytes", arg.toks
             )
 
-        if resolved > MAX_WORD:
-            if isinstance(arg, Name):
-                msg = (
-                    f"arg '{arg.name}' of instruction '{self.mnemonic}' "
-                    + f"resolves to value '{resolved}' which does not fit in two bytes"
-                )
-            else:
-                msg = (
-                    f"arg '{arg.val}' of instruction '{self.mnemonic}' does not fit "
-                    + "in two bytes"
-                )
-            raise Message(msg, self.op.toks)
-
-        yield resolved & 0xFF
-        yield (resolved >> 8) & 0xFF
+        yield evaled & 0xFF
+        yield (evaled >> 8) & 0xFF
 
     @property
     def size(self) -> int:

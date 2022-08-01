@@ -7,7 +7,7 @@ from wes.compilers.sap import SapCompiler
 from wes.exceptions import Message
 from wes.instruction import Word
 
-from .utils import In, Re
+from .utils import In
 
 
 @pytest.mark.parametrize(
@@ -34,10 +34,10 @@ class WordErrorCompiler(Compiler):
 @pytest.mark.parametrize(
     "file_txt,check_msg",
     (
-        ("word 0x10000", In("arg '65536' of instruction 'word' does not fit")),
+        ("word 0x10000", In("evaluated result '65536' does not fit")),
         (
             "0\nword end\n-1: end: 0",
-            Re(r"^arg 'end' of instruction 'word' .* value '16777215' .* two bytes$"),
+            In("evaluated result '16777215' does not fit"),
         ),
     ),
 )

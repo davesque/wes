@@ -8,6 +8,7 @@ https://medium.com/@gvanrossum_83706/peg-parsing-series-de5d41b2ed60
 """
 from __future__ import annotations
 
+import operator
 import contextlib
 import functools
 import re
@@ -25,7 +26,7 @@ from typing import (
     cast,
 )
 
-from wes.exceptions import Reset, Stop
+from wes.exceptions import Reset, Stop, Message
 from wes.lexer import Eof, Lexer, Newline, Text, TokenStream
 from wes.utils import serialize_dict, str_to_int
 
@@ -121,12 +122,63 @@ class Op(Stmt):
         super().__init__(**kwargs)
 
 
+UN_OPS = {
+    "-": operator.neg,
+    "~": operator.invert,
+}
+BIN_OPS = {
+    "|": operator.or_,
+    "^": operator.xor,
+    "&": operator.and_,
+    "<<": operator.lshift,
+    ">>": operator.rshift,
+    "+": operator.add,
+    "-": operator.sub,
+    "*": operator.mul,
+    "/": operator.floordiv,
+    "%": operator.mod,
+    "**": operator.pow,
+}
+
+
 class Expr(Node):
     __slots__ = tuple()
 
     @property
     def is_deref(self) -> bool:
         return self.toks[0].text == "["
+
+    def eval(self, scope: Dict[str, int]) -> int:
+        if isinstance(self, Val):
+            return self.val
+        elif isinstance(self, Name):
+            try:
+                return scope[self.name]
+            except KeyError:
+                raise Message(
+                    f"name '{self.name}' is not bound to any value", self.toks
+                )
+        elif isinstance(self, UnExpr):
+            try:
+                fn = UN_OPS[self.op]
+            except KeyError:
+                raise Message(f"unrecognized operator '{self.op}'", (self.toks[0],))
+
+            x = self.x.eval(scope)
+
+            return fn(x)
+        elif isinstance(self, BinExpr):
+            try:
+                fn = BIN_OPS[self.op]
+            except KeyError:
+                raise Message(f"unrecognized operator '{self.op}'", (self.toks[0],))
+
+            x = self.x.eval(scope)
+            y = self.y.eval(scope)
+
+            return fn(x, y)
+        else:
+            raise Exception("invariant")
 
 
 class Name(Expr):
@@ -410,7 +462,9 @@ class Parser:
 
         arg = self.parse_arg()
         if arg is None:
-            raise Reset(f"expected expression after mnemonic '{mnemonic.text}'", (mnemonic,))
+            raise Reset(
+                f"expected expression after mnemonic '{mnemonic.text}'", (mnemonic,)
+            )
 
         self.expect_newline()
 
@@ -426,7 +480,9 @@ class Parser:
 
         arg1 = self.parse_arg()
         if arg1 is None:
-            raise Reset(f"expected expression after mnemonic '{mnemonic.text}'", (mnemonic,))
+            raise Reset(
+                f"expected expression after mnemonic '{mnemonic.text}'", (mnemonic,)
+            )
 
         comma = self.expect(",", error=Stop)
 

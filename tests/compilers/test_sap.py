@@ -84,7 +84,7 @@ def test_compile_bad_label() -> None:
     with pytest.raises(Message) as excinfo:
         list(compiler)
 
-    assert "unrecognized label" in excinfo.value.msg
+    assert "name 'foo' is not bound" in excinfo.value.msg
 
 
 def test_compile_big_op_arg() -> None:

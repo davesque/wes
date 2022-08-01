@@ -3,7 +3,6 @@ from typing import Iterator
 from wes.compiler import Compiler
 from wes.exceptions import Message
 from wes.instruction import Const, Unary, Word
-from wes.parser import Name, Val
 
 
 class SapUnary(Unary):
@@ -12,19 +11,12 @@ class SapUnary(Unary):
 
     def encode(self) -> Iterator[int]:
         arg = self.op.args[0]
+        evaled = arg.eval(self.compiler.labels)
 
-        if isinstance(arg, Name):
-            arg = self.compiler.resolve_label(arg.name, arg.toks[0])
-        elif isinstance(arg, Val):
-            if arg.val > self.compiler.max_addr:
-                raise Message(f"arg '{arg.val}' is too large", arg.toks)
-            arg = arg.val
-        else:
-            raise Message(
-                f"'{self.mnemonic}' expects name or value as argument", arg.toks
-            )
+        if evaled > self.compiler.max_addr:
+            raise Message(f"evaluated result '{evaled}' is too large", arg.toks)
 
-        yield (self.code << 4) + arg
+        yield (self.code << 4) + evaled
 
 
 class Nop(Const):
