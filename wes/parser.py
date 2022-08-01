@@ -161,8 +161,9 @@ class Expr(Node):
         elif isinstance(self, UnExpr):
             try:
                 fn = UN_OPS[self.op]
-            except KeyError:
-                raise Message(f"unrecognized operator '{self.op}'", (self.toks[0],))
+            except KeyError:  # pragma: no cover
+                # parser should prevent this from happening
+                raise Exception("invariant")
 
             x = self.x.eval(scope)
 
@@ -170,8 +171,9 @@ class Expr(Node):
         elif isinstance(self, BinExpr):
             try:
                 fn = BIN_OPS[self.op]
-            except KeyError:
-                raise Message(f"unrecognized operator '{self.op}'", (self.toks[0],))
+            except KeyError:  # pragma: no cover
+                # parser should prevent this from happening
+                raise Exception("invariant")
 
             x = self.x.eval(scope)
             y = self.y.eval(scope)

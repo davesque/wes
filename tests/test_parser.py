@@ -1,11 +1,11 @@
 from io import StringIO
-from typing import Any, Tuple
+from typing import Any, Dict, Tuple, cast
 
 import pytest
 
-from wes.exceptions import Stop, TokenError
+from wes.exceptions import Stop, TokenError, Message
 from wes.parser import BinExpr as B
-from wes.parser import File, Label
+from wes.parser import Expr, File, Label
 from wes.parser import Name as N
 from wes.parser import Node, Offset, Op, Parser
 from wes.parser import UnExpr as U
@@ -419,3 +419,59 @@ def test_expr_parsers(method_name: str, file_txt: str, expected: Any) -> None:
             getattr(parser, method_name)()
 
         assert expected(excinfo.value.msg)
+
+
+@pytest.mark.parametrize(
+    "file_txt,scope,expected",
+    (
+        ("42", {}, 42),
+        ("foo", {"foo": 42}, 42),
+        ("-1", {}, -1),
+        ("~0", {}, -1),
+        ("5 | 4", {}, 5),
+        ("5 ^ 6", {}, 3),
+        ("5 & 6", {}, 4),
+        ("5 >> 1", {}, 2),
+        ("5 << 1", {}, 10),
+        ("2 + 3", {}, 5),
+        ("2 - 3", {}, -1),
+        ("2 * 3", {}, 6),
+        ("5 / 3", {}, 1),
+        ("5 % 3", {}, 2),
+        ("2 ** 4", {}, 16),
+        ("x - y", {"x": 2, "y": 3}, -1),
+        ("-(2 ** 8)", {}, -256),
+        ("2 + 3 * 4", {}, 14),
+        ("2 * 3 + 4", {}, 10),
+        ("foo", {}, In("name 'foo' is not bound")),
+    ),
+)
+def test_expr_eval(file_txt: str, scope: Dict[str, int], expected: Any) -> None:
+    parser = Parser.from_str(file_txt)
+    file = parser.parse_file()
+    expr = cast(Expr, file.stmts[0])
+
+    if isinstance(expected, int):
+        actual = expr.eval(scope)
+
+        assert actual == expected
+    elif isinstance(expected, Predicate):
+        with pytest.raises(Message) as excinfo:
+            expr.eval(scope)
+
+        assert expected(excinfo.value.msg)
+
+
+def test_expr_is_deref() -> None:
+    parser = Parser.from_str("foo")
+    file = parser.parse_file()
+    expr = cast(Expr, file.stmts[0])
+
+    assert not expr.is_deref
+
+    parser = Parser.from_str("foo [bar]")
+    file = parser.parse_file()
+    op = cast(Op, file.stmts[0])
+    expr = op.args[0]
+
+    assert expr.is_deref
