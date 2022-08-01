@@ -112,9 +112,9 @@ class Op(Stmt):
     __slots__ = ("mnemonic", "args")
 
     mnemonic: str
-    args: Tuple[Union[str, int], ...]
+    args: Tuple[Expr, ...]
 
-    def __init__(self, mnemonic: str, args: Tuple[Union[str, int], ...], **kwargs: Any):
+    def __init__(self, mnemonic: str, args: Tuple[Expr, ...], **kwargs: Any):
         self.mnemonic = mnemonic
         self.args = args
 
@@ -123,6 +123,10 @@ class Op(Stmt):
 
 class Expr(Node):
     __slots__ = tuple()
+
+    @property
+    def is_deref(self) -> bool:
+        return self.toks[0].text == "["
 
 
 class Name(Expr):
@@ -400,43 +404,59 @@ class Parser:
     def parse_unary(self) -> Op:
         mnemonic = self.expect()
         if not NAME_RE.match(mnemonic.text):
-            raise Reset(f"{repr(mnemonic.text)} is not a valid name", (mnemonic,))
+            raise Reset(
+                f"'{mnemonic.text}' is not a valid name or expression", (mnemonic,)
+            )
 
-        arg = self.expect()
+        arg = self.parse_arg()
+        if arg is None:
+            raise Reset(f"expected expression after mnemonic '{mnemonic.text}'", (mnemonic,))
+
         self.expect_newline()
 
-        arg_ = self.parse_arg_token(arg)
-
-        return Op(mnemonic.text, (arg_,), toks=(mnemonic, arg))
+        return Op(mnemonic.text, (arg,), toks=(mnemonic,) + arg.toks)
 
     @optional
     def parse_binary(self) -> Op:
         mnemonic = self.expect()
         if not NAME_RE.match(mnemonic.text):
             raise Reset(
-                f"{repr(mnemonic.text)} is not a valid name or expression", (mnemonic,)
+                f"'{mnemonic.text}' is not a valid name or expression", (mnemonic,)
             )
 
-        arg1 = self.expect()
+        arg1 = self.parse_arg()
+        if arg1 is None:
+            raise Reset(f"expected expression after mnemonic '{mnemonic.text}'", (mnemonic,))
+
         comma = self.expect(",", error=Stop)
-        arg2 = self.expect(error=Stop)
+
+        arg2 = self.parse_arg()
+        if arg2 is None:
+            raise Stop(f"expected expression after '{comma.text}'", (comma,))
+
         self.expect_newline(error=Stop)
 
-        arg1_ = self.parse_arg_token(arg1)
-        arg2_ = self.parse_arg_token(arg2)
+        toks = (mnemonic,) + arg1.toks + (comma,) + arg2.toks
+        return Op(mnemonic.text, (arg1, arg2), toks=toks)
 
-        return Op(mnemonic.text, (arg1_, arg2_), toks=(mnemonic, arg1, comma, arg2))
-
-    def parse_arg_token(self, name_or_val: Text) -> Union[str, int]:
-        if VAL_RE.match(name_or_val.text):
-            return str_to_int(name_or_val.text)
-        elif NAME_RE.match(name_or_val.text):
-            return name_or_val.text
+    def parse_arg(self) -> Optional[Expr]:
+        if deref := self.parse_deref():
+            return deref
         else:
-            raise Stop(
-                f"{repr(name_or_val.text)} is not a valid name or expression",
-                (name_or_val,),
-            )
+            return self.parse_expr()
+
+    @optional
+    def parse_deref(self) -> Expr:
+        l_bracket = self.expect("[")
+
+        expr = self.parse_expr()
+        if expr is None:
+            raise Stop(f"expected expression after '{l_bracket.text}'", (l_bracket,))
+
+        r_bracket = self.expect("]", error=Stop)
+
+        new_toks = (l_bracket,) + expr.toks + (r_bracket,)
+        return type(expr)(*expr.slot_values, toks=new_toks)
 
     @optional
     def parse_atom(self) -> Expr:
@@ -444,7 +464,7 @@ class Parser:
             expr = self.parse_expr()
             if expr is None:
                 raise Stop(f"expected expression after '{l_paren.text}'", (l_paren,))
-            r_paren = self.expect(")")
+            r_paren = self.expect(")", error=Stop)
 
             new_toks = (l_paren,) + expr.toks + (r_paren,)
             return type(expr)(*expr.slot_values, toks=new_toks)
