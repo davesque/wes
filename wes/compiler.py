@@ -18,10 +18,12 @@ class Compiler:
 
     file: File
     labels: Dict[str, int]
+    consts: Dict[str, int]
 
     def __init__(self, file: File):
         self.file = file
         self.labels = {}
+        self.consts = {}
 
     @classmethod
     def from_str(cls: Type[T], text: str) -> T:
@@ -59,7 +61,7 @@ class Compiler:
         else:  # pragma: no cover
             raise Exception("invariant")
 
-    def find_labels(self) -> None:
+    def scan(self) -> None:
         last_inst = None
         loc = 0
 
@@ -150,7 +152,7 @@ class Compiler:
         return offset_loc
 
     def __iter__(self) -> Iterator[int]:
-        self.find_labels()
+        self.scan()
 
         last_inst = None
         loc = 0
@@ -173,7 +175,8 @@ class Compiler:
             elif isinstance(stmt, Offset):
                 offset_loc = self.resolve_offset(loc, stmt)
 
-                # we know this from the `find_labels` pass
+                # We know this from the `scan` pass.  Scan will throw an error
+                # if an offset is not preceded by a padding instruction.
                 last_inst = cast(Instruction, last_inst)
 
                 padding_len = offset_loc - loc

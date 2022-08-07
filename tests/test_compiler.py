@@ -47,7 +47,7 @@ foo 42 ; invalid instruction
 
         assert excinfo.value.msg == "unrecognized instruction 'foo'"
 
-    def test_find_labels(self) -> None:
+    def test_scan(self) -> None:
         compiler = SapCompiler.from_str(
             """
 zero: 0x42
@@ -57,7 +57,7 @@ word 0xffff
 fifteen: 0x44
     """
         )
-        compiler.find_labels()
+        compiler.scan()
 
         assert len(compiler.labels) == 2
 
@@ -74,13 +74,11 @@ fifteen: 0x44
             ("word 0\n-1: 0", In("size of padding instruction 'word'")),
         ),
     )
-    def test_find_labels_errors(
-        self, file_txt: str, check_msg: Callable[[str], bool]
-    ) -> None:
+    def test_scan_errors(self, file_txt: str, check_msg: Callable[[str], bool]) -> None:
         compiler = SapCompiler.from_str(file_txt)
 
         with pytest.raises(Message) as excinfo:
-            compiler.find_labels()
+            compiler.scan()
 
         assert check_msg(excinfo.value.msg)
 
@@ -96,7 +94,7 @@ label2: 0
 label3: 0
     """
         )
-        compiler.find_labels()
+        compiler.scan()
 
         assert compiler.labels["label1"] == 3
         assert compiler.labels["label2"] == 10
@@ -115,7 +113,7 @@ label3: 0
         compiler = SapCompiler.from_str(file_txt)
 
         with pytest.raises(Message) as excinfo:
-            compiler.find_labels()
+            compiler.scan()
 
         assert check_msg(excinfo.value.msg)
 
@@ -126,7 +124,7 @@ lda meaning_of_life
 forty_two: 0x42
     """
         )
-        compiler.find_labels()
+        compiler.scan()
 
         bad_label_tok = compiler.file.stmts[0].toks[1]
         with pytest.raises(Message) as excinfo:
