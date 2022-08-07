@@ -1,4 +1,4 @@
-from typing import Callable, List
+from typing import Callable, List, Union
 
 import pytest
 
@@ -7,7 +7,7 @@ from wes.compilers.sap import SapCompiler
 from wes.exceptions import Message
 from wes.instruction import Word
 
-from .utils import In
+from .utils import In, Eq, Predicate
 
 
 @pytest.mark.parametrize(
@@ -15,12 +15,22 @@ from .utils import In
     (
         ("word 0", [0, 0]),
         ("word foo\nfoo: 1", [2, 0, 1]),
+        ("256", Eq("evaluated result '256' is too large")),
+        ("hlt 42", Eq("'hlt' instruction takes no argument")),
+        ("lda", Eq("'lda' instruction takes one argument")),
+        ("hlt", [0xf0]),
     ),
 )
-def test_word(file_txt: str, expected: List[int]) -> None:
+def test_instructions(file_txt: str, expected: Union[List[int], Predicate]) -> None:
     compiler = SapCompiler.from_str(file_txt)
 
-    assert list(compiler) == expected
+    if isinstance(expected, Predicate):
+        with pytest.raises(Message) as excinfo:
+            list(compiler)
+
+        assert expected(excinfo.value.msg)
+    else:
+        assert list(compiler) == expected
 
 
 class WordErrorCompiler(Compiler):
