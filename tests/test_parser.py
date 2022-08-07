@@ -267,6 +267,10 @@ hlt
   word start
 0xfffe:
   word 0
++2:
+  foo
+-1:
+  bar
 """
     )
     file = parser.parse_file()
@@ -280,6 +284,10 @@ hlt
             Op("word", (N("start"),)),
             Offset(0xFFFE, None),
             Op("word", (V(0),)),
+            Offset(2, '+'),
+            N("foo"),
+            Offset(1, '-'),
+            N("bar"),
         )
     )
 
