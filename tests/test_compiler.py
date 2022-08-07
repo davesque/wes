@@ -50,9 +50,13 @@ foo 42 ; invalid instruction
     def test_scan(self) -> None:
         compiler = SapCompiler.from_str(
             """
+x = 5
+y = 6
+z = x + y
 zero: 0x42
 word 0xffff
 0
+w = x + y + z
 -1:
 fifteen: 0x44
     """
@@ -60,9 +64,16 @@ fifteen: 0x44
         compiler.scan()
 
         assert len(compiler.labels) == 2
+        assert len(compiler.consts) == 4
+        assert len(compiler.scope) == 6
 
         assert compiler.labels["zero"] == 0
         assert compiler.labels["fifteen"] == 15
+
+        assert compiler.consts["x"] == 5
+        assert compiler.consts["y"] == 6
+        assert compiler.consts["z"] == 11
+        assert compiler.consts["w"] == 22
 
     @pytest.mark.parametrize(
         "file_txt,check_msg",
@@ -72,6 +83,9 @@ fifteen: 0x44
             ("foo: 0\nfoo: 0", Eq("redefinition of label 'foo'")),
             ("-1: 0", In("offset must follow")),
             ("word 0\n-1: 0", In("size of padding instruction 'word'")),
+            ("lda = 42", Eq("constant 'lda' uses reserved name")),
+            ("foo = 42\nfoo = 0", Eq("redefinition of constant 'foo'")),
+            ("foo: 0\nfoo = 0", Eq("label name 'foo' collides with constant name")),
         ),
     )
     def test_scan_errors(self, file_txt: str, check_msg: Callable[[str], bool]) -> None:
@@ -216,6 +230,31 @@ nop  ; ...
 
 init: 42
 incr: 1
+    """
+        )
+        assert list(compiler) == expected_output
+
+    def test_compile_constants(self) -> None:
+        # fmt: off
+        expected_output = (
+            [0b00010100, 0b11100000, 0b00100101, 0b01100001, 0b00101010, 0b00000001]
+        )
+        # fmt: on
+
+        compiler = SapCompiler.from_str(
+            """
+init_val = 42
+incr_val = 1
+
+lda init
+
+loop:
+  out
+  add incr
+  jmp loop
+
+init: init_val
+incr: incr_val
     """
         )
         assert list(compiler) == expected_output

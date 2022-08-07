@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import Dict, Iterator, TextIO, Type, TypeVar, cast, overload
+from typing import Dict, Iterator, List, TextIO, Type, TypeVar, cast, overload
 
 from wes.exceptions import Message
 from wes.instruction import Instruction, Operation, Value
 from wes.lexer import Text
-from wes.parser import Expr, File, Label, Name, Offset, Op, Parser, Val
+from wes.parser import Const, Expr, File, Label, Name, Offset, Op, Parser, Val
 
 T = TypeVar("T")
 
@@ -19,11 +19,13 @@ class Compiler:
     file: File
     labels: Dict[str, int]
     consts: Dict[str, int]
+    scope: Dict[str, int]
 
     def __init__(self, file: File):
         self.file = file
         self.labels = {}
         self.consts = {}
+        self.scope = {}
 
     @classmethod
     def from_str(cls: Type[T], text: str) -> T:
@@ -65,8 +67,31 @@ class Compiler:
         last_inst = None
         loc = 0
 
+        const_stmts = []
+        const_names = set()
+
         for stmt in self.file.stmts:
-            if isinstance(stmt, Label):
+            if isinstance(stmt, Const):
+                if stmt.name in self.instructions:
+                    raise Message(
+                        f"constant '{stmt.name}' uses reserved name", stmt.toks
+                    )
+                if stmt.name in const_names:
+                    raise Message(
+                        f"redefinition of constant '{stmt.name}'", stmt.toks
+                    )
+
+                const_stmts.append(stmt)
+                const_names.add(stmt.name)
+
+        self.resolve_consts(const_stmts)
+        self.scope.update(self.consts)
+
+        for stmt in self.file.stmts:
+            if isinstance(stmt, Const):
+                pass  # already handled in first pass
+
+            elif isinstance(stmt, Label):
                 if stmt.name in self.instructions:
                     raise Message(
                         f"label '{stmt.name}' uses reserved name", (stmt.toks[0],)
@@ -75,8 +100,14 @@ class Compiler:
                     raise Message(
                         f"redefinition of label '{stmt.name}'", (stmt.toks[0],)
                     )
+                if stmt.name in self.consts:
+                    raise Message(
+                        f"label name '{stmt.name}' collides with constant name",
+                        (stmt.toks[0],),
+                    )
 
                 self.labels[stmt.name] = loc
+                self.scope[stmt.name] = loc
 
             elif isinstance(stmt, Offset):
                 offset_loc = self.resolve_offset(loc, stmt)
@@ -108,18 +139,26 @@ class Compiler:
                     raise Message("statement makes program too large", (stmt.toks[0],))
 
                 if isinstance(stmt, Name):
-                    # rewrite free standing names as nullary ops
-                    stmt = Op(stmt.name, (), toks=stmt.toks)
+                    if stmt.name in self.consts:
+                        # rewrite constant names with their resolved values
+                        stmt = Val(self.consts[stmt.name], toks=stmt.toks)
+                    else:
+                        # rewrite other free standing names as nullary ops
+                        stmt = Op(stmt.name, (), toks=stmt.toks)
                 elif isinstance(stmt, Expr):
                     # rewrite any other expression as a literal value after
                     # evaluation
-                    stmt = Val(stmt.eval(self.labels), toks=stmt.toks)
+                    stmt = Val(stmt.eval(self.scope), toks=stmt.toks)
 
                 last_inst = self.get_instruction(stmt)
                 loc += last_inst.size
 
             else:  # pragma: no cover
                 raise Exception("invariant")
+
+    def resolve_consts(self, const_stmts: List[Const]) -> None:
+        for stmt in const_stmts:
+            self.consts[stmt.name] = stmt.val.eval(self.consts)
 
     def resolve_label(self, label: str, label_tok: Text) -> int:
         try:
@@ -160,12 +199,16 @@ class Compiler:
         for stmt in self.file.stmts:
             if isinstance(stmt, (Op, Expr)):
                 if isinstance(stmt, Name):
-                    # rewrite free standing names as nullary ops
-                    stmt = Op(stmt.name, (), toks=stmt.toks)
+                    if stmt.name in self.consts:
+                        # rewrite constant names with their resolved values
+                        stmt = Val(self.consts[stmt.name], toks=stmt.toks)
+                    else:
+                        # rewrite other free standing names as nullary ops
+                        stmt = Op(stmt.name, (), toks=stmt.toks)
                 elif isinstance(stmt, Expr):
                     # rewrite any other expression as a literal value after
                     # evaluation
-                    stmt = Val(stmt.eval(self.labels), toks=stmt.toks)
+                    stmt = Val(stmt.eval(self.scope), toks=stmt.toks)
 
                 last_inst = self.get_instruction(stmt)
                 yield from last_inst.encode()
@@ -189,3 +232,5 @@ class Compiler:
                     Exception("invariant")
 
                 loc = offset_loc
+
+            # no other statement types cause code generation...

@@ -11,7 +11,7 @@ class SapUnary(Unary):
 
     def encode(self) -> Iterator[int]:
         arg = self.op.args[0]
-        evaled = arg.eval(self.compiler.labels)
+        evaled = arg.eval(self.compiler.scope)
 
         if evaled > self.compiler.max_addr:
             raise Message(f"evaluated result '{evaled}' is too large", arg.toks)

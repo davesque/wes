@@ -101,7 +101,7 @@ class Word(Unary):
 
     def encode(self) -> Iterator[int]:
         arg = self.op.args[0]
-        evaled = arg.eval(self.compiler.labels)
+        evaled = arg.eval(self.compiler.scope)
 
         if evaled > MAX_WORD:
             raise Message(
