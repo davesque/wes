@@ -11,7 +11,7 @@ class ParserError(Exception):
 
 
 class TokenError(ParserError):
-    def __init__(self, msg: str, toks: Tuple[Token, ...]):
+    def __init__(self, msg: str, toks: Tuple[Token, ...]):  # pragma: no cover
         self.msg = msg
         self.toks = toks
 
