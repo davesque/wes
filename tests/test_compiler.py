@@ -150,11 +150,14 @@ forty_two: 0x42
         assert compiler.resolve_label("forty_two", good_label_tok) == 1
 
     def test_compile_basic(self) -> None:
-        # fmt: off
-        expected_output = (
-            [0b00010100, 0b11100000, 0b00100101, 0b01100001, 0b00101010, 0b00000001]
-        )
-        # fmt: on
+        expected_output = [
+            0b00010100,
+            0b11100000,
+            0b00100101,
+            0b01100001,
+            0b00101010,
+            0b00000001,
+        ]
 
         compiler = SapCompiler.from_str(
             """
@@ -235,12 +238,14 @@ incr: 1
         assert list(compiler) == expected_output
 
     def test_compile_constants(self) -> None:
-        # fmt: off
-        expected_output = (
-            [0b00010100, 0b11100000, 0b00100101, 0b01100001, 0b00101010, 0b00000001]
-        )
-        # fmt: on
-
+        expected_output = [
+            0b00010100,
+            0b11100000,
+            0b00100101,
+            0b01100001,
+            0b00101010,
+            0b00000001,
+        ]
         compiler = SapCompiler.from_str(
             """
 init_val = 42
@@ -255,6 +260,16 @@ loop:
 
 init: init_val
 incr: incr_val
+    """
+        )
+        assert list(compiler) == expected_output
+
+        expected_output = [0b01011001]
+        compiler = SapCompiler.from_str(
+            """
+x = 0x8
+
+ldi x + 1
     """
         )
         assert list(compiler) == expected_output
