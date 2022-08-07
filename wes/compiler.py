@@ -139,12 +139,12 @@ class Compiler:
         if offset_loc > self.max_addr:
             raise Message(
                 f"offset resolves to oversized location '{offset_loc}'",
-                offset.toks,
+                offset.toks[:-1],
             )
         if offset_loc < loc:
             raise Message(
                 f"offset resolves to location '{offset_loc}' before current position",
-                offset.toks,
+                offset.toks[:-1],
             )
 
         return offset_loc
