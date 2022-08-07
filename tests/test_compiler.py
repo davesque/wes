@@ -131,24 +131,6 @@ label3: 0
 
         assert check_msg(excinfo.value.msg)
 
-    def test_resolve_label(self) -> None:
-        compiler = SapCompiler.from_str(
-            """
-lda meaning_of_life
-forty_two: 0x42
-    """
-        )
-        compiler.scan()
-
-        bad_label_tok = compiler.file.stmts[0].toks[1]
-        with pytest.raises(Message) as excinfo:
-            compiler.resolve_label("meaning_of_life", bad_label_tok)
-        assert excinfo.value.msg == "unrecognized label 'meaning_of_life'"
-        assert excinfo.value.toks == (bad_label_tok,)
-
-        good_label_tok = compiler.file.stmts[1].toks[1]
-        assert compiler.resolve_label("forty_two", good_label_tok) == 1
-
     def test_compile_basic(self) -> None:
         expected_output = [
             0b00010100,

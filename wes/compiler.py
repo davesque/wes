@@ -17,12 +17,14 @@ class Compiler:
     instructions: Dict[str, Type[Operation]] = {}
 
     file: File
+
     labels: Dict[str, int]
     consts: Dict[str, int]
     scope: Dict[str, int]
 
     def __init__(self, file: File):
         self.file = file
+
         self.labels = {}
         self.consts = {}
         self.scope = {}
@@ -64,28 +66,10 @@ class Compiler:
             raise Exception("invariant")
 
     def scan(self) -> None:
+        self.resolve_consts()
+
         last_inst = None
         loc = 0
-
-        const_stmts = []
-        const_names = set()
-
-        for stmt in self.file.stmts:
-            if isinstance(stmt, Const):
-                if stmt.name in self.instructions:
-                    raise Message(
-                        f"constant '{stmt.name}' uses reserved name", stmt.toks
-                    )
-                if stmt.name in const_names:
-                    raise Message(
-                        f"redefinition of constant '{stmt.name}'", stmt.toks
-                    )
-
-                const_stmts.append(stmt)
-                const_names.add(stmt.name)
-
-        self.resolve_consts(const_stmts)
-        self.scope.update(self.consts)
 
         for stmt in self.file.stmts:
             if isinstance(stmt, Const):
@@ -156,15 +140,27 @@ class Compiler:
             else:  # pragma: no cover
                 raise Exception("invariant")
 
-    def resolve_consts(self, const_stmts: List[Const]) -> None:
+    def resolve_consts(self) -> None:
+        const_stmts = []
+        const_names = set()
+        for stmt in self.file.stmts:
+            if isinstance(stmt, Const):
+                if stmt.name in self.instructions:
+                    raise Message(
+                        f"constant '{stmt.name}' uses reserved name", stmt.toks
+                    )
+                if stmt.name in const_names:
+                    raise Message(
+                        f"redefinition of constant '{stmt.name}'", stmt.toks
+                    )
+
+                const_stmts.append(stmt)
+                const_names.add(stmt.name)
+
         for stmt in const_stmts:
             self.consts[stmt.name] = stmt.val.eval(self.consts)
 
-    def resolve_label(self, label: str, label_tok: Text) -> int:
-        try:
-            return self.labels[label]
-        except KeyError:
-            raise Message(f"unrecognized label '{label}'", (label_tok,))
+        self.scope.update(self.consts)
 
     def resolve_offset(self, loc: int, offset: Offset) -> int:
         if offset.relative == "+":
