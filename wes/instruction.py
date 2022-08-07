@@ -82,7 +82,7 @@ class Unary(Operation):
             )
 
 
-class Const(Nullary):
+class Constant(Nullary):
     output: int = None  # type: ignore
 
     def encode(self) -> Iterator[int]:

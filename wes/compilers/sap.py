@@ -2,7 +2,7 @@ from typing import Iterator
 
 from wes.compiler import Compiler
 from wes.exceptions import Message
-from wes.instruction import Const, Unary, Word
+from wes.instruction import Constant, Unary, Word
 
 
 class SapUnary(Unary):
@@ -19,7 +19,7 @@ class SapUnary(Unary):
         yield (self.code << 4) + evaled
 
 
-class Nop(Const):
+class Nop(Constant):
     mnemonic = "nop"
     output = 0b00000000
 
@@ -64,12 +64,12 @@ class Jz(SapUnary):
     code = 0b1000
 
 
-class Out(Const):
+class Out(Constant):
     mnemonic = "out"
     output = 0b11100000
 
 
-class Hlt(Const):
+class Hlt(Constant):
     mnemonic = "hlt"
     output = 0b11110000
 
