@@ -3,7 +3,7 @@ from typing import Any, Dict, Tuple, cast
 
 import pytest
 
-from wes.exceptions import Stop, TokenError, Message
+from wes.exceptions import Message, Stop, TokenError
 from wes.parser import BinExpr as B
 from wes.parser import Expr, File, Label
 from wes.parser import Name as N
@@ -284,9 +284,9 @@ hlt
             Op("word", (N("start"),)),
             Offset(0xFFFE, None),
             Op("word", (V(0),)),
-            Offset(2, '+'),
+            Offset(2, "+"),
             N("foo"),
-            Offset(1, '-'),
+            Offset(1, "-"),
             N("bar"),
         )
     )

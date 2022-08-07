@@ -19,11 +19,11 @@ def _char_type(c: str) -> Any:
     """
     if c.isspace():
         return 0
-    elif c == '*':
+    elif c == "*":
         return 1
-    elif c == '<':
+    elif c == "<":
         return 2
-    elif c == '>':
+    elif c == ">":
         return 3
     elif c in DISJOINED:
         return float("nan")

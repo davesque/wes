@@ -3,7 +3,7 @@ from typing import Callable
 import pytest
 
 from wes.exceptions import EndOfTokens, Message
-from wes.lexer import Eof, Lexer, Newline, Text, TokenStream, tokenize, DISJOINED
+from wes.lexer import DISJOINED, Eof, Lexer, Newline, Text, TokenStream, tokenize
 
 from .utils import Eq
 

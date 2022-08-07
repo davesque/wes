@@ -7,7 +7,7 @@ from wes.compilers.sap import SapCompiler
 from wes.exceptions import Message
 from wes.instruction import Word
 
-from .utils import In, Eq, Predicate
+from .utils import Eq, In, Predicate
 
 
 @pytest.mark.parametrize(
@@ -18,7 +18,7 @@ from .utils import In, Eq, Predicate
         ("256", Eq("evaluated result '256' is too large")),
         ("hlt 42", Eq("'hlt' instruction takes no argument")),
         ("lda", Eq("'lda' instruction takes one argument")),
-        ("hlt", [0xf0]),
+        ("hlt", [0xF0]),
     ),
 )
 def test_instructions(file_txt: str, expected: Union[List[int], Predicate]) -> None:
