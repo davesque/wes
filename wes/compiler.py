@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from typing import Dict, Iterator, List, TextIO, Type, TypeVar, cast, overload
+from typing import Dict, Iterator, TextIO, Type, TypeVar, cast, overload
 
 from wes.exceptions import Message
 from wes.instruction import Instruction, Operation, Value
-from wes.lexer import Text
 from wes.parser import Const, Expr, File, Label, Name, Offset, Op, Parser, Val
 
 T = TypeVar("T")
@@ -150,9 +149,7 @@ class Compiler:
                         f"constant '{stmt.name}' uses reserved name", stmt.toks
                     )
                 if stmt.name in const_names:
-                    raise Message(
-                        f"redefinition of constant '{stmt.name}'", stmt.toks
-                    )
+                    raise Message(f"redefinition of constant '{stmt.name}'", stmt.toks)
 
                 const_stmts.append(stmt)
                 const_names.add(stmt.name)
