@@ -73,7 +73,7 @@ class Message(Exception):
 
         # fmt:off
         return f"""
-at line {fst.line_num}, col {fst.col}:
+at line {fst.line_num}, col {fst.col + 1}:
 {line}
 {marker_string}
 

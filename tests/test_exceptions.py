@@ -11,7 +11,7 @@ def test_rendered_error_render_text() -> None:
 
     # fmt: off
     assert e.render(file_txt) == """
-at line 2, col 16:
+at line 2, col 17:
 the quick brown fox jumped over the lazy dogs
                 ^^^
 
@@ -25,7 +25,7 @@ problem here
 
     # fmt: off
     assert e.render(file_txt) == """
-at line 2, col 16:
+at line 2, col 17:
 the quick brown fox jumped over the lazy dogs
                 ^^^
 
@@ -41,7 +41,7 @@ def test_rendered_error_render_newline() -> None:
 
     # fmt: off
     assert e.render(file_txt) == """
-at line 1, col 9:
+at line 1, col 10:
 test line
          ^
 
@@ -57,7 +57,7 @@ def test_rendered_error_render_newline_with_nl() -> None:
 
     # fmt: off
     assert e.render(file_txt) == """
-at line 1, col 9:
+at line 1, col 10:
 test line
          ^
 
@@ -73,7 +73,7 @@ def test_rendered_error_render_eof() -> None:
 
     # fmt: off
     assert e.render(file_txt) == """
-at line 1, col 9:
+at line 1, col 10:
 test line
          ^
 
@@ -89,7 +89,7 @@ def test_rendered_error_render_eof_with_nl() -> None:
 
     # fmt: off
     assert e.render(file_txt) == r"""
-at line 1, col 10:
+at line 1, col 11:
 test line
          ^
 
@@ -105,7 +105,7 @@ def test_rendered_error_multiple_tokens() -> None:
     e = Message("problem here", toks[5:8])
     # fmt: off
     assert e.render(file_txt) == """
-at line 2, col 10:
+at line 2, col 11:
 the quick brown fox jumped over the lazy dogs
           ^^^^^^^^^^^^^^^^
 
@@ -116,7 +116,7 @@ problem here
     e = Message("problem here", (toks[5], toks[7]))
     # fmt: off
     assert e.render(file_txt) == """
-at line 2, col 10:
+at line 2, col 11:
 the quick brown fox jumped over the lazy dogs
           ^^^^^^^^^^^^^^^^
 
@@ -127,7 +127,7 @@ problem here
     e = Message("problem here", toks[1:3])
     # fmt: off
     assert e.render(file_txt) == """
-at line 1, col 5:
+at line 1, col 6:
 line one
      ^^^
 
@@ -141,7 +141,7 @@ problem here
     e = Message("problem here", toks[1:])
     # fmt: off
     assert e.render(file_txt) == """
-at line 1, col 5:
+at line 1, col 6:
 line one
      ^^^
 
@@ -152,7 +152,7 @@ problem here
     e = Message("problem here", toks[2:])
     # fmt: off
     assert e.render(file_txt) == """
-at line 1, col 8:
+at line 1, col 9:
 line one
         ^
 
