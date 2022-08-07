@@ -229,16 +229,18 @@ b
 
 
 def test_lexer_char_types() -> None:
-    lexer = Lexer.from_str(f"***<<>>*<>{DISJOINED}")
+    lexer = Lexer.from_str(f"***<<>>==*<>={DISJOINED}")
 
     assert list(lexer) == [
         Text("***", 0, 1, 0),
         Text("<<", 0, 1, 3),
         Text(">>", 0, 1, 5),
-        Text("*", 0, 1, 7),
-        Text("<", 0, 1, 8),
-        Text(">", 0, 1, 9),
-    ] + [Text(c, 0, 1, 10 + i) for i, c in enumerate(DISJOINED)] + [
-        Newline(0, 1, 24),
-        Eof(0, 1, 24),
+        Text("==", 0, 1, 7),
+        Text("*", 0, 1, 9),
+        Text("<", 0, 1, 10),
+        Text(">", 0, 1, 11),
+        Text("=", 0, 1, 12),
+    ] + [Text(c, 0, 1, 13 + i) for i, c in enumerate(DISJOINED)] + [
+        Newline(0, 1, 27),
+        Eof(0, 1, 27),
     ]

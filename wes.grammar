@@ -3,7 +3,9 @@ VAL: (0b[01_]+|0o[0-7_]+|[0-9_]+|0x[a-fA-F0-9_]+)
 
 file: stmt* EOF
 
-stmt: offset | label | inst
+stmt: const | offset | label | inst
+
+const: name '=' expr NEWLINE
 
 offset: relative | absolute
 

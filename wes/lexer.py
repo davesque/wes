@@ -25,10 +25,12 @@ def _char_type(c: str) -> Any:
         return 2
     elif c == ">":
         return 3
+    elif c == "=":
+        return 4
     elif c in DISJOINED:
         return float("nan")
     else:
-        return 4
+        return 5
 
 
 def tokenize(s: str, *, split_f: Callable[[str], Any] = _char_type) -> Iterator[str]:

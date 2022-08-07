@@ -100,6 +100,19 @@ class Label(Stmt):
         super().__init__(**kwargs)
 
 
+class Const(Stmt):
+    __slots__ = ("name", "val")
+
+    name: str
+    val: Expr
+
+    def __init__(self, name: str, val: Expr, **kwargs: Any):
+        self.name = name
+        self.val = val
+
+        super().__init__(**kwargs)
+
+
 class Offset(Stmt):
     __slots__ = ("offset", "relative")
 
@@ -387,11 +400,29 @@ class Parser:
         return File(tuple(stmts))
 
     def parse_stmt(self) -> Optional[Union[Stmt, Expr]]:
+        if const := self.parse_const():
+            return const
         if offset := self.parse_offset():
             return offset
         elif label := self.parse_label():
             return label
         return self.parse_inst()
+
+    @optional
+    def parse_const(self) -> Const:
+        name = self.expect()
+        eq = self.expect("=")
+
+        if not NAME_RE.match(name.text):
+            raise Stop(f"{repr(name.text)} is not a valid name", (name,))
+
+        val = self.parse_expr()
+        if val is None:
+            raise Stop(f"expected expression after '{eq.text}'", (eq,))
+
+        self.expect_newline()
+
+        return Const(name.text, val, toks=(name, eq) + val.toks)
 
     def parse_offset(self) -> Optional[Offset]:
         if off := self.parse_relative():

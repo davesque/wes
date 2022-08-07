@@ -5,7 +5,7 @@ import pytest
 
 from wes.exceptions import Message, Stop, TokenError
 from wes.parser import BinExpr as B
-from wes.parser import Expr, File, Label
+from wes.parser import Const, Expr, File, Label
 from wes.parser import Name as N
 from wes.parser import Node, Offset, Op, Parser
 from wes.parser import UnExpr as U
@@ -251,6 +251,30 @@ def test_parse_underscore_digit_grouping(int_repr: str, int_val: int) -> None:
     file = parser.parse_file()
 
     assert file == File((V(int_val),))
+
+
+def test_parse_const() -> None:
+    parser = Parser.from_str("foo = 42")
+    file = parser.parse_file()
+    assert file == File((Const("foo", V(42)),))
+
+
+def test_invalid_const_name() -> None:
+    parser = Parser.from_str("foo!#@$ = 0")
+
+    with pytest.raises(Stop) as excinfo:
+        parser.parse_const()
+
+    assert "is not a valid name" in excinfo.value.msg
+
+
+def test_invalid_const_expression() -> None:
+    parser = Parser.from_str("foo =")
+
+    with pytest.raises(Stop) as excinfo:
+        parser.parse_const()
+
+    assert "expected expression after '='" in excinfo.value.msg
 
 
 def test_parse_offsets() -> None:
