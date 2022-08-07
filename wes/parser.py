@@ -5,6 +5,10 @@ Many of these parsing routines taken from or inspired by Guido van Rossum's
 article series on PEG parsing:
 
 https://medium.com/@gvanrossum_83706/peg-parsing-series-de5d41b2ed60
+
+The expression grammar is a simplified version of Python's expression grammar:
+
+https://github.com/python/cpython/blob/330f1d58282517bdf1f19577ab9317fa9810bf95/Grammar/python.gram
 """
 from __future__ import annotations
 
