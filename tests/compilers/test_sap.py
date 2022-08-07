@@ -1,7 +1,27 @@
+from typing import List, Union
+
 import pytest
 
 from wes.compilers.sap import SapCompiler
 from wes.exceptions import Message
+
+from ..utils import Eq, Predicate
+
+
+@pytest.mark.parametrize(
+    "file_txt,expected",
+    (("ldi 0x10", Eq("evaluated result '16' is too large")),),
+)
+def test_sap_instructions(file_txt: str, expected: Union[List[int], Predicate]) -> None:
+    compiler = SapCompiler.from_str(file_txt)
+
+    if isinstance(expected, Predicate):
+        with pytest.raises(Message) as excinfo:
+            list(compiler)
+
+        assert expected(excinfo.value.msg)
+    else:
+        assert list(compiler) == expected
 
 
 def test_compile_count() -> None:
