@@ -3,7 +3,7 @@ from typing import Callable
 import pytest
 
 from wes.exceptions import EndOfTokens, Message
-from wes.lexer import Eof, Lexer, Newline, Text, TokenStream, tokenize
+from wes.lexer import Eof, Lexer, Newline, Text, TokenStream, tokenize, DISJOINED
 
 from .utils import Eq
 
@@ -225,4 +225,20 @@ b
         Text("b", 21, 9, 0),
         Newline(21, 9, 1),
         Eof(21, 9, 2),
+    ]
+
+
+def test_lexer_char_types() -> None:
+    lexer = Lexer.from_str(f"***<<>>*<>{DISJOINED}")
+
+    assert list(lexer) == [
+        Text("***", 0, 1, 0),
+        Text("<<", 0, 1, 3),
+        Text(">>", 0, 1, 5),
+        Text("*", 0, 1, 7),
+        Text("<", 0, 1, 8),
+        Text(">", 0, 1, 9),
+    ] + [Text(c, 0, 1, 10 + i) for i, c in enumerate(DISJOINED)] + [
+        Newline(0, 1, 24),
+        Eof(0, 1, 24),
     ]
