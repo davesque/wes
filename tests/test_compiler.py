@@ -264,12 +264,14 @@ incr: incr_val
         )
         assert list(compiler) == expected_output
 
-        expected_output = [0b01011001]
+        expected_output = [0b01011001, 0b11111111]
         compiler = SapCompiler.from_str(
             """
 x = 0x8
+y = 0xff
 
 ldi x + 1
+y
     """
         )
         assert list(compiler) == expected_output
