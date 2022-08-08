@@ -1,5 +1,5 @@
 from io import StringIO
-from typing import Any, Dict, Tuple, cast
+from typing import Any, Dict, cast
 
 import pytest
 
