@@ -272,7 +272,9 @@ def optional(method: Callable[[Parser], T]) -> Callable[[Parser], Optional[T]]:
 U = TypeVar("U", bound=Node)
 
 
-def cache_result(method: Callable[..., Optional[U]]) -> Callable[..., Optional[U]]:  # pragma: no cover
+def cache_result(
+    method: Callable[..., Optional[U]]
+) -> Callable[..., Optional[U]]:  # pragma: no cover
     @functools.wraps(method)
     def new_method(self: Parser, *args: Any, **kwargs: Any) -> Optional[U]:
         key = (self.toks.mark(), method, args, serialize_dict(kwargs))
@@ -542,7 +544,9 @@ class Parser:
         if l_bracket := self.maybe("["):
             expr = self.parse_expr()
             if expr is None:
-                raise Stop(f"expected expression after '{l_bracket.text}'", (l_bracket,))
+                raise Stop(
+                    f"expected expression after '{l_bracket.text}'", (l_bracket,)
+                )
             r_bracket = self.expect("]", error=Stop)
 
             toks = (l_bracket,) + expr.toks + (r_bracket,)
