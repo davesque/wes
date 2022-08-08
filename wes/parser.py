@@ -161,10 +161,6 @@ BIN_OPS = {
 class Expr(Node):
     __slots__ = tuple()
 
-    @property
-    def is_deref(self) -> bool:
-        return self.toks[0].text == "["
-
     def eval(self, scope: Dict[str, int]) -> int:
         if isinstance(self, Val):
             return self.val
@@ -198,6 +194,17 @@ class Expr(Node):
             return fn(x, y)
         else:  # pragma: no cover
             raise Exception("invariant")
+
+
+class Deref(Expr):
+    __slots__ = ("expr",)
+
+    expr: Expr
+
+    def __init__(self, expr: Expr, **kwargs: Any):
+        self.expr = expr
+
+        super().__init__(**kwargs)
 
 
 class Name(Expr):
@@ -538,8 +545,8 @@ class Parser:
                 raise Stop(f"expected expression after '{l_bracket.text}'", (l_bracket,))
             r_bracket = self.expect("]", error=Stop)
 
-            new_toks = (l_bracket,) + expr.toks + (r_bracket,)
-            return type(expr)(*expr.slot_values, toks=new_toks)
+            toks = (l_bracket,) + expr.toks + (r_bracket,)
+            return Deref(expr, toks=toks)
 
         elif l_paren := self.maybe("("):
             expr = self.parse_expr()

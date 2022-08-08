@@ -5,7 +5,7 @@ import pytest
 
 from wes.exceptions import Message, Stop, TokenError
 from wes.parser import BinExpr as B
-from wes.parser import Const, Expr, File, Label
+from wes.parser import Const, Deref, Expr, File, Label
 from wes.parser import Name as N
 from wes.parser import Node, Offset, Op, Parser
 from wes.parser import UnExpr as U
@@ -350,7 +350,7 @@ def test_invalid_backward_offset_val() -> None:
         ("parse_atom", "0", V(0)),
         ("parse_atom", "foo", N("foo")),
         ("parse_atom", "(foo)", N("foo")),
-        ("parse_atom", "[foo]", N("foo")),
+        ("parse_atom", "[foo]", Deref(N("foo"))),
         ("parse_atom", "!!!", None),
         # hard failures
         ("parse_atom", "(!!!)", Eq("expected expression after '('")),
@@ -494,26 +494,3 @@ def test_expr_eval(file_txt: str, scope: Dict[str, int], expected: Any) -> None:
             expr.eval(scope)
 
         assert expected(excinfo.value.msg)
-
-
-def test_expr_is_deref() -> None:
-    parser = Parser.from_str("foo")
-    file = parser.parse_file()
-    expr = cast(Expr, file.stmts[0])
-
-    assert not expr.is_deref
-
-    parser = Parser.from_str("foo [bar]")
-    file = parser.parse_file()
-    op = cast(Op, file.stmts[0])
-    expr = op.args[0]
-
-    assert expr.is_deref
-
-
-def test_parse_deref_error() -> None:
-    parser = Parser.from_str("foo [!!!]")
-    with pytest.raises(Stop) as excinfo:
-        parser.parse_file()
-
-    assert "expected expression after '['" in excinfo.value.msg
