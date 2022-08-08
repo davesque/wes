@@ -58,7 +58,7 @@ class Pattern(SlotClass):
     def __repr__(self) -> str:
         params_repr = ", ".join(repr(p) for p in self.params)
         if params_repr:
-            params_repr = f"[{params_repr}]"
+            params_repr = f"({params_repr})"
 
         return f"{type(self).__name__}{params_repr}"
 

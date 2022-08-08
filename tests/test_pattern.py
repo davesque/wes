@@ -91,8 +91,8 @@ def test_pattern_eq() -> None:
 
 def test_pattern_repr() -> None:
     assert repr(integer) == "Integer"
-    assert repr(List(integer)) == "List[Integer]"
-    assert repr(Map(string, integer)) == "Map[String, Integer]"
+    assert repr(List(integer)) == "List(Integer)"
+    assert repr(Map(string, integer)) == "Map(String, Integer)"
 
 
 def string_or_integer(t: Pattern) -> bool:
