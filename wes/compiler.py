@@ -65,8 +65,30 @@ class Compiler:
             raise Exception("invariant")
 
     def scan(self) -> None:
-        self.resolve_consts()
+        self.find_consts()
+        self.find_labels()
 
+    def find_consts(self) -> None:
+        const_stmts = []
+        const_names = set()
+        for stmt in self.file.stmts:
+            if isinstance(stmt, Const):
+                if stmt.name in self.instructions:
+                    raise Message(
+                        f"constant '{stmt.name}' uses reserved name", stmt.toks
+                    )
+                if stmt.name in const_names:
+                    raise Message(f"redefinition of constant '{stmt.name}'", stmt.toks)
+
+                const_stmts.append(stmt)
+                const_names.add(stmt.name)
+
+        for stmt in const_stmts:
+            self.consts[stmt.name] = stmt.val.eval(self.consts)
+
+        self.scope.update(self.consts)
+
+    def find_labels(self) -> None:
         last_inst = None
         loc = 0
 
@@ -138,26 +160,6 @@ class Compiler:
 
             else:  # pragma: no cover
                 raise Exception("invariant")
-
-    def resolve_consts(self) -> None:
-        const_stmts = []
-        const_names = set()
-        for stmt in self.file.stmts:
-            if isinstance(stmt, Const):
-                if stmt.name in self.instructions:
-                    raise Message(
-                        f"constant '{stmt.name}' uses reserved name", stmt.toks
-                    )
-                if stmt.name in const_names:
-                    raise Message(f"redefinition of constant '{stmt.name}'", stmt.toks)
-
-                const_stmts.append(stmt)
-                const_names.add(stmt.name)
-
-        for stmt in const_stmts:
-            self.consts[stmt.name] = stmt.val.eval(self.consts)
-
-        self.scope.update(self.consts)
 
     def resolve_offset(self, loc: int, offset: Offset) -> int:
         if offset.relative == "+":
