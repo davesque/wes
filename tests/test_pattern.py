@@ -3,15 +3,8 @@ from typing import Any
 
 import pytest
 
-from wes.pattern import (
-    Pattern,
-    Substitutions,
-    Var,
-    apply_sub,
-    occurs_check,
-    unify,
-)
 from wes.exceptions import PatternError
+from wes.pattern import Pattern, Substitutions, Var, apply_sub, occurs_check, unify
 
 
 class String(Pattern):
