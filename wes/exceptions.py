@@ -84,3 +84,12 @@ at line {fst.line_num}, col {fst.col + 1}:
 
 class EndOfTokens(Exception):
     pass
+
+
+class PatternError(Exception):
+    """
+    Indicates an error occurred in a method of the ``Pattern`` class or while
+    attempting to unify patterns.
+    """
+
+    pass
