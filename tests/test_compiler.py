@@ -3,7 +3,7 @@ from typing import Callable, cast
 
 import pytest
 
-from wes.compilers.sap import Lda, SapCompiler
+from wes.compilers.sap import CompileSap, Lda
 from wes.exceptions import Message
 from wes.instruction import Value
 from wes.parser import Op, Val
@@ -13,13 +13,13 @@ from .utils import Eq, In, Re
 
 class TestCompiler:
     def test_from_str(self) -> None:
-        assert list(SapCompiler.from_str("255")) == [255]
+        assert list(CompileSap.from_str("255")) == [255]
 
     def test_from_buf(self) -> None:
-        assert list(SapCompiler.from_buf(StringIO("255"))) == [255]
+        assert list(CompileSap.from_buf(StringIO("255"))) == [255]
 
     def test_get_instruction(self) -> None:
-        compiler = SapCompiler.from_str(
+        compiler = CompileSap.from_str(
             """
 lda 1  ; valid op
 2      ; valid value
@@ -48,7 +48,7 @@ foo 42 ; invalid instruction
         assert excinfo.value.msg == "unrecognized instruction 'foo'"
 
     def test_scan(self) -> None:
-        compiler = SapCompiler.from_str(
+        compiler = CompileSap.from_str(
             """
 x = 5
 y = 6
@@ -89,7 +89,7 @@ fifteen: 0x44
         ),
     )
     def test_scan_errors(self, file_txt: str, check_msg: Callable[[str], bool]) -> None:
-        compiler = SapCompiler.from_str(file_txt)
+        compiler = CompileSap.from_str(file_txt)
 
         with pytest.raises(Message) as excinfo:
             compiler.scan()
@@ -97,7 +97,7 @@ fifteen: 0x44
         assert check_msg(excinfo.value.msg)
 
     def test_resolve_offsets(self) -> None:
-        compiler = SapCompiler.from_str(
+        compiler = CompileSap.from_str(
             """
 0
 +2:
@@ -124,7 +124,7 @@ label3: 0
     def test_resolve_offsets_errors(
         self, file_txt: str, check_msg: Callable[[str], bool]
     ) -> None:
-        compiler = SapCompiler.from_str(file_txt)
+        compiler = CompileSap.from_str(file_txt)
 
         with pytest.raises(Message) as excinfo:
             compiler.scan()
@@ -141,7 +141,7 @@ label3: 0
             0b00000001,
         ]
 
-        compiler = SapCompiler.from_str(
+        compiler = CompileSap.from_str(
             """
 lda init
 
@@ -165,7 +165,7 @@ incr: 1
         )
         # fmt: on
 
-        compiler = SapCompiler.from_str(
+        compiler = CompileSap.from_str(
             """
 lda init
 
@@ -183,7 +183,7 @@ incr: 1
         )
         assert list(compiler) == expected_output
 
-        compiler = SapCompiler.from_str(
+        compiler = CompileSap.from_str(
             """
 lda init
 
@@ -201,7 +201,7 @@ incr: 1
         )
         assert list(compiler) == expected_output
 
-        compiler = SapCompiler.from_str(
+        compiler = CompileSap.from_str(
             """
 lda init
 
@@ -228,7 +228,7 @@ incr: 1
             0b00101010,
             0b00000001,
         ]
-        compiler = SapCompiler.from_str(
+        compiler = CompileSap.from_str(
             """
 init_val = 42
 incr_val = 1
@@ -247,7 +247,7 @@ incr: incr_val
         assert list(compiler) == expected_output
 
         expected_output = [0b01011001, 0b11111111]
-        compiler = SapCompiler.from_str(
+        compiler = CompileSap.from_str(
             """
 x = 0x8
 y = 0xff

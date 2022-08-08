@@ -74,7 +74,7 @@ class Hlt(Constant):
     output = 0b11110000
 
 
-class SapCompiler(Compiler):
+class CompileSap(Compiler):
     max_addr = 15
     max_val = 255
 

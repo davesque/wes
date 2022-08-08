@@ -2,7 +2,7 @@ from typing import List, Union
 
 import pytest
 
-from wes.compilers.sap import SapCompiler
+from wes.compilers.sap import CompileSap
 from wes.exceptions import Message
 
 from ..utils import Eq, Predicate
@@ -13,7 +13,7 @@ from ..utils import Eq, Predicate
     (("ldi 0x10", Eq("evaluated result '16' is too large")),),
 )
 def test_sap_instructions(file_txt: str, expected: Union[List[int], Predicate]) -> None:
-    compiler = SapCompiler.from_str(file_txt)
+    compiler = CompileSap.from_str(file_txt)
 
     if isinstance(expected, Predicate):
         with pytest.raises(Message) as excinfo:
@@ -25,7 +25,7 @@ def test_sap_instructions(file_txt: str, expected: Union[List[int], Predicate]) 
 
 
 def test_compile_count() -> None:
-    compiler = SapCompiler.from_str(
+    compiler = CompileSap.from_str(
         """
 ; Counts from 42 to 256 (zero really in 8 bits), then down from 255 to 1
 ; before halting
@@ -54,7 +54,7 @@ incr: 1
 
 
 def test_compile_fib() -> None:
-    compiler = SapCompiler.from_str(
+    compiler = CompileSap.from_str(
         """
 ; Counts up in fibonacci numbers forever (with a lot of overflow)
 
@@ -79,12 +79,12 @@ b: 1
 
 
 def test_compile_op_with_literal() -> None:
-    compiler = SapCompiler.from_str("lda 1")
+    compiler = CompileSap.from_str("lda 1")
     assert list(compiler) == [17]
 
 
 def test_compile_bad_unary_op() -> None:
-    compiler = SapCompiler.from_str("lda")
+    compiler = CompileSap.from_str("lda")
     with pytest.raises(Message) as excinfo:
         list(compiler)
 
@@ -92,7 +92,7 @@ def test_compile_bad_unary_op() -> None:
 
 
 def test_compile_bad_nullary_op() -> None:
-    compiler = SapCompiler.from_str("nop 1")
+    compiler = CompileSap.from_str("nop 1")
     with pytest.raises(Message) as excinfo:
         list(compiler)
 
@@ -100,7 +100,7 @@ def test_compile_bad_nullary_op() -> None:
 
 
 def test_compile_bad_label() -> None:
-    compiler = SapCompiler.from_str("lda foo")
+    compiler = CompileSap.from_str("lda foo")
     with pytest.raises(Message) as excinfo:
         list(compiler)
 
@@ -108,7 +108,7 @@ def test_compile_bad_label() -> None:
 
 
 def test_compile_big_op_arg() -> None:
-    compiler = SapCompiler.from_str("lda 16")
+    compiler = CompileSap.from_str("lda 16")
     with pytest.raises(Message) as excinfo:
         list(compiler)
 
@@ -116,7 +116,7 @@ def test_compile_big_op_arg() -> None:
 
 
 def test_compile_big_bare_literal() -> None:
-    compiler = SapCompiler.from_str("256")
+    compiler = CompileSap.from_str("256")
     with pytest.raises(Message) as excinfo:
         list(compiler)
 
@@ -124,7 +124,7 @@ def test_compile_big_bare_literal() -> None:
 
 
 def test_compile_unrecognized_instruction() -> None:
-    compiler = SapCompiler.from_str("foo")
+    compiler = CompileSap.from_str("foo")
     with pytest.raises(Message) as excinfo:
         list(compiler)
 

@@ -5,7 +5,7 @@ from io import StringIO
 from typing import BinaryIO, Generic, TextIO, TypeVar
 
 from wes.compiler import Compiler
-from wes.compilers.sap import SapCompiler
+from wes.compilers.sap import CompileSap
 from wes.exceptions import Message, Stop
 
 IoType = TypeVar("IoType", TextIO, BinaryIO)
@@ -54,7 +54,7 @@ class Binary(Formatter[BinaryIO]):
 
 def run(in_buf: TextIO, formatter: Formatter[IoType]) -> None:
     try:
-        compiler = SapCompiler.from_buf(in_buf)
+        compiler = CompileSap.from_buf(in_buf)
     except Stop as e:
         raise Message(e.msg, e.toks)
 

@@ -3,7 +3,7 @@ from typing import Callable, List, Union
 import pytest
 
 from wes.compiler import Compiler
-from wes.compilers.sap import SapCompiler
+from wes.compilers.sap import CompileSap
 from wes.exceptions import Message
 from wes.instruction import Word
 
@@ -22,7 +22,7 @@ from .utils import Eq, In, Predicate
     ),
 )
 def test_instructions(file_txt: str, expected: Union[List[int], Predicate]) -> None:
-    compiler = SapCompiler.from_str(file_txt)
+    compiler = CompileSap.from_str(file_txt)
 
     if isinstance(expected, Predicate):
         with pytest.raises(Message) as excinfo:
