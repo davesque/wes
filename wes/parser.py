@@ -265,7 +265,7 @@ def optional(method: Callable[[Parser], T]) -> Callable[[Parser], Optional[T]]:
 U = TypeVar("U", bound=Node)
 
 
-def cache_result(method: Callable[..., Optional[U]]) -> Callable[..., Optional[U]]:
+def cache_result(method: Callable[..., Optional[U]]) -> Callable[..., Optional[U]]:  # pragma: no cover
     @functools.wraps(method)
     def new_method(self: Parser, *args: Any, **kwargs: Any) -> Optional[U]:
         key = (self.toks.mark(), method, args, serialize_dict(kwargs))
@@ -495,7 +495,7 @@ class Parser:
                 f"'{mnemonic.text}' is not a valid name or expression", (mnemonic,)
             )
 
-        arg = self.parse_arg()
+        arg = self.parse_expr()
         if arg is None:
             raise Reset(
                 f"expected expression after mnemonic '{mnemonic.text}'", (mnemonic,)
@@ -513,7 +513,7 @@ class Parser:
                 f"'{mnemonic.text}' is not a valid name or expression", (mnemonic,)
             )
 
-        arg1 = self.parse_arg()
+        arg1 = self.parse_expr()
         if arg1 is None:
             raise Reset(
                 f"expected expression after mnemonic '{mnemonic.text}'", (mnemonic,)
@@ -521,7 +521,7 @@ class Parser:
 
         comma = self.expect(",", error=Stop)
 
-        arg2 = self.parse_arg()
+        arg2 = self.parse_expr()
         if arg2 is None:
             raise Stop(f"expected expression after '{comma.text}'", (comma,))
 
@@ -530,29 +530,18 @@ class Parser:
         toks = (mnemonic,) + arg1.toks + (comma,) + arg2.toks
         return Op(mnemonic.text, (arg1, arg2), toks=toks)
 
-    @cache_result
-    def parse_arg(self) -> Optional[Expr]:
-        if deref := self.parse_deref():
-            return deref
-        else:
-            return self.parse_expr()
-
-    @optional
-    def parse_deref(self) -> Expr:
-        l_bracket = self.expect("[")
-
-        expr = self.parse_expr()
-        if expr is None:
-            raise Stop(f"expected expression after '{l_bracket.text}'", (l_bracket,))
-
-        r_bracket = self.expect("]", error=Stop)
-
-        new_toks = (l_bracket,) + expr.toks + (r_bracket,)
-        return type(expr)(*expr.slot_values, toks=new_toks)
-
     @optional
     def parse_atom(self) -> Expr:
-        if l_paren := self.maybe("("):
+        if l_bracket := self.maybe("["):
+            expr = self.parse_expr()
+            if expr is None:
+                raise Stop(f"expected expression after '{l_bracket.text}'", (l_bracket,))
+            r_bracket = self.expect("]", error=Stop)
+
+            new_toks = (l_bracket,) + expr.toks + (r_bracket,)
+            return type(expr)(*expr.slot_values, toks=new_toks)
+
+        elif l_paren := self.maybe("("):
             expr = self.parse_expr()
             if expr is None:
                 raise Stop(f"expected expression after '{l_paren.text}'", (l_paren,))

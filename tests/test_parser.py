@@ -350,9 +350,11 @@ def test_invalid_backward_offset_val() -> None:
         ("parse_atom", "0", V(0)),
         ("parse_atom", "foo", N("foo")),
         ("parse_atom", "(foo)", N("foo")),
+        ("parse_atom", "[foo]", N("foo")),
         ("parse_atom", "!!!", None),
         # hard failures
         ("parse_atom", "(!!!)", Eq("expected expression after '('")),
+        ("parse_atom", "[!!!]", Eq("expected expression after '['")),
         # ========= parse_power =========
         ("parse_power", "!!!", None),  # returns `None` on fail
         ("parse_power", "0", V(0)),  # tries alternative

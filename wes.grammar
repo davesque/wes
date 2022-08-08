@@ -17,12 +17,8 @@ label: NAME ':' [NEWLINE]
 inst: nullary | unary | binary
 
 nullary: expr NEWLINE
-unary: NAME arg NEWLINE
-binary: NAME arg ',' arg NEWLINE
-
-arg: deref | expr
-
-deref: '[' expr ']'
+unary: NAME expr NEWLINE
+binary: NAME expr ',' expr NEWLINE
 
 expr: expr '|' xor | xor
 xor: xor '^' and | and
@@ -34,4 +30,4 @@ term: term ('*' | '/' | '%') factor | factor
 factor: ('-' | '~') factor | power
 power: atom '**' factor | atom
 
-atom: '(' expr ')' | NAME | VAL
+atom: '[' expr ']' | '(' expr ')' | NAME | VAL
