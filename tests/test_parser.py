@@ -14,39 +14,6 @@ from wes.parser import Val as V
 from .utils import Eq, In, Predicate
 
 
-class MyNode(Node):
-    __slots__ = ("foo", "bar")
-
-    foo: Tuple[str, ...]
-    bar: int
-
-    def __init__(self, foo: Tuple[str, ...], bar: int, **kwargs: Any):
-        self.foo = foo
-        self.bar = bar
-
-        super().__init__(**kwargs)
-
-
-def test_node_slot_values() -> None:
-    node = MyNode(("asdf", "zxcv"), 2)
-    assert node.slot_values == (("asdf", "zxcv"), 2)
-
-
-def test_node_repr() -> None:
-    node = MyNode(("asdf", "zxcv"), 2)
-    assert repr(node) == "MyNode(('asdf', 'zxcv'), 2)"
-
-
-def test_node_eq() -> None:
-    node1 = MyNode(("asdf", "zxcv"), 2)
-    node2 = MyNode(("asdf", "zxcv"), 2)
-    node3 = MyNode(("asdd", "zxcv"), 2)
-
-    assert node1 == node2
-    assert node1 != node3
-    assert node1 != 2
-
-
 @pytest.fixture
 def count_parser() -> Parser:
     return Parser.from_str(

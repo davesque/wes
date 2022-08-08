@@ -32,6 +32,7 @@ from typing import (
 
 from wes.exceptions import Message, Reset, Stop
 from wes.lexer import Eof, Lexer, Newline, Text, TokenStream
+from wes.pattern import Pattern
 from wes.utils import serialize_dict, str_to_int
 
 NAME_RE = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
@@ -40,49 +41,23 @@ VAL_RE = re.compile(r"^(0b[01_]+|0o[0-7_]+|[0-9_]+|0x[a-fA-F0-9_]+)$")
 T = TypeVar("T")
 
 
-class Node:
+class Node(Pattern):
     __slots__ = ("toks",)
 
-    toks: Tuple[Text, ...]
+    annotations = ("toks",)
 
-    def __init__(self, *, toks: Optional[Tuple[Text, ...]] = None):
-        if toks is None:
-            toks = ()
+    toks: Tuple[Text, ...]  # type: ignore
 
-        self.toks = toks
+    def __init__(self, *args: Any, **kwargs: Any):
+        kwargs.setdefault("toks", ())
 
-    @property
-    def slot_values(self) -> Tuple[Any, ...]:
-        return tuple(getattr(self, s) for s in self.__slots__ if s != "toks")
-
-    def __repr__(self) -> str:  # pragma: no cover
-        elems_repr = ", ".join(repr(i) for i in self.slot_values)
-        cls_name = self.__class__.__qualname__
-
-        return f"{cls_name}({elems_repr})"
-
-    def __eq__(self, other: Any) -> bool:
-        if type(self) is not type(other):
-            return False
-
-        # fail early if we find a mismatch
-        for x, y in zip(self.slot_values, other.slot_values):
-            if x != y:
-                return False
-
-        return True
+        super().__init__(*args, **kwargs)
 
 
 class File(Node):
     __slots__ = ("stmts",)
 
-    stmts: Tuple[Union[Stmt, Expr], ...]
-
-    def __init__(self, stmts: Tuple[Union[Stmt, Expr], ...]):
-        self.stmts = stmts
-
-        # we have all the tokens in the statement nodes
-        super().__init__(toks=tuple())
+    stmts: Tuple[Union[Stmt, Expr], ...]  # type: ignore
 
 
 class Stmt(Node):
@@ -92,51 +67,28 @@ class Stmt(Node):
 class Label(Stmt):
     __slots__ = ("name",)
 
-    name: str
-
-    def __init__(self, name: str, **kwargs: Any):
-        self.name = name
-
-        super().__init__(**kwargs)
+    name: str  # type: ignore
 
 
 class Const(Stmt):
     __slots__ = ("name", "val")
 
-    name: str
-    val: Expr
-
-    def __init__(self, name: str, val: Expr, **kwargs: Any):
-        self.name = name
-        self.val = val
-
-        super().__init__(**kwargs)
+    name: str  # type: ignore
+    val: Expr  # type: ignore
 
 
 class Offset(Stmt):
     __slots__ = ("offset", "relative")
 
-    offset: int
-    relative: Optional[str]
-
-    def __init__(self, offset: int, relative: Optional[str], **kwargs: Any):
-        self.offset = offset
-        self.relative = relative
-
-        super().__init__(**kwargs)
+    offset: int  # type: ignore
+    relative: Optional[str]  # type: ignore
 
 
 class Op(Stmt):
     __slots__ = ("mnemonic", "args")
 
-    mnemonic: str
-    args: Tuple[Expr, ...]
-
-    def __init__(self, mnemonic: str, args: Tuple[Expr, ...], **kwargs: Any):
-        self.mnemonic = mnemonic
-        self.args = args
-
-        super().__init__(**kwargs)
+    mnemonic: str  # type: ignore
+    args: Tuple[Expr, ...]  # type: ignore
 
 
 UN_OPS = {
@@ -199,62 +151,34 @@ class Expr(Node):
 class Deref(Expr):
     __slots__ = ("expr",)
 
-    expr: Expr
-
-    def __init__(self, expr: Expr, **kwargs: Any):
-        self.expr = expr
-
-        super().__init__(**kwargs)
+    expr: Expr  # type: ignore
 
 
 class Name(Expr):
     __slots__ = ("name",)
 
-    name: str
-
-    def __init__(self, name: str, **kwargs: Any):
-        self.name = name
-
-        super().__init__(**kwargs)
+    name: str  # type: ignore
 
 
 class Val(Expr):
     __slots__ = ("val",)
 
-    val: int
-
-    def __init__(self, val: int, **kwargs: Any):
-        self.val = val
-
-        super().__init__(**kwargs)
+    val: int  # type: ignore
 
 
 class UnExpr(Expr):
     __slots__ = ("op", "x")
 
-    op: str
-    x: Expr
-
-    def __init__(self, op: str, x: Expr, **kwargs: Any):
-        self.op = op
-        self.x = x
-
-        super().__init__(**kwargs)
+    op: str  # type: ignore
+    x: Expr  # type: ignore
 
 
 class BinExpr(Expr):
     __slots__ = ("x", "op", "y")
 
-    x: Expr
-    op: str
-    y: Expr
-
-    def __init__(self, x: Expr, op: str, y: Expr, **kwargs: Any):
-        self.x = x
-        self.op = op
-        self.y = y
-
-        super().__init__(**kwargs)
+    x: Expr  # type: ignore
+    op: str  # type: ignore
+    y: Expr  # type: ignore
 
 
 def optional(method: Callable[[Parser], T]) -> Callable[[Parser], Optional[T]]:
@@ -559,7 +483,7 @@ class Parser:
             r_paren = self.expect(")", error=Stop)
 
             new_toks = (l_paren,) + expr.toks + (r_paren,)
-            return type(expr)(*expr.slot_values, toks=new_toks)
+            return type(expr)(*expr.params, toks=new_toks)
 
         else:
             name_or_val = self.expect()
