@@ -23,3 +23,24 @@ def serialize_dict(dct: Dict[str, Any]) -> Tuple[Tuple[str, Any], ...]:
     items.sort(key=lambda i: i[0])
 
     return tuple(items)
+
+
+class SlotClass:
+    __slots__: Tuple[str, ...] = ()
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        # set parameters
+        for name, param in zip(self.__slots__, args):
+            setattr(self, name, param)
+        for name, param in kwargs.items():
+            setattr(self, name, param)
+
+        # make sure all parameters are set
+        for name in self.__slots__:
+            try:
+                getattr(self, name)
+            except AttributeError:
+                raise TypeError(
+                    f"{type(self).__name__} requires a setting "
+                    + f"for the '{name}' parameter"
+                )
