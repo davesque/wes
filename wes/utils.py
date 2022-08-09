@@ -1,4 +1,4 @@
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, Iterator
 
 BASES = {
     "0b": 2,
@@ -16,6 +16,12 @@ def str_to_int(s: str) -> int:
 
 def byte_length(i: int) -> int:
     return max(1, (i.bit_length() + 7) // 8)
+
+
+def le_bytes(i: int, n: int) -> Iterator[int]:
+    for _ in range(n):
+        yield i & 0xFF
+        i >>= 8
 
 
 def serialize_dict(dct: Dict[str, Any]) -> Tuple[Tuple[str, Any], ...]:
