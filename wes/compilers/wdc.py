@@ -84,7 +84,7 @@ class WdcUnary(Unary):
             raise Message(
                 f"instruction '{self.mnemonic}' does not support "
                 + f"addressing mode '{fmt_name}' for "
-                + f"{b_len} byte operand '{evaled}'",
+                + f"{b_len} byte operands",
                 arg.toks,
             )
 
