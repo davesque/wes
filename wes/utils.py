@@ -1,4 +1,4 @@
-from typing import Any, Dict, Tuple, Iterator
+from typing import Any, Dict, Iterator, Tuple
 
 BASES = {
     "0b": 2,

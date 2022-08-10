@@ -2,7 +2,7 @@ from typing import Any, Callable
 
 import pytest
 
-from wes.utils import byte_length, serialize_dict, str_to_int, SlotClass
+from wes.utils import SlotClass, byte_length, le_bytes, serialize_dict, str_to_int
 
 
 def test_str_to_int() -> None:
@@ -20,6 +20,16 @@ def test_byte_length() -> None:
     assert byte_length(2**16) == 3
     assert byte_length(2**24 - 1) == 3
     assert byte_length(2**24) == 4
+
+
+def test_le_bytes() -> None:
+    assert list(le_bytes(0xff, 1)) == [0xff]
+    assert list(le_bytes(0xff, 2)) == [0xff, 0x00]
+    assert list(le_bytes(0x100, 2)) == [0x00, 0x01]
+    assert list(le_bytes(0xffff, 2)) == [0xff, 0xff]
+    assert list(le_bytes(0x10000, 2)) == [0x00, 0x00]
+    assert list(le_bytes(0x10000, 3)) == [0x00, 0x00, 0x01]
+    assert list(le_bytes(0x12345, 3)) == [0x45, 0x23, 0x01]
 
 
 def test_serialize_dict() -> None:
