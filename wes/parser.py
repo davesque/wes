@@ -36,7 +36,7 @@ from wes.pattern import Pattern
 from wes.utils import serialize_dict, str_to_int
 
 NAME_RE = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
-VAL_RE = re.compile(r"^(0b[01_]+|0o[0-7_]+|[0-9_]+|0x[a-fA-F0-9_]+)$")
+VAL_RE = re.compile(r"^(0b[01_]+|0o[0-7_]+|[0-9][0-9_]*|0x[a-fA-F0-9_]+)$")
 
 T = TypeVar("T")
 
