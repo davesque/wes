@@ -6,8 +6,8 @@ from typing import Dict, Iterator, Tuple
 from wes.compiler import Compiler
 from wes.exceptions import Message, PatternError
 from wes.instruction import Constant, Unary
-from wes.parser import BinExpr, Deref, Name, Expr
-from wes.pattern import T, Pattern
+from wes.parser import BinExpr, Deref, Expr, Name
+from wes.pattern import Pattern, T
 from wes.utils import byte_length, le_bytes
 
 
