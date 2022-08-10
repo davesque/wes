@@ -2,10 +2,11 @@ import argparse
 import shutil
 import sys
 from io import StringIO
-from typing import BinaryIO, Generic, TextIO, TypeVar
+from typing import BinaryIO, Generic, TextIO, Type, TypeVar
 
 from wes.compiler import Compiler
 from wes.compilers.sap import CompileSap
+from wes.compilers.wdc import Compile6502
 from wes.exceptions import Message, Stop
 
 IoType = TypeVar("IoType", TextIO, BinaryIO)
@@ -52,9 +53,11 @@ class Binary(Formatter[BinaryIO]):
         shutil.copyfileobj(ReadCompiler(compiler), self.buf)
 
 
-def run(in_buf: TextIO, formatter: Formatter[IoType]) -> None:
+def run(
+    in_buf: TextIO, formatter: Formatter[IoType], compiler_cls: Type[Compiler]
+) -> None:
     try:
-        compiler = CompileSap.from_buf(in_buf)
+        compiler = compiler_cls.from_buf(in_buf)
     except Stop as e:
         raise Message(e.msg, e.toks)
 
@@ -64,6 +67,10 @@ def run(in_buf: TextIO, formatter: Formatter[IoType]) -> None:
 FORMATTERS = {
     "binary": Binary(sys.stdout.buffer),
     "binary_text": BinaryText(sys.stdout),
+}
+COMPILERS = {
+    "sap1": CompileSap,
+    "w65c02s": Compile6502,
 }
 
 parser = argparse.ArgumentParser(description="Compile an assembly file.")
@@ -82,18 +89,27 @@ parser.add_argument(
     choices=FORMATTERS.keys(),
     required=False,
 )
+parser.add_argument(
+    "-a",
+    "--arch",
+    help="target architecture",
+    default="w65c02s",
+    choices=COMPILERS.keys(),
+    required=False,
+)
 
 
 def main():  # pragma: no cover
     args = parser.parse_args()
 
     formatter = FORMATTERS[args.format]
+    compiler_cls = COMPILERS[args.arch]
 
     file_txt = args.file.read()
     in_buf = StringIO(file_txt)
 
     try:
-        run(in_buf, formatter)
+        run(in_buf, formatter, compiler_cls)
     except Message as e:
         print(e.render(file_txt), file=sys.stderr)
         sys.exit(1)

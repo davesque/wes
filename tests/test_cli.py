@@ -3,6 +3,7 @@ from io import BytesIO, StringIO
 import pytest
 
 from wes.cli import Binary, BinaryText, run
+from wes.compilers.sap import CompileSap
 from wes.exceptions import Message
 
 
@@ -39,7 +40,7 @@ def test_run_binary_text(in_buf: StringIO) -> None:
     out_buf = StringIO()
     formatter = BinaryText(out_buf)
 
-    run(in_buf, formatter)
+    run(in_buf, formatter, CompileSap)
     out_buf.seek(0)
 
     # fmt: off
@@ -64,7 +65,7 @@ def test_run_binary(in_buf: StringIO) -> None:
     out_buf = BytesIO()
     formatter = Binary(out_buf)
 
-    run(in_buf, formatter)
+    run(in_buf, formatter, CompileSap)
     out_buf.seek(0)
 
     assert out_buf.read() == bytes(
@@ -90,4 +91,4 @@ def test_run_stop_as_message() -> None:
     formatter = BinaryText(StringIO())
 
     with pytest.raises(Message):
-        run(in_buf, formatter)
+        run(in_buf, formatter, CompileSap)

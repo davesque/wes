@@ -2,11 +2,11 @@
 
 This is a little assembler that can be used to generate program code for Ben
 Eater's 8-bit computer, also known as the SAP-1 (see here:
-https://eater.net/8bit).
+https://eater.net/8bit).  Support for the WDC W65C02S processor is also
+currently in the works.
 
-It might eventually develop into something more general purpose with some
-convenience features targeted at embedded programming.  For example, W65C02S
-support is currently in the works.
+More broadly, this assembler project aims to provide a general assembler
+framework with some convenience features targeted at ROM programming.
 
 ## Installation and Usage
 
@@ -29,7 +29,7 @@ pip install .
 Then, try compiling one of the example files:
 ```bash
 # pipe a file into wes
-wes < examples/count.asm
+wes --arch sap1 --format binary_text < examples/count.asm
 0000: 0001 1010
 0001: 1110 0000
 0010: 0010 1011
@@ -44,7 +44,7 @@ wes < examples/count.asm
 1011: 0000 0001
 
 # or, specify a file path as an arg
-wes examples/count.asm
+wes -a sap1 -f binary_text examples/count.asm
 # ...
 ```
 
